@@ -10,3 +10,5 @@ pydantic-settings
 ollama
 python-jose
 python-multipart
+pytest-asyncio
+pytest-asyncio

@@ -1,489 +1,179 @@
-# MCP Server – An LLM‑Enabled Tool for Ansible Tower / AWX
+# AWX Advanced Tools - An LLM-Enabled Gateway for Ansible AWX
 
-> **TL;DR** – A lightweight FastAPI service that exposes the MCP (Model Context Protocol) API to LLMs, enabling them to launch AWX job templates, create inventories, query jobs, and more. The original EasyVista/ServiceNow adapters have been replaced with an AWX adapter.
+> **TL;DR** – A lightweight FastAPI service that acts as a gateway between a Large Language Model (LLM) and Ansible AWX. It exposes a REST API that allows LLMs to launch job templates, create inventories, and query job statuses.
 
 ---
 
 ## Table of Contents
 
-1. [What is MCP?](#what-is-mcp)
-2. [Project Overview](#project-overview)
-3. [Architecture & Design](#architecture--design)
-4. [Installation & Setup](#installation--setup)
-5. [Configuration](#configuration)
-6. [Running the Server](#running-the-server)
-7. [MCP API](#mcp-api)
-   - 7.1. [Generic MCP Request](#generic-mcp-request)
-   - 7.2. [AWX Specific Actions & Schemas](#awx-specific-actions-and-schemas)
-8. [Context Management](#context-management)
-9. [Error Handling & Response Codes](#error-handling--response-codes)
-10. [Audit Logging](#audit-logging)
-11. [Testing](#testing)
-12. [Extending the Adapter](#extending-the-adapter)
-13. [Deployment Checklist](#deployment-checklist)
-14. [Contribution Guidelines](#contribution-guidelines)
-15. [License](#license)
+1. [Project Overview](#project-overview)
+2. [Architecture & Design](#architecture--design)
+3. [Installation & Setup](#installation--setup)
+4. [Configuration](#configuration)
+5. [Running the Server](#running-the-server)
+6. [API Specification](#api-specification)
+7. [Open-WebUI Tool](#open-webui-tool)
+8. [Testing](#testing)
+9. [Deployment](#deployment)
+10. [Contribution Guidelines](#contribution-guidelines)
+11. [License](#license)
 ---
 
-## 1. What is MCP?
+## 1. Project Overview
 
-The **Model Context Protocol** (MCP) is a lightweight, stateless request‑response format designed for function‑calling scenarios with large‑language‑model (LLM) systems. It allows an LLM to:
-
-* **Carry state** across multiple calls via a `context_id`.
-* **Target a specific platform** (e.g., AWX, Kubernetes, GitHub Actions) and invoke platform‑specific actions.
-* **Validate payloads** against JSON schemas so the service can reject malformed or unsafe data.
-
-The protocol is intentionally simple: a single JSON object is sent to the `/mcp` endpoint, validated, and forwarded to the appropriate backend adapter.
-
----
-
-## 2. Project Overview
-
-The repository contains:
+This repository contains a FastAPI application that serves as a bridge between an LLM and Ansible AWX. It allows an LLM to perform actions in AWX by calling a simple, secure REST API.
 
 | Component | Purpose |
 |-----------|---------|
-| **FastAPI** | Web framework exposing the `/mcp` endpoint and automatic OpenAPI docs. |
-| **Pydantic** | Environment‑variable loading (`BaseSettings`) and request validation (`MCPRequest`). |
-| **Redis** | Optional persistent context store (currently a simple in‑memory manager is used). |
-| **Audit Log** | Every request and response is written to a rotating file in `AUDIT_LOG_DIR`. |
+| **FastAPI** | Web framework exposing the REST API and automatic OpenAPI docs. |
+| **Pydantic** | Environment-variable loading and request validation. |
 | **AWX Adapter** | Implements the three core AWX actions: `launch_job_template`, `create_inventory`, and `get_job`. |
-| **Context Manager** | Keeps track of `context_id` → `MCPContext` mappings. |
-
-The service is intentionally minimal, making it easy to drop into any environment that can host a FastAPI app.
+| **LLM Client Factory** | Supports multiple LLM providers (e.g., OpenAI, Ollama) for generating AWX payloads. |
+| **Docker Support** | Comes with `docker-compose.yml` for easy local development and a `Dockerfile` for production. |
+| **Kubernetes Manifests** | Includes basic manifests for deploying to Kubernetes. |
 
 ---
 
-## 3. Architecture & Design
+## 2. Architecture & Design
 
-### 3.1 High‑Level Flow
+The service exposes a standard REST API. An external tool, such as Open-WebUI, makes authenticated requests to this service, which then translates them into the appropriate calls to the AWX API.
 
+### High-Level Flow
 ```
-Client → POST /mcp (with Bearer token) → MCP Server
+Client (e.g., Open-WebUI) → REST API (with Bearer token) → AWX Advanced Tools
    │
-   ├─► Validate generic MCP schema
-   ├─► Resolve platform‑specific schema (AWX)
-   ├─► Retrieve or create Context ID
-   ├─► Call corresponding AWX adapter (async HTTPX request)
-   └─► Return JSON response & log audit
-```
-
-### 3.2 Detailed Components
-
-| Layer | Responsibility | Key Files |
-|-------|----------------|-----------|
-| **API Layer** | Exposes `/mcp`, authenticates requests, performs schema validation, and orchestrates the adapter call. | `app/main.py`, `app/router.py` |
-| **Schema Registry** | Holds JSON schemas for each action; used by the validator. | `app/schema/registry.py` |
-| **Context Manager** | Stores `context_id` → `MCPContext` mapping. In the default branch this is an in‑memory dictionary; can be swapped out for a Redis‑backed implementation. | `app/context.py` |
-| **AWX Adapter** | Makes HTTP requests to the AWX API, handling authentication and error translation. | `app/adapters/awx.py` |
-| **Audit Logger** | Serialises request/response pairs to a file, rotating when the file exceeds a size threshold. | `app/logger.py` |
-
-
-+### 3.3 LLM Layer
-+
-+After the refactor, the service now includes an **LLM‑enabled** architecture that lets large‑language‑models (LLMs) generate job payloads, manage context, and cache results.
-+
-+| Layer | Responsibility | Key Files |
-+|-------|----------------|-----------|
-+| **LLM Client** | Provides the `LLMClient` class which interacts with the configured LLM provider (e.g., OpenAI, Anthropic). | `app/llm/client.py` |
-+| **Prompt Templates** | Stores reusable prompt templates for actions such as `launch_job_template`. | `app/llm/templates.py` |
-+| **Prompt Service** | Wraps the LLM client and prompt templates, returning structured JSON for the MCP adapter. | `app/llm/service.py` |
-+| **Cache** | Optional Redis or in‑memory cache for prompt responses and context logs. | `app/llm/cache.py` |
-+| **Prompt Logger** | Adds a concise log summary to every audit record. | `app/logger.py` |
-+```
-
-+The LLM layer is optional but highly recommended for use cases where the payload is generated by an LLM. The new `app/llm/` package contains all the necessary code.
-
-
-
-### 3.1 High‑Level Flow
-
-```
-Client → POST /mcp (with Bearer token) → MCP Server
-   │
-   ├─► Validate generic MCP schema
-   ├─► Resolve platform‑specific schema (AWX)
-   ├─► Retrieve or create Context ID
-   ├─► Call corresponding AWX adapter (async HTTPX request)
-   └─► Return JSON response & log audit
-```
-
-### 3.2 Detailed Components
-
-| Layer | Responsibility | Key Files |
-|-------|----------------|-----------|
-| **API Layer** | Exposes `/mcp`, authenticates requests, performs schema validation, and orchestrates the adapter call. | `app/main.py`, `app/router.py` |
-| **Schema Registry** | Holds JSON schemas for each action; used by the validator. | `app/schema/registry.py` |
-| **Context Manager** | Stores `context_id` → `MCPContext` mapping. In the default branch this is an in‑memory dictionary; can be swapped out for a Redis‑backed implementation. | `app/context.py` |
-| **AWX Adapter** | Makes HTTP requests to the AWX API, handling authentication and error translation. | `app/adapters/awx.py` |
-| **Audit Logger** | Serialises request/response pairs to a file, rotating when the file exceeds a size threshold. | `app/logger.py` |
-
-### 3.3 Data Flow Example
-
-```text
-Client sends:
-{
-  context_id: null,
-  platform: "AWX",
-  action: "launch_job_template",
-  payload: { template_id: 42, extra_vars: { my_var: "value" } }
-}
-
-Server creates new UUID for context_id.
-Server calls AWX Adapter:
-GET /api/v2/job_templates/42/launch? ...
-
-AWX returns:
-{ "id": 123, "status": "pending", ... }
-
-Server responds:
-{
-  context_id: "<uuid>",
-  result: { ... }
-}
+   ├─► Authenticate request
+   ├─► Call corresponding AWX adapter method
+   ├─► Make request to AWX API
+   └─► Return JSON response
 ```
 
 ---
 
-## 4. Installation & Setup
+## 3. Installation & Setup
 
-### 4.1 Prerequisites
+### 3.1 Prerequisites
 
 | Component | Minimum Version |
 |-----------|-----------------|
 | Python    | 3.10+ |
-| pip       | 20.0+ |
-| Docker    | 20.10+ (optional, for local testing) |
+| Docker    | 20.10+ |
 
-### 4.2 Clone the Repository
-
-```bash
-git clone https://github.com/your-org/mcp-server.git
-cd mcp-server
-```
-
-### 4.3 Optional Virtual Environment
+### 3.2 Clone the Repository
 
 ```bash
-python -m venv .venv
-source .venv/bin/activate
+git clone https://github.com/antuelle78/awx_advanced_tools.git
+cd awx_advanced_tools
 ```
 
-### 4.4 Install Dependencies
+### 3.3 Docker Hub Image
 
+A pre-built Docker image is available on Docker Hub:
 ```bash
-pip install -r requirements.txt
-```
-
-+### 4.5 LLM Dependencies
-+The LLM layer requires the official SDKs for your chosen provider. For example, to use OpenAI you need:
-+
-+```bash
-+pip install openai
-+```
-+
-+If you prefer Anthropic:
-+
-+```bash
-+pip install anthropic
-+```
-+
-+Both SDKs are optional – the service will still function if you skip them, but LLM‑generated payloads will not be available.
-+
-+### 4.6 Docker (Optional)
-+```dockerfile
-+# syntax=docker/dockerfile:1
-+FROM python:3.11-slim
-+WORKDIR /app
-+COPY . .
-+RUN pip install --no-cache-dir -r requirements.txt
-+EXPOSE 8000
-+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
-+```
-+
-+Build & run:
-+
-+```bash
-docker build -t mcp-server .
-docker run -d -p 8000:8000 --env-file .env mcp-server
-+```
-
-
-
-### 4.1 Prerequisites
-
-| Component | Minimum Version |
-|-----------|-----------------|
-| Python    | 3.10+ |
-| pip       | 20.0+ |
-| Docker    | 20.10+ (optional, for local testing) |
-
-### 4.2 Clone the Repository
-
-```bash
-git clone https://github.com/your-org/mcp-server.git
-cd mcp-server
-```
-
-### 4.3 Optional Virtual Environment
-
-```bash
-python -m venv .venv
-source .venv/bin/activate
-```
-
-### 4.4 Install Dependencies
-
-```bash
-pip install -r requirements.txt
-```
-
-### 4.5 Docker (Optional)
-
-```dockerfile
-# syntax=docker/dockerfile:1
-FROM python:3.11-slim
-WORKDIR /app
-COPY . .
-RUN pip install --no-cache-dir -r requirements.txt
-EXPOSE 8000
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
-```
-
-Build & run:
-
-```bash
-docker build -t mcp-server .
-docker run -d -p 8000:8000 --env-file .env mcp-server
+docker pull antuelle78/awx_advanced_tools:latest
 ```
 
 ---
 
-## 5. Configuration
+## 4. Configuration
 
-All settings are read from environment variables. The following table lists the required variables; create a `.env` file in the project root or set them in your deployment environment.
+All settings are read from environment variables. Create a `.env` file in the project root or set the variables in your deployment environment.
 
 | Variable | Description | Example |
 |----------|-------------|---------|
-| `LLM_API_KEY` | API key for the LLM provider (unused in this repo but kept for compatibility). | `sk-xxxx` |
-| `LLM_ENDPOINT` | LLM provider endpoint. | `https://api.llm.com/v1/chat/completions` |
-+| `LLM_MODEL` | Name of the model to use (e.g., `gpt-4o`). | `gpt-4o` |
-+| `LLM_API_KEY` | API key for the LLM provider (used by the LLM client). | `sk-xxxx` |
-
-| `AWX_BASE_URL` | Base URL of your AWX/Tower instance (including https://). | `https://awx.example.com` |
-| `AWX_TOKEN` | Bearer token with AWX permissions (`job_template_launch`, `inventory`). | `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...` |
-| `JWT_SECRET` | Secret used to validate JWTs for API access. | `super-secret` |
-+| `LLM_MODEL` | Name of the LLM model to use. | `gpt-4o` |
-+| `LLM_ENDPOINT` | Endpoint for the LLM provider. | `https://api.llm.com/v1/chat/completions` |
-+| `LLM_API_KEY` | API key for the LLM provider. | `sk-xxxx` |
-
-| `AUDIT_LOG_DIR` | Directory where audit logs are stored. | `/var/log/mcp` |
-| `REDIS_HOST`, `REDIS_PORT`, `REDIS_DB` | (Optional) Redis connection info if you swap the context manager. | `localhost`, `6379`, `0` |
-
-> **Security Note** – The service uses HTTP Bearer authentication. Replace the dummy JWT validation with your own logic in production.
+| `AWX_BASE_URL` | Base URL of your AWX/Tower instance. | `https://awx.example.com` |
+| `AWX_TOKEN` | Bearer token with AWX permissions. | `your_awx_token` |
+| `JWT_SECRET` | Secret used to validate JWTs for API access. | `a_very_secret_key` |
+| `LLM_PROVIDER` | The LLM provider to use. Can be `default` (for OpenAI-compatible APIs) or `ollama`. | `ollama` |
+| `LLM_ENDPOINT` | The endpoint of the LLM provider. | `http://host.docker.internal:11434` |
+| `LLM_MODEL` | The name of the LLM model to use. | `gemma3` |
+| `LLM_API_KEY` | API key for the LLM provider (only required for `default` provider). | `your_llm_api_key` |
 
 ---
 
-## 6. Running the Server
+## 5. Running the Server
+
+The easiest way to run the server is with Docker Compose, which also starts a mock AWX service for testing.
 
 ```bash
-uvicorn app.main:app --host 0.0.0.0 --port 8000
+docker compose up -d
 ```
+
+The server will be available at `http://localhost:8001`.
+
+---
+
+## 6. API Specification
 
 The following endpoints are available:
 
 | Endpoint | Method | Description |
 |----------|--------|-------------|
-| `/mcp` | POST | Main entry point for MCP calls |
-| `/docs` | GET | Swagger UI (auto‑generated by FastAPI) |
-| `/redoc` | GET | ReDoc UI |
+| `/awx/job_templates/{template_id}/launch` | POST | Launches an AWX job template. |
+| `/awx/inventories` | POST | Creates a new inventory in AWX. |
+| `/awx/jobs/{job_id}` | GET | Retrieves the current status of a job. |
+| `/docs` | GET | Swagger UI for interactive API documentation. |
 
 ---
 
-## 7. MCP API Specification
+## 7. Open-WebUI Tool
 
-### 7.1 Generic MCP Request
+This repository includes an `open-webui-tool.py` file that can be imported into Open-WebUI to allow an LLM to use this service.
 
-```json
-{
-  "context_id": "string | null",
-  "platform": "string",
-  "action": "string",
-  "payload": { "object": "any" }
-}
-```
+### Configuration
 
-* `context_id` – If `null` or omitted, the service generates a new UUID and starts a fresh context.
-* `platform` – After the refactor, this must be `"AWX"`.
-* `action` – One of the AWX actions listed below.
-* `payload` – Action‑specific data; must conform to the JSON schema registered in `app/schema/registry.py`.
-
-### 7.2 AWX Actions & Schemas
-
-| Action | JSON Schema | Description |
-|--------|-------------|-------------|
-| `launch_job_template` | `{ "template_id": int, "extra_vars": object | null }` | Launches an AWX job template. `extra_vars` are passed to the job as Ansible variables. |
-| `create_inventory` | `{ "name": string, "variables": object | null }` | Creates a new inventory in AWX. `variables` are stored as host/group variables. |
-| `get_job` | `{ "job_id": int }` | Retrieves the current status of a job (running, failed, successful, etc.). |
+1.  Import the `open-webui-tool.py` file in the Open-WebUI interface.
+2.  In the tool's "Valves" settings, enter a valid JWT for the `jwt_token` field. You can generate one using the `generate_token.py` script.
 
 ---
 
-## 8. Example Requests
+## 8. Testing
 
-Replace `<JWT>` with a valid bearer token.
-
-### 8.1 Launch a Job Template
+Run the automated tests with `pytest`:
 
 ```bash
-curl -X POST http://localhost:8000/mcp \
-  -H "Authorization: Bearer <JWT>" \
-  -H "Content-Type: application/json" \
-  -d '{
-        "context_id": null,
-        "platform": "AWX",
-        "action": "launch_job_template",
-        "payload": {
-          "template_id": 42,
-          "extra_vars": { "env": "prod" }
-        }
-      }'
-```
-
-### 8.2 Create an Inventory
-
-```bash
-curl -X POST http://localhost:8000/mcp \
-  -H "Authorization: Bearer <JWT>" \
-  -H "Content-Type: application/json" \
-  -d '{
-        "context_id": null,
-        "platform": "AWX",
-        "action": "create_inventory",
-        "payload": {
-          "name": "staging",
-          "variables": { "ansible_host": "10.1.1.1" }
-        }
-      }'
-```
-
-### 8.3 Query a Job
-
-```bash
-curl -X POST http://localhost:8000/mcp \
-  -H "Authorization: Bearer <JWT>" \
-  -H "Content-Type: application/json" \
-  -d '{
-        "context_id": null,
-        "platform": "AWX",
-        "action": "get_job",
-        "payload": { "job_id": 123 }
-      }'
-```
-
----
-
-## 9. Error Handling
-
-The service returns standard HTTP status codes:
-
-| Code | Meaning | Example Body |
-|------|---------|--------------|
-| 200 | OK | `{ "context_id": "...", "result": { … } }` |
-| 400 | Bad Request (schema validation failure) | `{ "detail": "template_id must be an integer" }` |
-| 401 | Unauthorized (invalid/missing JWT) | `{ "detail": "Unauthorized" }` |
-| 403 | Forbidden (AWX API error) | `{ "detail": "Forbidden: job template launch not allowed" }` |
-| 500 | Internal Server Error (unexpected) | `{ "detail": "Unexpected error while contacting AWX" }` |
-
-The adapter functions raise `httpx.HTTPStatusError` for non‑2xx responses; these are caught and transformed into a 403 or 500 as appropriate.
-+### 9.1 LLM‑Related Errors
-+If an LLM request fails (e.g., network error, rate limit), the service will return a **502 Bad Gateway** with a message describing the issue. The error is also logged in the audit trail with a `llm_error` flag.
-
-
-
-The service returns standard HTTP status codes:
-
-| Code | Meaning | Example Body |
-|------|---------|--------------|
-| 200 | OK | `{ "context_id": "...", "result": { … } }` |
-| 400 | Bad Request (schema validation failure) | `{ "detail": "template_id must be an integer" }` |
-| 401 | Unauthorized (invalid/missing JWT) | `{ "detail": "Unauthorized" }` |
-| 403 | Forbidden (AWX API error) | `{ "detail": "Forbidden: job template launch not allowed" }` |
-| 500 | Internal Server Error (unexpected) | `{ "detail": "Unexpected error while contacting AWX" }` |
-
-The adapter functions raise `httpx.HTTPStatusError` for non‑2xx responses; these are caught and transformed into a 403 or 500 as appropriate.
-
----
-
-## 10. Audit Logging
-
-Every request and its corresponding response are written to a rotating log file in the directory specified by `AUDIT_LOG_DIR`. Each entry contains:
-
-* Timestamp (ISO 8601 UTC)
-* Client IP and User ID (extracted from JWT)
-* Full request body
-* Full response body
-
-Logs are written in JSON Lines format, making them easy to ingest into ELK/Kibana or any log aggregator.
-
----
-
-## 11. Testing
-
-Run the automated tests with **pytest**:
-
-```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
 pytest
 ```
 
-The tests cover:
-
-* Successful request handling and context creation
-* Schema validation errors
-* Adapter error handling (currently mocked)
-
 ---
 
-## 12. Extending the Adapter
+## 9. Deployment
 
-The AWX adapter (`app/adapters/awx.py`) exposes the following async functions. Add new ones by following the same pattern:
-
-```python
-async def launch_job_template(template_id: int, extra_vars: dict | None = None) -> dict:
-    """Launch an AWX job template and return the JSON payload."""
-
-async def create_inventory(name: str, variables: dict | None = None) -> dict:
-    """Create a new inventory and return the JSON payload."""
-
-async def get_job(job_id: int) -> dict:
-    """Retrieve job status and return the JSON payload."""
+### Docker
+You can run the pre-built image from Docker Hub:
+```bash
+docker run -d -p 8001:8000 \
+  --env-file .env \
+  antuelle78/awx_advanced_tools:latest
 ```
 
-All HTTP calls use `httpx.AsyncClient` with a bearer token header and raise for status.
+### Kubernetes
+Basic Kubernetes manifests are provided in the `k8s` directory. Update the `deployment.yaml` to use the correct image:
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mcp-server
+spec:
+  template:
+    spec:
+      containers:
+        - name: mcp-server
+          image: antuelle78/awx_advanced_tools:latest
+```
 
 ---
 
-## 13. Deployment Checklist
+## 10. Contribution Guidelines
 
-1. Create a `.env` file with all required variables.
-2. Run `pytest` to ensure the service behaves as expected.
-3. Build the Docker image (if desired) and run it.
-4. Expose the `/mcp` endpoint behind your API gateway or directly to the LLM.
-5. Configure your LLM platform to send MCP requests to this endpoint.
+Pull requests are welcome! Please fork the repository and submit a pull request with your changes.
 
 ---
 
-## 14. Contribution Guidelines
+## 11. License
 
-Pull requests are welcome! Please follow these steps:
-
-1. Fork the repository.
-2. Create a feature branch (`git checkout -b feature/xyz`).
-3. Write tests for any new functionality.
-4. Run `pytest` and ensure all tests pass.
-5. Submit a pull request.
-
----
-
-## 15. License
-
-MIT License – see the [LICENSE](LICENSE) file for details.
+MIT License.

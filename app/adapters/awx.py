@@ -30,3 +30,60 @@ async def create_inventory(inventory: InventoryCreate, user: str = Depends(verif
         )
     except httpx.HTTPStatusError as exc:  # pragma: no cover
         raise HTTPException(status_code=exc.response.status_code, detail=str(exc))
+
+@router.get("/job_templates/{template_id}/schedules")
+async def list_schedules(template_id: int, user: str = Depends(verify_token)):
+    try:
+        return await awx_client.list_schedules(template_id)
+    except httpx.HTTPStatusError as exc:  # pragma: no cover
+        raise HTTPException(status_code=exc.response.status_code, detail=str(exc))
+
+@router.patch("/schedules/{schedule_id}")
+async def toggle_schedule(schedule_id: int, enabled: bool, user: str = Depends(verify_token)):
+    try:
+        return await awx_client.toggle_schedule(schedule_id, enabled)
+    except httpx.HTTPStatusError as exc:  # pragma: no cover
+        raise HTTPException(status_code=exc.response.status_code, detail=str(exc))
+
+class ScheduleCreate(BaseModel):
+    name: str
+    rrule: str
+    job_template_id: int
+
+@router.delete("/schedules/{schedule_id}")
+async def delete_schedule(schedule_id: int, user: str = Depends(verify_token)):
+    try:
+        return await awx_client.delete_schedule(schedule_id)
+    except httpx.HTTPStatusError as exc:  # pragma: no cover
+        raise HTTPException(status_code=exc.response.status_code, detail=str(exc))
+
+@router.get("/templates")
+async def list_templates(user: str = Depends(verify_token)):
+    try:
+        return await awx_client.list_templates()
+    except httpx.HTTPStatusError as exc:  # pragma: no cover
+        raise HTTPException(status_code=exc.response.status_code, detail=str(exc))
+
+@router.get("/jobs")
+async def list_jobs(page: int = 1, user: str = Depends(verify_token)):
+    try:
+        return await awx_client.list_jobs(page)
+    except httpx.HTTPStatusError as exc:  # pragma: no cover
+        raise HTTPException(status_code=exc.response.status_code, detail=str(exc))
+
+@router.get("/schedules/{schedule_id}")
+async def get_schedule(schedule_id: int, user: str = Depends(verify_token)):
+    try:
+        return await awx_client.get_schedule(schedule_id)
+    except httpx.HTTPStatusError as exc:  # pragma: no cover
+        raise HTTPException(status_code=exc.response.status_code, detail=str(exc))
+
+async def create_schedule(schedule: ScheduleCreate, user: str = Depends(verify_token)):
+    try:
+        return await awx_client.create_schedule(
+            name=schedule.name,
+            rrule=schedule.rrule,
+            job_template_id=schedule.job_template_id
+        )
+    except httpx.HTTPStatusError as exc:  # pragma: no cover
+        raise HTTPException(status_code=exc.response.status_code, detail=str(exc))

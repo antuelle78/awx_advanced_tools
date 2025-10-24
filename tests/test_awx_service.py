@@ -1,0 +1,56 @@
+import httpx
+import pytest
+from unittest.mock import AsyncMock, patch
+from app.adapters.awx_service import awx_client
+
+# Dummy response helper
+class DummyResponse:
+    def __init__(self, json_data: dict, status_code: int = 200):
+        self._json = json_data
+        self.status_code = status_code
+
+    def json(self):
+        return self._json
+
+    def raise_for_status(self):
+        if self.status_code >= 400:
+            raise httpx.HTTPStatusError("Error", request=None, response=self)
+
+async def dummy_post(url, json=None, headers=None):
+    return DummyResponse({"url": url, "json": json, "headers": headers})
+
+async def dummy_get(url, params=None, headers=None):
+    return DummyResponse({"url": url, "params": params, "headers": headers})
+
+async def dummy_patch(url, json=None, headers=None):
+    return DummyResponse({"method": "PATCH", "url": url, "json": json, "headers": headers})
+
+async def dummy_delete(url, headers=None):
+    return DummyResponse({"method": "DELETE", "url": url, "headers": headers})
+
+@pytest.fixture
+def mock_httpx():
+    with patch("httpx.AsyncClient") as MockClient:
+        mock_instance = MockClient.return_value
+        mock_instance.__aenter__.return_value = mock_instance
+        mock_instance.__aexit__.return_value = None
+        mock_instance.post = AsyncMock(side_effect=dummy_post)
+        mock_instance.get = AsyncMock(side_effect=dummy_get)
+        mock_instance.patch = AsyncMock(side_effect=dummy_patch)
+        mock_instance.delete = AsyncMock(side_effect=dummy_delete)
+        yield MockClient
+
+@pytest.mark.asyncio
+async def test_launch_job_template(mock_httpx):
+    result = await awx_client.launch_job_template(10, {"var": "value"})
+    assert result["url"].endswith("/job_templates/10/launch/")
+
+@pytest.mark.asyncio
+async def test_create_inventory(mock_httpx):
+    result = await awx_client.create_inventory("test_inv", {"var": "val"})
+    assert result["json"]["name"] == "test_inv"
+
+@pytest.mark.asyncio
+async def test_list_templates(mock_httpx):
+    result = await awx_client.list_templates()
+    assert result["url"].endswith("/job_templates/")

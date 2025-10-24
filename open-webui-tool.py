@@ -95,4 +95,81 @@ class Tools:
         except Exception as e:
             return json.dumps({"error": str(e)})
 
+    def list_schedules(self, template_id: int) -> str:
+        """
+        Lists all schedules associated with a specific job template.
+
+        :param template_id: The ID of the job template to query.
+        :return: A JSON string containing a list of schedules and their details.
+        """
+        url = f"{self.mcp_server_url}/awx/job_templates/{template_id}/schedules"
+        try:
+            response = self.client.get(url, headers=self._get_headers())
+            response.raise_for_status()
+            return json.dumps(response.json())
+        except httpx.HTTPStatusError as e:
+            return json.dumps({"error": f"HTTP error occurred: {e.response.status_code}", "detail": e.response.text})
+        except Exception as e:
+            return json.dumps({"error": str(e)})
+
+    def toggle_schedule(self, schedule_id: int, enabled: bool) -> str:
+        """
+        Enables or disables a specific job schedule.
+
+        :param schedule_id: The ID of the schedule to modify. Use list_schedules to find this ID.
+        :param enabled: Set to true to enable the schedule, or false to disable it.
+        :return: A JSON string with the updated schedule details.
+        """
+        url = f"{self.mcp_server_url}/awx/schedules/{schedule_id}"
+        params = {"enabled": enabled}
+        try:
+            response = self.client.patch(url, headers=self._get_headers(), params=params)
+            response.raise_for_status()
+            return json.dumps(response.json())
+        except httpx.HTTPStatusError as e:
+            return json.dumps({"error": f"HTTP error occurred: {e.response.status_code}", "detail": e.response.text})
+        except Exception as e:
+            return json.dumps({"error": str(e)})
+
+    def delete_schedule(self, schedule_id: int) -> str:
+        """
+        Permanently deletes a job schedule.
+
+        :param schedule_id: The ID of the schedule to delete.
+        :return: A confirmation message indicating success or failure.
+        """
+        url = f"{self.mcp_server_url}/awx/schedules/{schedule_id}"
+        try:
+            response = self.client.delete(url, headers=self._get_headers())
+            response.raise_for_status()
+            return json.dumps(response.json())
+        except httpx.HTTPStatusError as e:
+            return json.dumps({"error": f"HTTP error occurred: {e.response.status_code}", "detail": e.response.text})
+        except Exception as e:
+            return json.dumps({"error": str(e)})
+
+    def create_schedule(self, name: str, rrule: str, job_template_id: int) -> str:
+        """
+        Creates a new schedule for a job template.
+
+        :param name: The name of the schedule.
+        :param rrule: The recurrence rule for the schedule (e.g., 'DTSTART:20251024T120000Z RRULE:FREQ=DAILY;INTERVAL=1').
+        :param job_template_id: The ID of the job template to schedule.
+        :return: A JSON string with the details of the newly created schedule.
+        """
+        url = f"{self.mcp_server_url}/awx/schedules/"
+        payload = {
+            "name": name,
+            "rrule": rrule,
+            "job_template_id": job_template_id
+        }
+        try:
+            response = self.client.post(url, headers=self._get_headers(), json=payload)
+            response.raise_for_status()
+            return json.dumps(response.json())
+        except httpx.HTTPStatusError as e:
+            return json.dumps({"error": f"HTTP error occurred: {e.response.status_code}", "detail": e.response.text})
+        except Exception as e:
+            return json.dumps({"error": str(e)})
+
 tools = Tools()

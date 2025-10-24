@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
       - name: awx-advanced-tools
-        image: ghcr.io/your-org/awx-advanced-tools:latest
+        image: antuelle78/awx_advanced_tools:latest
         ports:
         - containerPort: 8000
         envFrom:
