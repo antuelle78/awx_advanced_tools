@@ -157,14 +157,80 @@ class Tools:
         :param job_template_id: The ID of the job template to schedule.
         :return: A JSON string with the details of the newly created schedule.
         """
-        url = f"{self.mcp_server_url}/awx/schedules/"
+        url = f"{self.mcp_server_url}/awx/job_templates/{job_template_id}/schedules"
         payload = {
             "name": name,
-            "rrule": rrule,
-            "job_template_id": job_template_id
+            "rrule": rrule
         }
         try:
             response = self.client.post(url, headers=self._get_headers(), json=payload)
+            response.raise_for_status()
+            return json.dumps(response.json())
+        except httpx.HTTPStatusError as e:
+            return json.dumps({"error": f"HTTP error occurred: {e.response.status_code}", "detail": e.response.text})
+        except Exception as e:
+            return json.dumps({"error": str(e)})
+
+    def list_inventories(self) -> str:
+        """
+        Lists all inventories in AWX.
+
+        :return: A JSON string containing a list of inventories and their details.
+        """
+        url = f"{self.mcp_server_url}/awx/inventories"
+        try:
+            response = self.client.get(url, headers=self._get_headers())
+            response.raise_for_status()
+            return json.dumps(response.json())
+        except httpx.HTTPStatusError as e:
+            return json.dumps({"error": f"HTTP error occurred: {e.response.status_code}", "detail": e.response.text})
+        except Exception as e:
+            return json.dumps({"error": str(e)})
+
+    def get_inventory(self, inventory_id: int) -> str:
+        """
+        Retrieves the details of a specific inventory.
+
+        :param inventory_id: The ID of the inventory to retrieve.
+        :return: A JSON string containing the details of the inventory.
+        """
+        url = f"{self.mcp_server_url}/awx/inventories/{inventory_id}"
+        try:
+            response = self.client.get(url, headers=self._get_headers())
+            response.raise_for_status()
+            return json.dumps(response.json())
+        except httpx.HTTPStatusError as e:
+            return json.dumps({"error": f"HTTP error occurred: {e.response.status_code}", "detail": e.response.text})
+        except Exception as e:
+            return json.dumps({"error": str(e)})
+
+    def delete_inventory(self, inventory_id: int) -> str:
+        """
+        Permanently deletes an inventory.
+
+        :param inventory_id: The ID of the inventory to delete.
+        :return: A confirmation message indicating success or failure.
+        """
+        url = f"{self.mcp_server_url}/awx/inventories/{inventory_id}"
+        try:
+            response = self.client.delete(url, headers=self._get_headers())
+            response.raise_for_status()
+            return json.dumps(response.json())
+        except httpx.HTTPStatusError as e:
+            return json.dumps({"error": f"HTTP error occurred: {e.response.status_code}", "detail": e.response.text})
+        except Exception as e:
+            return json.dumps({"error": str(e)})
+
+    def sync_inventory(self, inventory_id: int) -> str:
+        """
+        Triggers a sync of an inventory.
+
+        :param inventory_id: The ID of the inventory to sync.
+        :return: A JSON string with the details of the sync job.
+        """
+        url = f"{self.mcp_server_url}/awx/inventories/{inventory_id}/sync"
+        try:
+            response = self.client.post(url, headers=self._get_headers())
             response.raise_for_status()
             return json.dumps(response.json())
         except httpx.HTTPStatusError as e:

@@ -31,6 +31,35 @@ async def create_inventory(inventory: InventoryCreate, user: str = Depends(verif
     except httpx.HTTPStatusError as exc:  # pragma: no cover
         raise HTTPException(status_code=exc.response.status_code, detail=str(exc))
 
+@router.get("/inventories")
+async def list_inventories(user: str = Depends(verify_token)):
+    try:
+        return await awx_client.list_inventories()
+    except httpx.HTTPStatusError as exc:  # pragma: no cover
+        raise HTTPException(status_code=exc.response.status_code, detail=str(exc))
+
+@router.get("/inventories/{inventory_id}")
+async def get_inventory(inventory_id: int, user: str = Depends(verify_token)):
+    try:
+        return await awx_client.get_inventory(inventory_id)
+    except httpx.HTTPStatusError as exc:  # pragma: no cover
+        raise HTTPException(status_code=exc.response.status_code, detail=str(exc))
+
+@router.delete("/inventories/{inventory_id}")
+async def delete_inventory(inventory_id: int, user: str = Depends(verify_token)):
+    try:
+        return await awx_client.delete_inventory(inventory_id)
+    except httpx.HTTPStatusError as exc:  # pragma: no cover
+        raise HTTPException(status_code=exc.response.status_code, detail=str(exc))
+
+@router.post("/inventories/{inventory_id}/sync")
+async def sync_inventory(inventory_id: int, user: str = Depends(verify_token)):
+    try:
+        return await awx_client.sync_inventory(inventory_id)
+    except httpx.HTTPStatusError as exc:  # pragma: no cover
+        raise HTTPException(status_code=exc.response.status_code, detail=str(exc))
+
+
 @router.get("/job_templates/{template_id}/schedules")
 async def list_schedules(template_id: int, user: str = Depends(verify_token)):
     try:
