@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  mcp-server:
+    build: .
+    ports:
+      - "8001:8000"
+    env_file:
+      - .env
+    environment:
+      - AWX_BASE_URL=http://mock-awx:8055
+    volumes:
+      - ./logs:/var/log/mcp
+    depends_on:
+      - redis
+      - mock-awx
+
+  redis:
+    image: "redis:alpine"
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  mock-awx:
+    build:
+      context: ./mock_awx
+    ports:
+      - "8055:8055"

@@ -1,0 +1,43 @@
+# Kubernetes deployment and service
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: awx-advanced-tools
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: awx-advanced-tools
+  template:
+    metadata:
+      labels:
+        app: awx-advanced-tools
+    spec:
+      containers:
+      - name: awx-advanced-tools
+        image: ghcr.io/your-org/awx-advanced-tools:latest
+        ports:
+        - containerPort: 8000
+        envFrom:
+        - configMapRef:
+            name: awx-advanced-tools-config
+        volumeMounts:
+        - name: audit-logs
+          mountPath: /var/log/audit
+      volumes:
+      - name: audit-logs
+        persistentVolumeClaim:
+          claimName: audit-logs-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: awx-advanced-tools
+spec:
+  selector:
+    app: awx-advanced-tools
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8000
+  type: ClusterIP

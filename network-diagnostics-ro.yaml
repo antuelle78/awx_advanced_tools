@@ -1,0 +1,340 @@
+# Network Diagnostics Toolkit
+mcp:
+  description: |
+    Network Diagnostics Toolkit providing a comprehensive set of tools for troubleshooting network connectivity, examining routing configurations, performing DNS lookups, checking port availability, and analyzing network interfaces with cross-platform support.
+  run: shell: bash
+  tools:
+    - name: "single_ping"
+      description: "Send a single ping packet to test basic network connectivity"
+      params:
+        hostname:
+          type: string
+          description: "The hostname or IP address to ping"
+          required: true
+          constraints:
+            - "hostname.size() > 0 && hostname.size() <= 253" # Standard DNS name length limits
+            - "hostname.matches('^[a-zA-Z0-9._-]+$')" # Valid hostname characters
+            - "!hostname.contains(';')" # Prevent command injection
+      run:
+        timeout: "30s"
+        command: |
+          echo "Sending a single ping packet to {{ .hostname }}..."
+          if [ "$(uname)" = "Darwin" ] || [ "$(uname)" = "Linux" ]; then
+            # macOS and Linux ping
+            ping -c 1 -W 2 "{{ .hostname }}"
+          else
+            # Windows format ping
+            ping -n 1 -w 2000 "{{ .hostname }}"
+          fi
+      output:
+        prefix: "Quick connectivity test to {{ .hostname }}:"
+    - name: "network_interfaces"
+      description: "List all network interfaces and their configuration"
+      params:
+        filter:
+          type: string
+          description: "Optional filter to narrow down results (e.g., 'eth', 'wlan')"
+      constraints:
+        - "filter == '' || filter.size() < 20" # Reasonable filter length
+        - "!filter.contains(';')" # Prevent command injection
+        - "!filter.matches('.*[&>|<`$].*')" # Block shell special characters
+      run:
+        timeout: "30s"
+        command: |
+          # Detect OS and use appropriate command
+          if [ "$(uname)" = "Darwin" ]; then
+            # macOS
+            if [ -n "{{ .filter }}" ]; then
+              ifconfig | grep -A 5 -i "{{ .filter }}"
+            else
+              ifconfig
+            fi
+          elif [ "$(uname)" = "Linux" ]; then
+            # Linux
+            if [ -n "{{ .filter }}" ]; then
+              ip addr show | grep -A 6 -E "{{ .filter }}"
+            else
+              ip addr show
+            fi
+          else
+            # Windows or other (assuming PowerShell availability through WSL or similar)
+            echo "Network interfaces information:"
+            ipconfig
+          fi
+      output:
+        prefix: "Network interfaces:"
+    - name: "ip_address"
+      description: "Show public and private IP address information"
+      params:
+        interface:
+          type: string
+          description: "Optional network interface name (e.g., 'eth0', 'en0')"
+      constraints:
+        - "interface == '' || interface.size() < 20" # Reasonable interface name length
+        - "!interface.contains(';')" # Prevent command injection
+        - "!interface.matches('.*[&>|<`$].*')" # Block shell special characters
+        - "interface.matches('^[a-zA-Z0-9_:.-]*$')" # Limit to alphanumeric and common interface chars
+      run:
+        timeout: "30s"
+        command: |
+          echo "Private IP addresses:"
+          if [ "$(uname)" = "Darwin" ]; then
+            # macOS
+            if [ -n "{{ .interface }}" ]; then
+              ifconfig "{{ .interface }}" | grep "inet " | awk '{print $2}'
+            else
+              ifconfig | grep "inet " | grep -v 127.0.0.1 | awk '{print $2}'
+            fi
+          elif [ "$(uname)" = "Linux" ]; then
+            # Linux
+            if [ -n "{{ .interface }}" ]; then
+              ip addr show "{{ .interface }}" | grep "inet " | awk '{print $2}'
+            else
+              ip addr show | grep "inet " | grep -v 127.0.0.1 | awk '{print $2}'
+            fi
+          else
+            # Windows fallback
+            ipconfig | grep -i "IPv4"
+          fi
+          echo -e "\nPublic IP address:"
+          curl -s https://api.ipify.org || curl -s https://ifconfig.me
+      output:
+        prefix: "IP address information:"
+    - name: "routing_table"
+      description: "Display the network routing table"
+      constraints:
+        - "true" # No user input to validate, command is fixed
+      run:
+        timeout: "30s"
+        command: |
+          if [ "$(uname)" = "Darwin" ]; then
+            # macOS
+            netstat -nr
+          elif [ "$(uname)" = "Linux" ]; then
+            # Linux
+            ip route
+          else
+            # Windows fallback
+            route print
+          fi
+      output:
+        prefix: "Routing table:"
+    - name: "dns_lookup"
+      description: "Perform DNS resolution for a hostname"
+      params:
+        hostname:
+          type: string
+          description: "The hostname to resolve (e.g., 'example.com')"
+          required: true
+        record_type:
+          type: string
+          description: "Optional record type (e.g., 'A', 'AAAA', 'MX', 'TXT')"
+      constraints:
+        - "hostname.size() > 0 && hostname.size() <= 253" # Standard DNS name length limits
+        - "hostname.matches('^[a-zA-Z0-9._-]+$')" # Valid hostname characters
+        - "!hostname.contains(';')" # Prevent command injection
+        - "record_type == '' || ['A', 'AAAA', 'MX', 'CNAME', 'TXT', 'NS', 'SOA', 'SRV', 'PTR'].exists(t, t == record_type)" # Valid record types
+      run:
+        timeout: "30s"
+        command: |
+          if [ -n "{{ .record_type }}" ]; then
+            dig "{{ .hostname }}" {{ .record_type }} +short || nslookup -type={{ .record_type }} "{{ .hostname }}"
+          else
+            dig "{{ .hostname }}" +short || nslookup "{{ .hostname }}"
+          fi
+      output:
+        prefix: "DNS resolution for {{ .hostname }}{{ if .record_type }} ({{ .record_type }}){{ end }}:"
+    - name: "traceroute"
+      description: "Trace the network route to a host"
+      params:
+        hostname:
+          type: string
+          description: "The hostname or IP address to trace"
+          required: true
+        max_hops:
+          type: number
+          description: "Maximum number of hops (default: 30)"
+      constraints:
+        - "hostname.size() > 0 && hostname.size() <= 253" # Standard DNS name length limits
+        - "hostname.matches('^[a-zA-Z0-9._-]+$')" # Valid hostname characters
+        - "!hostname.contains(';')" # Prevent command injection
+        - "int(max_hops) == 0 || (int(max_hops) >= 1 && int(max_hops) <= 30)" # Reasonable max hops
+      run:
+        timeout: "30s"
+        command: |
+          MAX_HOPS=30
+          if [ {{ .max_hops }} -gt 0 ]; then
+            MAX_HOPS={{ .max_hops }}
+          fi
+          if [ "$(uname)" = "Darwin" ]; then
+            # macOS
+            traceroute -m $MAX_HOPS "{{ .hostname }}"
+          elif [ "$(uname)" = "Linux" ]; then
+            # Linux
+            traceroute -m $MAX_HOPS "{{ .hostname }}"
+          else
+            # Windows
+            tracert -h $MAX_HOPS "{{ .hostname }}"
+          fi
+      output:
+        prefix: "Traceroute to {{ .hostname }}:"
+    - name: "portscan"
+      description: "Scan TCP ports on a host or IP range. Supports single ports, port ranges, and IP ranges. Uses nmap if available, falls back to netcat."
+      params:
+        target:
+          type: string
+          description: "Hostname, IP address, or IP range (e.g., 'example.com', '192.168.1.1', '192.168.1.0/24', '10.0.0.1-10')"
+          required: true
+        ports:
+          type: string
+          description: "Port specification: single port '80', range '80-443', or comma-separated '22,80,443'"
+          required: true
+        scan_type:
+          type: string
+          description: "Scan type: 'quick' (SYN scan, fast) or 'connect' (TCP connect, more compatible). Default: 'connect'"
+      constraints:
+        # Target validation - allow hostnames, IPs, CIDR, and IP ranges
+        - "target.size() > 0 && target.size() <= 253"
+        - "target.matches('^[a-zA-Z0-9./_-]+$')"
+        - "!target.contains(';')"
+        - "!target.contains('&')"
+        - "!target.contains('|')"
+        - "!target.contains('`')"
+        - "!target.contains('$')"
+        # Port validation - allow single port, ranges, or comma-separated
+        - "ports.size() > 0 && ports.size() <= 100" # Reasonable port spec length
+        - "ports.matches('^[0-9,-]+$')" # Only digits, commas, and hyphens
+        - "!ports.contains('--')" # Prevent malformed ranges
+        - "!ports.startsWith('-') && !ports.endsWith('-')" # No leading/trailing hyphens
+        # Scan type validation
+        - "scan_type == '' || scan_type == 'quick' || scan_type == 'connect'"
+      run:
+        timeout: "120s"
+        runner: sandbox-exec
+        command: |
+          TARGET="{{ .target }}"
+          PORTS="{{ .ports }}"
+          SCAN_TYPE="{{ .scan_type }}"
+          if [ -z "$SCAN_TYPE" ]; then
+            SCAN_TYPE="connect"
+          fi
+          echo "Scanning ports $PORTS on $TARGET (scan type: $SCAN_TYPE)..."
+          echo ""
+          if command -v nmap &>/dev/null; then
+            echo "Using nmap for port scanning..."
+            if [ "$SCAN_TYPE" = "quick" ]; then
+              # SYN scan (requires root on most systems, will fall back to connect if not root)
+              sudo -n nmap -sS -p "$PORTS" --open -T4 --max-retries 2 "$TARGET" 2>/dev/null || \
+              nmap -sT -p "$PORTS" --open -T4 --max-retries 2 "$TARGET"
+            else
+              nmap -sT -p "$PORTS" --open -T4 --max-retries 2 "$TARGET"
+            fi
+          else
+            echo "nmap not found, using netcat for basic port scanning..."
+            echo "Note: This method only supports single hosts, not IP ranges"
+            echo ""
+            if echo "$PORTS" | grep -q '-'; then
+              START_PORT=$(echo "$PORTS" | cut -d'-' -f1)
+              END_PORT=$(echo "$PORTS" | cut -d'-' -f2)
+              echo "Scanning ports $START_PORT to $END_PORT on $TARGET..."
+              for port in $(seq "$START_PORT" "$END_PORT"); do
+                if [ "$(uname)" = "Darwin" ]; then
+                  nc -zv -G 2 "$TARGET" "$port" 2>/dev/null | grep -q "succeeded\|open" && echo "Port $port: OPEN"
+                else
+                  timeout 2 nc -zv "$TARGET" "$port" 2>/dev/null | grep -q "succeeded\|open" && echo "Port $port: OPEN"
+                fi
+              done
+            elif echo "$PORTS" | grep -q ','; then
+              echo "Scanning specified ports on $TARGET..."
+              IFS=',' read -ra PORT_ARRAY <<< "$PORTS"
+              for port in "${PORT_ARRAY[@]}"; do
+                if [ "$(uname)" = "Darwin" ]; then
+                  nc -zv -G 2 "$TARGET" "$port" 2>/dev/null | grep -q "succeeded\|open" && echo "Port $port: OPEN"
+                else
+                  timeout 2 nc -zv "$TARGET" "$port" 2>/dev/null | grep -q "succeeded\|open" && echo "Port $port: OPEN"
+                fi
+              done
+            else
+              echo "Scanning port $PORTS on $TARGET..."
+              if [ "$(uname)" = "Darwin" ]; then
+                nc -zv -G 2 "$TARGET" "$PORTS" 2>/dev/null || echo "Port $PORTS: closed or filtered"
+              else
+                timeout 2 nc -zv "$TARGET" "$PORTS" 2>/dev/null || echo "Port $PORTS: closed or filtered"
+              fi
+            fi
+            echo "\nScan complete. Note: Install 'nmap' for more comprehensive scanning capabilities."
+          fi
+      output:
+        prefix: "Port scan results for {{ .target }}:"
+    - name: "netstat_connections"
+      description: "Show active network connections"
+      params:
+        filter:
+          type: string
+          description: "Optional filter string (e.g., 'ESTABLISHED', '80', 'tcp')"
+      constraints:
+        - "filter == '' || filter.size() < 20" # Reasonable filter length
+        - "!filter.contains(';')" # Prevent command injection
+        - "!filter.matches('.*[&>|<`$].*')" # Block shell special characters
+      run:
+        timeout: "30s"
+        command: |
+          if [ "$(uname)" = "Darwin" ]; then
+            # macOS
+            if [ -n "{{ .filter }}" ]; then
+              netstat -an | grep -i "{{ .filter }}"
+            else
+              netstat -an
+            fi
+          elif [ "$(uname)" = "Linux" ]; then
+            # Linux
+            if [ -n "{{ .filter }}" ]; then
+              ss -tuln | grep -i "{{ .filter }}"
+            else
+              ss -tuln
+            fi
+          else
+            # Windows fallback
+            netstat -an | grep -i "{{ .filter }}"
+          fi
+      output:
+        prefix: "Active network connections{{ if .filter }} (filtered by: {{ .filter }}){{ end }}:"
+    - name: "dns_config"
+      description: "Show DNS resolver configuration"
+      run:
+        timeout: "30s"
+        command: |
+          echo "DNS Servers:"
+          if [ "$(uname)" = "Darwin" ]; then
+            # macOS
+            scutil --dns | grep "nameserver[\[0-9\]]" | sort -u
+          elif [ "$(uname)" = "Linux" ]; then
+            # Linux
+            cat /etc/resolv.conf | grep "nameserver" | sort -u
+          else
+            # Windows fallback
+            ipconfig /all | grep -i "DNS Servers" -A 5
+          fi
+      output:
+        prefix: "DNS configuration:"
+    - name: "network_bandwidth"
+      description: "Run a simple network bandwidth test"
+      params:
+        size:
+          type: number
+          description: "Size of the test in MB (1-10)"
+      constraints:
+        - "int(size) == 0 || (int(size) >= 1 && int(size) <= 10)" # Reasonable test size with integers
+      run:
+        timeout: "30s"
+        command: |
+          TEST_SIZE=1
+          if [ {{ .size }} -ge 1 ]; then
+            TEST_SIZE={{ .size }}
+          fi
+          echo "Running ${TEST_SIZE}MB download speed test..."
+          time curl -s -o /dev/null https://speed.cloudflare.com/__down?bytes=$((TEST_SIZE * 1024 * 1024))
+          echo -e "\nRunning latency test to cloudflare.com..."
+          ping -c 3 cloudflare.com
+      output:
+        prefix: "Network bandwidth test results:"

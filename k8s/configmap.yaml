@@ -1,0 +1,11 @@
+# ConfigMap for environment variables
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: awx-advanced-tools-config
+data:
+  AWX_BASE_URL: "https://awx.example.com/api/v2"
+  AWX_TOKEN: "YOUR_AWX_TOKEN"
+  LLM_ENDPOINT: "http://llm-service:8000"
+  JWT_SECRET: "supersecret"
+  AUDIT_LOG_DIR: "/var/log/audit"
