@@ -97,11 +97,15 @@ class AWXClient:
 
     async def create_schedule(self, name: str, rrule: str, job_template_id: int) -> dict:
         """Create a new schedule for a job template."""
-
-        # removed duplicate create_schedule payload
-
-
-        # removed duplicate create_schedule payload
+        url = f"{self.base_url}/api/v2/job_templates/{job_template_id}/schedules/"
+        payload = {
+            "name": name,
+            "rrule": rrule,
+        }
+        async with httpx.AsyncClient() as client:
+            resp = await client.post(url, json=payload, headers=self.headers)
+            resp.raise_for_status()
+            return resp.json()
 
     # NEW INVENTORY METHODS START
     async def list_inventories(self) -> dict:

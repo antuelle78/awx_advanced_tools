@@ -58,6 +58,7 @@ Client (e.g., Open-WebUI) → REST API (with Bearer token) → AWX Advanced Tool
 |-----------|-----------------|
 | Python    | 3.10+ |
 | Docker    | 20.10+ |
+| Redis     | 5.0+   |
 
 ### 3.2 Clone the Repository
 
@@ -88,6 +89,9 @@ All settings are read from environment variables. Create a `.env` file in the pr
 | `LLM_ENDPOINT` | The endpoint of the LLM provider. | `http://host.docker.internal:11434` |
 | `LLM_MODEL` | The name of the LLM model to use. | `gemma3` |
 | `LLM_API_KEY` | API key for the LLM provider (only required for `default` provider). | `your_llm_api_key` |
+| `REDIS_HOST` | The hostname of the Redis server. | `redis` |
+| `REDIS_PORT` | The port of the Redis server. | `6379` |
+| `REDIS_DB` | The Redis database to use. | `0` |
 
 ---
 
