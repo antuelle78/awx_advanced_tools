@@ -19,6 +19,7 @@
 11. [License](#license)
 ---
 
+<a id="project-overview"></a>
 ## 1. Project Overview
 
 This repository contains a FastAPI application that serves as a bridge between an LLM and Ansible AWX. It allows an LLM to perform actions in AWX by calling a simple, secure REST API.
@@ -34,6 +35,7 @@ This repository contains a FastAPI application that serves as a bridge between a
 
 ---
 
+<a id="architecture--design"></a>
 ## 2. Architecture & Design
 
 The service exposes a standard REST API. An external tool, such as Open-WebUI, makes authenticated requests to this service, which then translates them into the appropriate calls to the AWX API.
@@ -50,6 +52,7 @@ Client (e.g., Open-WebUI) → REST API (with Bearer token) → AWX Advanced Tool
 
 ---
 
+<a id="installation--setup"></a>
 ## 3. Installation & Setup
 
 ### 3.1 Prerequisites
@@ -76,6 +79,7 @@ docker pull antuelle78/awx_advanced_tools:latest
 
 ---
 
+<a id="configuration"></a>
 ## 4. Configuration
 
 All settings are read from environment variables. Create a `.env` file in the project root or set the variables in your deployment environment.
@@ -95,6 +99,7 @@ All settings are read from environment variables. Create a `.env` file in the pr
 
 ---
 
+<a id="running-the-server"></a>
 ## 5. Running the Server
 
 The easiest way to run the server is with Docker Compose, which also starts a mock AWX service for testing.
@@ -107,6 +112,7 @@ The server will be available at `http://localhost:8001`.
 
 ---
 
+<a id="api-specification"></a>
 ## 6. API Specification
 
 The following endpoints are available:
@@ -131,6 +137,7 @@ The following endpoints are available:
 
 ---
 
+<a id="open-webui-tool"></a>
 ## 7. Open-WebUI Tool
 
 This repository includes an `open-webui-tool.py` file that can be imported into Open-WebUI to allow an LLM to use this service.
@@ -142,6 +149,7 @@ This repository includes an `open-webui-tool.py` file that can be imported into 
 
 ---
 
+<a id="testing"></a>
 ## 8. Testing
 
 Run the automated tests with `pytest`:
@@ -155,6 +163,7 @@ pytest
 
 ---
 
+<a id="deployment"></a>
 ## 9. Deployment
 
 ### Docker
@@ -186,12 +195,14 @@ The project includes a GitHub Actions workflow for automated CI/CD. On pushes to
 
 ---
 
+<a id="contribution-guidelines"></a>
 ## 10. Contribution Guidelines
 
 Pull requests are welcome! Please fork the repository and submit a pull request with your changes.
 
 ---
 
+<a id="license"></a>
 ## 11. License
 
 MIT License.
