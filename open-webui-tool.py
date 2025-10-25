@@ -41,13 +41,12 @@ class Tools:
         :return: A JSON string containing the details of the newly created job, including its 'id'. This 'id' should be used with the 'get_job' tool to check the job's status.
         """
         url = f"{self.mcp_server_url}/awx/job_templates/{template_id}/launch"
-        params = {}
+        payload = {}
         if extra_vars:
-            # FastAPI reads simple dicts from query params for POST if not part of a larger body
-            params['extra_vars'] = json.dumps(extra_vars)
+            payload['extra_vars'] = extra_vars
 
         try:
-            response = self.client.post(url, headers=self._get_headers(), params=params)
+            response = self.client.post(url, headers=self._get_headers(), json=payload)
             response.raise_for_status()
             return json.dumps(response.json())
         except httpx.HTTPStatusError as e:
@@ -55,17 +54,17 @@ class Tools:
         except Exception as e:
             return json.dumps({"error": str(e)})
 
-    def create_inventory(self, name: str, organization_id: int, variables: dict = None) -> str:
+    def create_inventory(self, name: str, organization: int, variables: dict = None) -> str:
         """
         Creates a new inventory in AWX.
 
         :param name: The name of the inventory.
-        :param organization_id: The ID of the organization for the inventory.
+        :param organization: The ID of the organization for the inventory.
         :param variables: A dictionary of variables for the inventory.
         :return: The result of the create inventory action.
         """
         url = f"{self.mcp_server_url}/awx/inventories"
-        payload = {"name": name, "organization": organization_id}
+        payload = {"name": name, "organization": organization}
         if variables:
             payload["variables"] = variables
 
@@ -121,9 +120,9 @@ class Tools:
         :return: A JSON string with the updated schedule details.
         """
         url = f"{self.mcp_server_url}/awx/schedules/{schedule_id}"
-        params = {"enabled": enabled}
+        payload = {"enabled": enabled}
         try:
-            response = self.client.patch(url, headers=self._get_headers(), params=params)
+            response = self.client.patch(url, headers=self._get_headers(), json=payload)
             response.raise_for_status()
             return json.dumps(response.json())
         except httpx.HTTPStatusError as e:

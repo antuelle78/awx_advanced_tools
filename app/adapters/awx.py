@@ -107,12 +107,13 @@ async def get_schedule(schedule_id: int, user: str = Depends(verify_token)):
     except httpx.HTTPStatusError as exc:  # pragma: no cover
         raise HTTPException(status_code=exc.response.status_code, detail=str(exc))
 
-async def create_schedule(schedule: ScheduleCreate, user: str = Depends(verify_token)):
+@router.post("/job_templates/{template_id}/schedules")
+async def create_schedule(template_id: int, schedule: ScheduleCreate, user: str = Depends(verify_token)):
     try:
         return await awx_client.create_schedule(
             name=schedule.name,
             rrule=schedule.rrule,
-            job_template_id=schedule.job_template_id
+            job_template_id=template_id
         )
     except httpx.HTTPStatusError as exc:  # pragma: no cover
         raise HTTPException(status_code=exc.response.status_code, detail=str(exc))
