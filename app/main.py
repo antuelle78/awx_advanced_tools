@@ -1,11 +1,11 @@
 # main entrypoint
-# Added comment to trigger CI/CD test
 from fastapi import FastAPI
-
-app = FastAPI(title="AWX Advanced Tools", description="Orchestration gateway", version="1.0.0")
-
 from app.adapters.awx import router as awx_router
 from app.adapters.auth import router as auth_router
+from app.adapters.awx_service import awx_client
+import logging, json
+
+app = FastAPI(title="AWX Advanced Tools", description="Orchestration gateway", version="1.0.0")
 
 app.include_router(awx_router)
 app.include_router(auth_router)
@@ -13,11 +13,6 @@ app.include_router(auth_router)
 @app.get("/")
 async def root_health_check():
     return {"status": "running"}
-
-
-from app.adapters.awx_service import awx_client
-# Structured logging setup
-import logging, json
 
 # Configure root logger to emit JSON
 class JsonFormatter(logging.Formatter):
