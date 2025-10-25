@@ -240,7 +240,7 @@ The following endpoints are available:
 <a id="open-webui-tool"></a>
 ## 7. Open-WebUI Tool
 
-This repository includes an `open-webui-tool.py` file that can be imported into Open-WebUI to allow an LLM to use this service.
+This repository includes an `open-webui-tool.py` file that can be imported into Open-WebUI to allow an LLM to use this service. Additionally, extended prompts for AWX tools are provided in the `prompts/` folder to enhance LLM context.
 
 ### Configuration
 

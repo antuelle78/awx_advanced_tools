@@ -7,8 +7,8 @@ Below is a minimal but production‑grade deployment configuration using **Docke
 
 version: "3.9"
 services:
-  awx-advanced-tools:
-    image: ghcr.io/sst/opencode:latest
+   awx-advanced-tools:
+     image: ghcr.io/antuelle78/awx_advanced_tools:latest
     container_name: awx-advanced-tools
     restart: unless-stopped
     env_file: .env
