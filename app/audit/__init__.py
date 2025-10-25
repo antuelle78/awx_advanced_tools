@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 
+
 class AuditLogEntry(BaseModel):
     user: str
     action: str

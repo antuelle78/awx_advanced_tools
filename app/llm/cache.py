@@ -7,7 +7,6 @@ Redis client (e.g. `aioredis`).  The rest of the code only imports
 
 from __future__ import annotations
 
-import json
 from typing import Any, Dict
 
 # In‑memory cache for demo purposes

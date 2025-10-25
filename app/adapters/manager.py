@@ -9,7 +9,6 @@ from .sn import router as sn_router
 from .llm import router as llm_router
 from .audit import router as audit_router
 from .context import router as context_router
-from .auth import router as auth_router
 
 # Registry mapping names to routers
 ADAPTER_REGISTRY: Dict[str, APIRouter] = {
@@ -19,10 +18,10 @@ ADAPTER_REGISTRY: Dict[str, APIRouter] = {
     "llm": llm_router,
     "audit": audit_router,
     "context": context_router,
-    "auth": auth_router,
 }
 
 # Helper to get router by name
+
 
 def get_adapter(name: str) -> APIRouter:
     """Return the FastAPI router for the requested adapter.

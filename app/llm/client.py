@@ -46,12 +46,15 @@ class OpenAIClient(BaseLLMClient):
         self.model = settings.llm_model
         self.api_key = settings.llm_api_key
         if not self.api_key:  # pragma: no cover
-            raise ValueError("LLM_API_KEY environment variable is required for the default provider")
+            raise ValueError(
+                "LLM_API_KEY environment variable is required for the default provider"
+            )
         self.max_tokens = int(os.getenv("LLM_MAX_TOKENS", "1500"))
         self.temperature = float(os.getenv("LLM_TEMPERATURE", "0.2"))
 
         self.openai.api_key = self.api_key
-        self.openai.api_base = self.endpoint.split("/v1/")[0]  # strip path
+        if self.endpoint:
+            self.openai.api_base = self.endpoint.split("/v1/")[0]  # strip path
 
     async def get_payload(
         self,

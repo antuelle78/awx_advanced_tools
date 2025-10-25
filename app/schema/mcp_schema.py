@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 
+
 class MCPRequest(BaseModel):
     context_id: str | None = None
     platform: str
@@ -8,6 +9,7 @@ class MCPRequest(BaseModel):
 
     class Config:
         arbitrary_types_allowed = True
+
 
 class MCPResponse(BaseModel):
     context_id: str

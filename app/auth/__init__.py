@@ -7,10 +7,12 @@ from app.config import settings
 router = APIRouter()
 security = HTTPBasic()
 
+
 def create_token(username: str) -> str:
     expire = datetime.utcnow() + timedelta(hours=24)
     payload = {"sub": username, "exp": expire}
     return jwt.encode(payload, settings.jwt_secret, algorithm="HS256")
+
 
 @router.post("/login")
 async def login(credentials: HTTPBasicCredentials = Depends(security)):

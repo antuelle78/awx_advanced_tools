@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "awx-mcp-server": {
+      "command": "python3",
+      "args": ["/home/ghost/awx_advanced_tools/mcp-server/mcp_server.py", "http://localhost:8001"],
+      "cwd": "/home/ghost/awx_advanced_tools/mcp-server",
+      "description": "AWX MCP Server Bridge",
+      "capabilities": [
+        "tools",
+        "resources"
+      ]
+    }
+  }
+}

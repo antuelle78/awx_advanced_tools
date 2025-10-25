@@ -30,7 +30,9 @@ class PromptService:
         key = f"{action}:{json.dumps(payload, sort_keys=True)}"
         return key
 
-    async def generate_payload(self, action: str, payload: Dict[str, Any]) -> Dict[str, Any]:
+    async def generate_payload(
+        self, action: str, payload: Dict[str, Any]
+    ) -> Dict[str, Any]:
         # 1. Validate the action exists
         if action not in TEMPLATES:
             raise ValueError(f"Unknown action {action}")
@@ -66,5 +68,7 @@ class PromptService:
         return result
 
     # Synchronous wrapper for convenience
-    def generate_payload_sync(self, action: str, payload: Dict[str, Any]) -> Dict[str, Any]:
+    def generate_payload_sync(
+        self, action: str, payload: Dict[str, Any]
+    ) -> Dict[str, Any]:
         return asyncio.run(self.generate_payload(action, payload))

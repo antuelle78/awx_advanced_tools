@@ -1,12 +1,12 @@
 import os
-from fastapi import APIRouter, Depends, HTTPException
-from app.adapters.token_auth import verify_token
+from fastapi import APIRouter, HTTPException
 from app.config import settings
 
 router = APIRouter(prefix="/audit", tags=["Audit Log"])
 
+
 @router.get("/logs")
-async def get_logs(user: str = Depends(verify_token)):
+async def get_logs():
     try:
         logs = []
         for f in os.listdir(settings.audit_log_dir):
