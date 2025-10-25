@@ -232,7 +232,11 @@ async def create_project(project: ProjectCreate):
 async def update_project(project_id: int, project: ProjectUpdate):
     try:
         return await awx_client.update_project(
-            project_id, project.name, project.scm_type, project.scm_url, project.description
+            project_id,
+            project.name,
+            project.scm_type,
+            project.scm_url,
+            project.description,
         )
     except httpx.HTTPStatusError as exc:  # pragma: no cover
         raise HTTPException(status_code=exc.response.status_code, detail=str(exc))
