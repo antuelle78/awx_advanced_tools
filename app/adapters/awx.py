@@ -28,6 +28,30 @@ class UserUpdate(BaseModel):
     email: Optional[str] = None
 
 
+class ProjectCreate(BaseModel):
+    name: str
+    scm_type: str
+    scm_url: str
+    description: Optional[str] = None
+
+
+class ProjectUpdate(BaseModel):
+    name: Optional[str] = None
+    scm_type: Optional[str] = None
+    scm_url: Optional[str] = None
+    description: Optional[str] = None
+
+
+class OrganizationCreate(BaseModel):
+    name: str
+    description: Optional[str] = None
+
+
+class OrganizationUpdate(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+
+
 @router.post("/job_templates/{template_id}/launch")
 async def launch_job_template(template_id: int, extra_vars: dict | None = None):
     try:
@@ -173,5 +197,103 @@ async def create_schedule(template_id: int, schedule: ScheduleCreate):
         return await awx_client.create_schedule(
             name=schedule.name, rrule=schedule.rrule, job_template_id=template_id
         )
+    except httpx.HTTPStatusError as exc:  # pragma: no cover
+        raise HTTPException(status_code=exc.response.status_code, detail=str(exc))
+
+
+# Project endpoints
+@router.get("/projects")
+async def list_projects():
+    try:
+        return await awx_client.list_projects()
+    except httpx.HTTPStatusError as exc:  # pragma: no cover
+        raise HTTPException(status_code=exc.response.status_code, detail=str(exc))
+
+
+@router.get("/projects/{project_id}")
+async def get_project(project_id: int):
+    try:
+        return await awx_client.get_project(project_id)
+    except httpx.HTTPStatusError as exc:  # pragma: no cover
+        raise HTTPException(status_code=exc.response.status_code, detail=str(exc))
+
+
+@router.post("/projects")
+async def create_project(project: ProjectCreate):
+    try:
+        return await awx_client.create_project(
+            project.name, project.scm_type, project.scm_url, project.description
+        )
+    except httpx.HTTPStatusError as exc:  # pragma: no cover
+        raise HTTPException(status_code=exc.response.status_code, detail=str(exc))
+
+
+@router.patch("/projects/{project_id}")
+async def update_project(project_id: int, project: ProjectUpdate):
+    try:
+        return await awx_client.update_project(
+            project_id, project.name, project.scm_type, project.scm_url, project.description
+        )
+    except httpx.HTTPStatusError as exc:  # pragma: no cover
+        raise HTTPException(status_code=exc.response.status_code, detail=str(exc))
+
+
+@router.delete("/projects/{project_id}")
+async def delete_project(project_id: int):
+    try:
+        return await awx_client.delete_project(project_id)
+    except httpx.HTTPStatusError as exc:  # pragma: no cover
+        raise HTTPException(status_code=exc.response.status_code, detail=str(exc))
+
+
+@router.post("/projects/{project_id}/sync")
+async def sync_project(project_id: int):
+    try:
+        return await awx_client.sync_project(project_id)
+    except httpx.HTTPStatusError as exc:  # pragma: no cover
+        raise HTTPException(status_code=exc.response.status_code, detail=str(exc))
+
+
+# Organization endpoints
+@router.get("/organizations")
+async def list_organizations():
+    try:
+        return await awx_client.list_organizations()
+    except httpx.HTTPStatusError as exc:  # pragma: no cover
+        raise HTTPException(status_code=exc.response.status_code, detail=str(exc))
+
+
+@router.get("/organizations/{organization_id}")
+async def get_organization(organization_id: int):
+    try:
+        return await awx_client.get_organization(organization_id)
+    except httpx.HTTPStatusError as exc:  # pragma: no cover
+        raise HTTPException(status_code=exc.response.status_code, detail=str(exc))
+
+
+@router.post("/organizations")
+async def create_organization(organization: OrganizationCreate):
+    try:
+        return await awx_client.create_organization(
+            organization.name, organization.description
+        )
+    except httpx.HTTPStatusError as exc:  # pragma: no cover
+        raise HTTPException(status_code=exc.response.status_code, detail=str(exc))
+
+
+@router.patch("/organizations/{organization_id}")
+async def update_organization(organization_id: int, organization: OrganizationUpdate):
+    try:
+        return await awx_client.update_organization(
+            organization_id, organization.name, organization.description
+        )
+    except httpx.HTTPStatusError as exc:  # pragma: no cover
+        raise HTTPException(status_code=exc.response.status_code, detail=str(exc))
+
+
+@router.delete("/organizations/{organization_id}")
+async def delete_organization(organization_id: int):
+    try:
+        return await awx_client.delete_organization(organization_id)
     except httpx.HTTPStatusError as exc:  # pragma: no cover
         raise HTTPException(status_code=exc.response.status_code, detail=str(exc))

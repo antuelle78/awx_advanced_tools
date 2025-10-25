@@ -556,20 +556,31 @@ class Tools:
         Updates an organization in AWX.
 
         :param organization_id: The ID of organization to update.
+
         :param name: The new name of organization.
+
         :param description: The new description of organization.
+
         :return: The result of update organization action.
+
         """
         url = f"{self.mcp_server_url}/awx/organizations/{organization_id}"
+
         payload: Dict[str, Any] = {}
+
         if name:
             payload["name"] = name
+
         if description:
             payload["description"] = description
+
         try:
             response = self.client.patch(url, headers=self._get_headers(), json=payload)
+
             response.raise_for_status()
+
             return json.dumps(response.json())
+
         except httpx.HTTPStatusError as e:
             return json.dumps(
                 {
@@ -577,6 +588,7 @@ class Tools:
                     "detail": e.response.text,
                 }
             )
+
         except Exception as e:
             return json.dumps({"error": str(e)})
 
