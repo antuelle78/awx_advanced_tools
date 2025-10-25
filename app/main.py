@@ -1,8 +1,4 @@
 # main entrypoint
-# Added comment to trigger CI/CD after adding Docker Hub secrets
-# Triggering another run to test Docker push
-# Testing CI/CD trigger
-# Testing secret configuration
 from fastapi import FastAPI
 from app.adapters.awx import router as awx_router
 from app.adapters.auth import router as auth_router

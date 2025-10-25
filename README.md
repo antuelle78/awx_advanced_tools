@@ -115,7 +115,18 @@ The following endpoints are available:
 |----------|--------|-------------|
 | `/awx/job_templates/{template_id}/launch` | POST | Launches an AWX job template. |
 | `/awx/inventories` | POST | Creates a new inventory in AWX. |
+| `/awx/inventories` | GET | Lists inventories in AWX. |
+| `/awx/inventories/{inventory_id}` | GET | Retrieves an inventory in AWX. |
+| `/awx/inventories/{inventory_id}` | DELETE | Deletes an inventory in AWX. |
+| `/awx/inventories/{inventory_id}/sync` | POST | Syncs an inventory in AWX. |
+| `/awx/job_templates/{template_id}/schedules` | GET | Lists schedules for a job template. |
+| `/awx/schedules/{schedule_id}` | PATCH | Toggles a schedule in AWX. |
+| `/awx/schedules/{schedule_id}` | DELETE | Deletes a schedule in AWX. |
+| `/awx/templates` | GET | Lists job templates in AWX. |
+| `/awx/jobs` | GET | Lists jobs in AWX. |
+| `/awx/schedules/{schedule_id}` | GET | Retrieves a schedule in AWX. |
 | `/awx/jobs/{job_id}` | GET | Retrieves the current status of a job. |
+| `/login` | POST | Logs in and returns a JWT token. |
 | `/docs` | GET | Swagger UI for interactive API documentation. |
 
 ---
@@ -169,6 +180,9 @@ spec:
         - name: mcp-server
           image: antuelle78/awx_advanced_tools:latest
 ```
+
+### CI/CD and Production Deployment
+The project includes a GitHub Actions workflow for automated CI/CD. On pushes to the master branch, it runs linting, type-checking, testing, and builds/pushes the Docker image to Docker Hub. Set the `DOCKER_USERNAME` and `DOCKER_PASSWORD` secrets in your GitHub repo to enable the push. The image is tagged as `your-username/awx_advanced_tools:latest`.
 
 ---
 
