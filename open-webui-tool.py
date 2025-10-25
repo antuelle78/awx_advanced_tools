@@ -82,7 +82,9 @@ class PromptOptimizer:
 
     def get_optimized_prompt(self, tool_name: str, **kwargs) -> str:
         """Generate an optimized prompt for a specific tool."""
-        base_prompt = self.tool_prompts.get(tool_name, "Use this tool to interact with AWX.")
+        base_prompt = self.tool_prompts.get(
+            tool_name, "Use this tool to interact with AWX."
+        )
         confidence_cues = [
             "I am confident this is the correct tool.",
             "This tool call should succeed.",
@@ -158,12 +160,15 @@ class Tools:
             return json.dumps(response.json())
 
         except httpx.HTTPStatusError as e:
-
             self.log_tool_usage("list_templates", False, time.time() - start_time)
-            return json.dumps({"error": f"HTTP error occurred: {e.response.status_code}", "detail": e.response.text})
+            return json.dumps(
+                {
+                    "error": f"HTTP error occurred: {e.response.status_code}",
+                    "detail": e.response.text,
+                }
+            )
 
         except Exception as e:
-
             self.log_tool_usage("list_templates", False, time.time() - start_time)
             return json.dumps({"error": str(e)})
 
@@ -542,7 +547,10 @@ class Tools:
             return json.dumps({"error": str(e)})
 
     def update_organization(
-        self, organization_id: int, name: Optional[str] = None, description: Optional[str] = None
+        self,
+        organization_id: int,
+        name: Optional[str] = None,
+        description: Optional[str] = None,
     ) -> str:
         """
         Updates an organization in AWX.
@@ -907,7 +915,10 @@ class Tools:
             return json.dumps({"error": str(e)})
 
     def update_credential(
-        self, credential_id: int, name: Optional[str] = None, inputs: Optional[Dict[str, Any]] = None
+        self,
+        credential_id: int,
+        name: Optional[str] = None,
+        inputs: Optional[Dict[str, Any]] = None,
     ) -> str:
         """
         Updates a credential in AWX.
@@ -1232,7 +1243,9 @@ class Tools:
         except Exception as e:
             return json.dumps({"error": str(e)})
 
-    def create_workflow_job_template(self, name: str, description: Optional[str] = None) -> str:
+    def create_workflow_job_template(
+        self, name: str, description: Optional[str] = None
+    ) -> str:
         """
         Creates a new workflow job template in AWX.
 
@@ -1269,7 +1282,10 @@ class Tools:
             return json.dumps({"error": str(e)})
 
     def update_workflow_job_template(
-        self, workflow_job_template_id: int, name: Optional[str] = None, description: Optional[str] = None
+        self,
+        workflow_job_template_id: int,
+        name: Optional[str] = None,
+        description: Optional[str] = None,
     ) -> str:
         """
         Updates a workflow job template in AWX.
