@@ -46,6 +46,12 @@ jobs:
     strategy:
       matrix:
         python-version: ['3.10', '3.11', '3.12']
+    env:
+      JWT_SECRET: test_secret
+      AWX_BASE_URL: dummy
+      AWX_TOKEN: dummy
+      LLM_ENDPOINT: dummy
+      LLM_MODEL: dummy
     steps:
     - uses: actions/checkout@v4
     - name: Set up Python ${{ matrix.python-version }}
@@ -64,13 +70,6 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
         pip install mypy types-jsonschema types-python-jose
-    - name: Set dummy env vars
-      run: |
-        echo "AWX_BASE_URL=dummy" >> $GITHUB_ENV
-        echo "AWX_TOKEN=dummy" >> $GITHUB_ENV
-        echo "LLM_ENDPOINT=dummy" >> $GITHUB_ENV
-        echo "LLM_MODEL=dummy" >> $GITHUB_ENV
-        echo "JWT_SECRET=test_secret" >> $GITHUB_ENV
     - name: Type-check with mypy
       run: mypy --explicit-package-bases --ignore-missing-imports app
 
@@ -109,6 +108,12 @@ jobs:
     strategy:
       matrix:
         python-version: ['3.10', '3.11', '3.12']
+    env:
+      JWT_SECRET: test_secret
+      AWX_BASE_URL: dummy
+      AWX_TOKEN: dummy
+      LLM_ENDPOINT: dummy
+      LLM_MODEL: dummy
     services:
       redis:
         image: redis:alpine
@@ -132,13 +137,6 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
         pip install pytest pytest-cov pytest-asyncio
-    - name: Set dummy env vars
-      run: |
-        echo "AWX_BASE_URL=dummy" >> $GITHUB_ENV
-        echo "AWX_TOKEN=dummy" >> $GITHUB_ENV
-        echo "LLM_ENDPOINT=dummy" >> $GITHUB_ENV
-        echo "LLM_MODEL=dummy" >> $GITHUB_ENV
-        echo "JWT_SECRET=test_secret" >> $GITHUB_ENV
     - name: Run tests with coverage
       run: pytest --cov=app --cov-report=xml --cov-report=term-missing
     - name: Upload coverage to Codecov

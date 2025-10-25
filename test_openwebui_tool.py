@@ -59,7 +59,7 @@ def test_tool_functionality():
     else:
         print("❌ Docstring format might be incorrect")
 
-    return True
+    assert True  # All checks passed
 
 
 def test_server_connectivity():

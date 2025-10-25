@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 import jwt
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, UTC
 from app.config import settings
 
 router = APIRouter()
@@ -9,7 +9,7 @@ security = HTTPBasic()
 
 
 def create_token(username: str) -> str:
-    expire = datetime.utcnow() + timedelta(hours=24)
+    expire = datetime.now(UTC) + timedelta(hours=24)
     payload = {"sub": username, "exp": expire}
     return jwt.encode(payload, settings.jwt_secret, algorithm="HS256")
 
