@@ -12,7 +12,6 @@ class Settings(BaseSettings):
     llm_model: str = "gpt-4o"
     llm_api_key: Optional[str] = None
     audit_log_dir: str = "/var/log/audit"
-    jwt_secret: str = "supersecret"
 
     class Config:
         env_file = ".env"

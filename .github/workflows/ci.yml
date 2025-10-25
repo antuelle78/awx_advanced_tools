@@ -47,7 +47,6 @@ jobs:
       matrix:
         python-version: ['3.10', '3.11', '3.12']
     env:
-      JWT_SECRET: test_secret
       AWX_BASE_URL: dummy
       AWX_TOKEN: dummy
       LLM_ENDPOINT: dummy
@@ -109,7 +108,6 @@ jobs:
       matrix:
         python-version: ['3.10', '3.11', '3.12']
     env:
-      JWT_SECRET: test_secret
       AWX_BASE_URL: dummy
       AWX_TOKEN: dummy
       LLM_ENDPOINT: dummy
