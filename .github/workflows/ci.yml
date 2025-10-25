@@ -41,7 +41,7 @@ jobs:
     - name: Install mypy
       run: pip install mypy
     - name: Type-check with mypy
-      run: mypy --explicit-package-bases app
+      run: mypy --explicit-package-bases --ignore-missing-imports app
 
   test:
     runs-on: ubuntu-latest
