@@ -40,6 +40,13 @@ jobs:
         pip install types-jsonschema types-python-jose
     - name: Install mypy
       run: pip install mypy
+    - name: Set dummy env vars
+      run: |
+        echo "AWX_BASE_URL=dummy" >> $GITHUB_ENV
+        echo "AWX_TOKEN=dummy" >> $GITHUB_ENV
+        echo "LLM_ENDPOINT=dummy" >> $GITHUB_ENV
+        echo "LLM_MODEL=dummy" >> $GITHUB_ENV
+        echo "JWT_SECRET=dummy" >> $GITHUB_ENV
     - name: Type-check with mypy
       run: mypy --explicit-package-bases --ignore-missing-imports app
 

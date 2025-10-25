@@ -29,3 +29,9 @@ SUMMARIZE_LOG_TEMPLATE = (
     "  \"summary\": \u003csummary string\u003e\n"
     "}}.\n"
 )
+
+TEMPLATES = {
+    "launch_job_template": LAUNCH_JOB_TEMPLATE,
+    "validate_schema": VALIDATE_SCHEMA_TEMPLATE,
+    "summarize_log": SUMMARIZE_LOG_TEMPLATE,
+}

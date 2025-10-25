@@ -107,7 +107,7 @@ class OllamaClient(BaseLLMClient):
             "options": {"temperature": temperature or self.temperature},
         }
         try:
-            response = await self.client.generate(**request)
+            response = await self.client.generate(**request)  # type: ignore
             content = response["response"]
         except Exception as exc:  # pragma: no cover
             raise RuntimeError("LLM request failed") from exc

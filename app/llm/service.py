@@ -15,7 +15,7 @@ from typing import Any, Dict
 from .client import get_llm_client
 from .templates import TEMPLATES
 
-from app.schema.registry import get_schema_for_action
+from app.schema.registry import get_schema
 
 # Optional: simple in‑memory cache (replace with redis if needed)
 _CACHE: Dict[str, Any] = {}
@@ -49,7 +49,7 @@ class PromptService:
         result = await self.client.get_payload(prompt)
 
         # 5. Validate result against schema
-        schema = get_schema_for_action(action)
+        schema = get_schema("AWX", action)
         # FastAPI uses pydantic for validation – we can reuse that
         from pydantic import BaseModel, ValidationError
 
