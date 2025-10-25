@@ -39,7 +39,7 @@ jobs:
     - name: Install mypy
       run: pip install mypy
     - name: Type-check with mypy
-      run: mypy app
+      run: mypy --explicit-package-bases app
 
   test:
     runs-on: ubuntu-latest
