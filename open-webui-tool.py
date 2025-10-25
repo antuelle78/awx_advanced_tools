@@ -8,8 +8,102 @@ requirements:
 
 import httpx
 from pydantic import BaseModel, Field
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 import json
+import logging
+import time
+import os
+
+
+class PromptOptimizer:
+    """Optimizes prompts for better LLM tool usage success rate."""
+
+    def __init__(self):
+        self.tool_prompts = self._load_tool_prompts()
+        self.confidence_threshold = 0.8
+        self.log_file = "tool_usage.log"
+
+    def _load_tool_prompts(self) -> Dict[str, str]:
+        """Load optimized prompts for each tool."""
+        return {
+            "list_templates": "List all available job templates in AWX. Use this to see what automation jobs are available.",
+            "launch_job_template": "Launch a specific job template in AWX. Provide the template_id and any extra_vars as a JSON object.",
+            "list_jobs": "List all jobs in AWX. Optionally provide a page number for pagination.",
+            "get_job": "Get the status of a specific job in AWX. Provide the job_id.",
+            "list_inventories": "List all inventories in AWX.",
+            "create_inventory": "Create a new inventory in AWX. Provide name, organization, and variables.",
+            "get_inventory": "Get details of a specific inventory in AWX. Provide the inventory_id.",
+            "delete_inventory": "Delete an inventory in AWX. Provide the inventory_id.",
+            "sync_inventory": "Sync an inventory in AWX. Provide the inventory_id.",
+            "list_schedules": "List schedules for a job template in AWX. Provide the template_id.",
+            "get_schedule": "Get details of a schedule in AWX. Provide the schedule_id.",
+            "create_schedule": "Create a schedule for a job template in AWX. Provide name, rrule, and job_template_id.",
+            "toggle_schedule": "Enable or disable a schedule in AWX. Provide schedule_id and enabled status.",
+            "delete_schedule": "Delete a schedule in AWX. Provide the schedule_id.",
+            "list_organizations": "List all organizations in AWX.",
+            "get_organization": "Get details of an organization in AWX. Provide the organization_id.",
+            "create_organization": "Create a new organization in AWX. Provide name and description.",
+            "update_organization": "Update an organization in AWX. Provide organization_id, name, and description.",
+            "delete_organization": "Delete an organization in AWX. Provide the organization_id.",
+            "list_projects": "List all projects in AWX.",
+            "get_project": "Get details of a project in AWX. Provide the project_id.",
+            "create_project": "Create a new project in AWX. Provide name, scm_type, scm_url, and description.",
+            "update_project": "Update a project in AWX. Provide project_id and other parameters.",
+            "delete_project": "Delete a project in AWX. Provide the project_id.",
+            "sync_project": "Sync a project in AWX. Provide the project_id.",
+            "list_credentials": "List all credentials in AWX.",
+            "get_credential": "Get details of a credential in AWX. Provide the credential_id.",
+            "create_credential": "Create a new credential in AWX. Provide name, credential_type, and inputs.",
+            "update_credential": "Update a credential in AWX. Provide credential_id and other parameters.",
+            "delete_credential": "Delete a credential in AWX. Provide the credential_id.",
+            "list_users": "List all users in AWX.",
+            "get_user": "Get details of a user in AWX. Provide the user_id.",
+            "create_user": "Create a new user in AWX. Provide username, password, and other parameters.",
+            "update_user": "Update a user in AWX. Provide user_id and other parameters.",
+            "delete_user": "Delete a user in AWX. Provide the user_id.",
+            "list_workflow_job_templates": "List all workflow job templates in AWX.",
+            "get_workflow_job_template": "Get details of a workflow job template in AWX. Provide the workflow_job_template_id.",
+            "create_workflow_job_template": "Create a new workflow job template in AWX. Provide name and description.",
+            "update_workflow_job_template": "Update a workflow job template in AWX. Provide workflow_job_template_id and other parameters.",
+            "delete_workflow_job_template": "Delete a workflow job template in AWX. Provide the workflow_job_template_id.",
+            "launch_workflow_job_template": "Launch a workflow job template in AWX. Provide workflow_job_template_id and extra_vars.",
+            "list_notifications": "List all notification templates in AWX.",
+            "get_notification": "Get details of a notification template in AWX. Provide the notification_id.",
+            "create_notification": "Create a new notification template in AWX. Provide name, notification_type, and notification_configuration.",
+            "update_notification": "Update a notification template in AWX. Provide notification_id and other parameters.",
+            "delete_notification": "Delete a notification template in AWX. Provide the notification_id.",
+            "list_instance_groups": "List all instance groups in AWX.",
+            "get_instance_group": "Get details of an instance group in AWX. Provide the instance_group_id.",
+            "create_instance_group": "Create a new instance group in AWX. Provide name and other parameters.",
+            "update_instance_group": "Update an instance group in AWX. Provide instance_group_id and other parameters.",
+            "delete_instance_group": "Delete an instance group in AWX. Provide the instance_group_id.",
+            "list_activity_stream": "List activity stream events in AWX. Provide page and page_size.",
+        }
+
+    def get_optimized_prompt(self, tool_name: str, **kwargs) -> str:
+        """Generate an optimized prompt for a specific tool."""
+        base_prompt = self.tool_prompts.get(tool_name, "Use this tool to interact with AWX.")
+        confidence_cues = [
+            "I am confident this is the correct tool.",
+            "This tool call should succeed.",
+            "Using the appropriate AWX API endpoint.",
+        ]
+        cue = confidence_cues[hash(tool_name) % len(confidence_cues)]
+        return f"{cue} {base_prompt}"
+
+    def log_tool_usage(self, tool_name: str, success: bool, response_time: float):
+        """Log tool usage for feedback loop."""
+        log_entry = {
+            "tool": tool_name,
+            "success": success,
+            "response_time": response_time,
+            "timestamp": time.time(),
+        }
+        try:
+            with open(self.log_file, "a") as f:
+                f.write(json.dumps(log_entry) + "\n")
+        except Exception as e:
+            logging.warning(f"Failed to log tool usage: {e}")
 
 
 class Tools:
@@ -21,12 +115,25 @@ class Tools:
     def __init__(self):
         self.valves = self.Valves()
         self.client = httpx.Client(timeout=30.0)  # Add timeout for requests
+        self.prompt_optimizer = PromptOptimizer()
 
     def _get_headers(self) -> dict:
         return {
             "Content-Type": "application/json",
             "Accept": "application/json",
         }
+
+    def get_optimized_prompt(self, tool_name: str, **kwargs) -> str:
+        """Get an optimized prompt for a specific tool."""
+        return self.prompt_optimizer.get_optimized_prompt(tool_name, **kwargs)
+
+    def log_tool_usage(self, tool_name: str, success: bool, response_time: float):
+        """Log tool usage for feedback loop."""
+        self.prompt_optimizer.log_tool_usage(tool_name, success, response_time)
+
+    def get_all_optimized_prompts(self) -> Dict[str, str]:
+        """Get optimized prompts for all available tools."""
+        return self.prompt_optimizer.tool_prompts
 
     @property
     def mcp_server_url(self) -> str:
@@ -36,21 +143,28 @@ class Tools:
         """
         Lists all job templates in AWX.
 
-        :return: A JSON string containing a list of job templates and their details.
+        :return: A JSON string containing a list of users and their details.
+
         """
+        start_time = time.time()
         url = f"{self.mcp_server_url}/awx/templates"
+
         try:
             response = self.client.get(url, headers=self._get_headers())
+
             response.raise_for_status()
+
+            self.log_tool_usage("list_templates", True, time.time() - start_time)
             return json.dumps(response.json())
+
         except httpx.HTTPStatusError as e:
-            return json.dumps(
-                {
-                    "error": f"HTTP error occurred: {e.response.status_code}",
-                    "detail": e.response.text,
-                }
-            )
+
+            self.log_tool_usage("list_templates", False, time.time() - start_time)
+            return json.dumps({"error": f"HTTP error occurred: {e.response.status_code}", "detail": e.response.text})
+
         except Exception as e:
+
+            self.log_tool_usage("list_templates", False, time.time() - start_time)
             return json.dumps({"error": str(e)})
 
     def launch_job_template(
@@ -64,7 +178,7 @@ class Tools:
         :return: A JSON string containing details of newly created job, including its 'id'. This 'id' should be used with 'get_job' tool to check job's status.
         """
         url = f"{self.mcp_server_url}/awx/job_templates/{template_id}/launch"
-        payload = {}
+        payload: Dict[str, Any] = {}
         if extra_vars:
             payload["extra_vars"] = extra_vars
 
@@ -401,7 +515,7 @@ class Tools:
         except Exception as e:
             return json.dumps({"error": str(e)})
 
-    def create_organization(self, name: str, description: str = None) -> str:
+    def create_organization(self, name: str, description: Optional[str] = None) -> str:
         """
         Creates a new organization in AWX.
 
@@ -428,7 +542,7 @@ class Tools:
             return json.dumps({"error": str(e)})
 
     def update_organization(
-        self, organization_id: int, name: str = None, description: str = None
+        self, organization_id: int, name: Optional[str] = None, description: Optional[str] = None
     ) -> str:
         """
         Updates an organization in AWX.
@@ -439,7 +553,7 @@ class Tools:
         :return: The result of update organization action.
         """
         url = f"{self.mcp_server_url}/awx/organizations/{organization_id}"
-        payload = {}
+        payload: Dict[str, Any] = {}
         if name:
             payload["name"] = name
         if description:
@@ -544,7 +658,7 @@ class Tools:
             return json.dumps({"error": str(e)})
 
     def create_project(
-        self, name: str, scm_type: str, scm_url: str, description: str = None
+        self, name: str, scm_type: str, scm_url: str, description: Optional[str] = None
     ) -> str:
         """
         Creates a new project in AWX.
@@ -588,10 +702,10 @@ class Tools:
     def update_project(
         self,
         project_id: int,
-        name: str = None,
-        scm_type: str = None,
-        scm_url: str = None,
-        description: str = None,
+        name: Optional[str] = None,
+        scm_type: Optional[str] = None,
+        scm_url: Optional[str] = None,
+        description: Optional[str] = None,
     ) -> str:
         """
         Updates a project in AWX.
@@ -611,7 +725,7 @@ class Tools:
         """
         url = f"{self.mcp_server_url}/awx/projects/{project_id}"
 
-        payload = {}
+        payload: Dict[str, Any] = {}
 
         if name:
             payload["name"] = name
@@ -793,7 +907,7 @@ class Tools:
             return json.dumps({"error": str(e)})
 
     def update_credential(
-        self, credential_id: int, name: str = None, inputs: dict = None
+        self, credential_id: int, name: Optional[str] = None, inputs: Optional[Dict[str, Any]] = None
     ) -> str:
         """
         Updates a credential in AWX.
@@ -809,7 +923,7 @@ class Tools:
         """
         url = f"{self.mcp_server_url}/awx/credentials/{credential_id}"
 
-        payload = {}
+        payload: Dict[str, Any] = {}
 
         if name:
             payload["name"] = name
@@ -924,9 +1038,9 @@ class Tools:
         self,
         username: str,
         password: str,
-        first_name: str = None,
-        last_name: str = None,
-        email: str = None,
+        first_name: Optional[str] = None,
+        last_name: Optional[str] = None,
+        email: Optional[str] = None,
     ) -> str:
         """
         Creates a new user in AWX.
@@ -978,10 +1092,10 @@ class Tools:
     def update_user(
         self,
         user_id: int,
-        username: str = None,
-        first_name: str = None,
-        last_name: str = None,
-        email: str = None,
+        username: Optional[str] = None,
+        first_name: Optional[str] = None,
+        last_name: Optional[str] = None,
+        email: Optional[str] = None,
     ) -> str:
         """
         Updates a user in AWX.
@@ -1001,7 +1115,7 @@ class Tools:
         """
         url = f"{self.mcp_server_url}/awx/users/{user_id}"
 
-        payload = {}
+        payload: Dict[str, Any] = {}
 
         if username:
             payload["username"] = username
@@ -1118,7 +1232,7 @@ class Tools:
         except Exception as e:
             return json.dumps({"error": str(e)})
 
-    def create_workflow_job_template(self, name: str, description: str = None) -> str:
+    def create_workflow_job_template(self, name: str, description: Optional[str] = None) -> str:
         """
         Creates a new workflow job template in AWX.
 
@@ -1155,7 +1269,7 @@ class Tools:
             return json.dumps({"error": str(e)})
 
     def update_workflow_job_template(
-        self, workflow_job_template_id: int, name: str = None, description: str = None
+        self, workflow_job_template_id: int, name: Optional[str] = None, description: Optional[str] = None
     ) -> str:
         """
         Updates a workflow job template in AWX.
@@ -1171,7 +1285,7 @@ class Tools:
         """
         url = f"{self.mcp_server_url}/awx/workflow_job_templates/{workflow_job_template_id}"
 
-        payload = {}
+        payload: Dict[str, Any] = {}
 
         if name:
             payload["name"] = name
@@ -1227,7 +1341,7 @@ class Tools:
             return json.dumps({"error": str(e)})
 
     def launch_workflow_job_template(
-        self, workflow_job_template_id: int, extra_vars: dict = None
+        self, workflow_job_template_id: int, extra_vars: Optional[Dict[str, Any]] = None
     ) -> str:
         """
         Launches a workflow job template in AWX.
@@ -1241,7 +1355,7 @@ class Tools:
         """
         url = f"{self.mcp_server_url}/awx/workflow_job_templates/{workflow_job_template_id}/launch"
 
-        payload = {}
+        payload: Dict[str, Any] = {}
 
         if extra_vars:
             payload["extra_vars"] = extra_vars
@@ -1364,8 +1478,8 @@ class Tools:
     def update_notification(
         self,
         notification_id: int,
-        name: str = None,
-        notification_configuration: dict = None,
+        name: Optional[str] = None,
+        notification_configuration: Optional[Dict[str, Any]] = None,
     ) -> str:
         """
         Updates a notification in AWX.
@@ -1381,7 +1495,7 @@ class Tools:
         """
         url = f"{self.mcp_server_url}/awx/notifications/{notification_id}"
 
-        payload = {}
+        payload: Dict[str, Any] = {}
 
         if name:
             payload["name"] = name
@@ -1495,8 +1609,8 @@ class Tools:
     def create_instance_group(
         self,
         name: str,
-        policy_instance_percentage: int = None,
-        policy_instance_minimum: int = None,
+        policy_instance_percentage: Optional[int] = None,
+        policy_instance_minimum: Optional[int] = None,
     ) -> str:
         """
         Creates a new instance group in AWX.
@@ -1512,7 +1626,7 @@ class Tools:
         """
         url = f"{self.mcp_server_url}/awx/instance_groups"
 
-        payload = {"name": name}
+        payload: Dict[str, Any] = {"name": name}
 
         if policy_instance_percentage:
             payload["policy_instance_percentage"] = policy_instance_percentage
@@ -1541,9 +1655,9 @@ class Tools:
     def update_instance_group(
         self,
         instance_group_id: int,
-        name: str = None,
-        policy_instance_percentage: int = None,
-        policy_instance_minimum: int = None,
+        name: Optional[str] = None,
+        policy_instance_percentage: Optional[int] = None,
+        policy_instance_minimum: Optional[int] = None,
     ) -> str:
         """
         Updates an instance group in AWX.
@@ -1561,7 +1675,7 @@ class Tools:
         """
         url = f"{self.mcp_server_url}/awx/instance_groups/{instance_group_id}"
 
-        payload = {}
+        payload: Dict[str, Any] = {}
 
         if name:
             payload["name"] = name
