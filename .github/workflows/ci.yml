@@ -85,5 +85,5 @@ jobs:
     - name: Build and push Docker image
       run: |
         docker compose build
-        docker tag mcp-server:latest ${{ secrets.DOCKER_USERNAME }}/awx_advanced_tools:latest
+        docker tag awx_advanced_tools-mcp-server:latest ${{ secrets.DOCKER_USERNAME }}/awx_advanced_tools:latest
         docker push ${{ secrets.DOCKER_USERNAME }}/awx_advanced_tools:latest
