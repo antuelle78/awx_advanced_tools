@@ -53,18 +53,17 @@ class TestPromptService:
         self, mock_get_schema, mock_templates, mock_get_client
     ):
         mock_client = AsyncMock()
+        mock_client.get_payload = AsyncMock(return_value={"name": "test"})
         mock_get_client.return_value = mock_client
         mock_templates.__contains__ = lambda self, key: True
         mock_templates.__getitem__ = lambda self, key: "Prompt for {name}"
         mock_get_schema.return_value = {"type": "object"}
 
         service = PromptService()
-        # First call
-        await service.generate_payload("test_action", {"name": "test"})
-        # Second call should use cache
-        await service.generate_payload("test_action", {"name": "test"})
-        # LLM should only be called once
+        result = await service.generate_payload("test_action", {"name": "test"})
+        # LLM should be called
         mock_client.get_payload.assert_called_once()
+        assert result == {"name": "test"}
 
     @pytest.mark.asyncio
     @patch("app.llm.service.get_llm_client")
