@@ -529,6 +529,26 @@ class Tools:
             self.log_tool_usage("delete_inventory", True, time.time() - start_time)
             return json.dumps(response.json())
         except httpx.HTTPStatusError as e:
+            if e.response.status_code == 500:
+                # AWX may return 500 even on successful delete, verify
+                try:
+                    inventories_response = self.list_inventories()
+                    inventories = json.loads(inventories_response)
+                    existing_ids = [inv["id"] for inv in inventories.get("results", [])]
+                    if inventory_id not in existing_ids:
+                        self.log_tool_usage("delete_inventory", True, time.time() - start_time)
+                        return json.dumps({"status": "deleted", "id": inventory_id})
+                    else:
+                        self.log_tool_usage("delete_inventory", False, time.time() - start_time)
+                        return json.dumps({
+                            "error": f"Inventory {inventory_id} was not deleted despite 500 error. It still exists in the list. Check AWX for issues."
+                        })
+                except Exception:
+                    self.log_tool_usage("delete_inventory", False, time.time() - start_time)
+                    return json.dumps({
+                        "error": f"HTTP error occurred: {e.response.status_code}",
+                        "detail": e.response.text,
+                    })
             self.log_tool_usage("delete_inventory", False, time.time() - start_time)
             return json.dumps(
                 {
@@ -937,6 +957,26 @@ class Tools:
             return json.dumps(response.json())
 
         except httpx.HTTPStatusError as e:
+            if e.response.status_code == 500:
+                # AWX may return 500 even on successful delete, verify
+                try:
+                    projects_response = self.list_projects()
+                    projects = json.loads(projects_response)
+                    existing_ids = [proj["id"] for proj in projects.get("results", [])]
+                    if project_id not in existing_ids:
+                        self.log_tool_usage("delete_project", True, time.time() - start_time)
+                        return json.dumps({"status": "deleted", "id": project_id})
+                    else:
+                        self.log_tool_usage("delete_project", False, time.time() - start_time)
+                        return json.dumps({
+                            "error": f"Project {project_id} was not deleted despite 500 error. It still exists in the list. Check AWX for issues."
+                        })
+                except Exception:
+                    self.log_tool_usage("delete_project", False, time.time() - start_time)
+                    return json.dumps({
+                        "error": f"HTTP error occurred: {e.response.status_code}",
+                        "detail": e.response.text,
+                    })
             self.log_tool_usage("delete_project", False, time.time() - start_time)
             return json.dumps(
                 {
