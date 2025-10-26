@@ -1,15 +1,16 @@
 # main entrypoint
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from app.adapters.awx import router as awx_router
 from app.adapters.llm import router as llm_router
 from app.adapters.audit import router as audit_router
 from app.adapters.ev import router as ev_router
 from app.adapters.sn import router as sn_router
-from app.auth import router as auth_router
+
 from app.adapters.awx_service import awx_client
 import logging
 import json
+import httpx
 
 app = FastAPI(
     title="AWX Advanced Tools", description="Orchestration gateway", version="1.0.0"
@@ -24,7 +25,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(auth_router)
 app.include_router(awx_router)
 app.include_router(llm_router)
 app.include_router(audit_router)
@@ -81,6 +81,14 @@ async def health():
 async def ready():
     available = await awx_ping()
     return {"ready": available, "awx": available}
+
+
+@app.get("/activity_stream")
+async def list_activity_stream(page: int = 1, page_size: int = 20):
+    try:
+        return await awx_client.list_activity_stream(page, page_size)
+    except httpx.HTTPStatusError as exc:
+        raise HTTPException(status_code=exc.response.status_code, detail=str(exc))
 
 
 # Removed duplicate liveness endpoint

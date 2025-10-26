@@ -5,7 +5,7 @@ Below is a minimal but production‑grade deployment configuration using **Docke
 ```yaml
 # docker-compose.yml
 
-version: "3.9"
+version: "3.8"
 services:
    awx-advanced-tools:
      image: ghcr.io/antuelle78/awx_advanced_tools:latest
@@ -15,7 +15,7 @@ services:
     environment:
       - AWX_BASE_URL=https://awx.example.com/api/v2
       - AWX_TOKEN=YOUR_SECURE_AWX_TOKEN
-      - LLMD_ENDPOINT=https://llm.example.com/endpoint
+       - LLM_ENDPOINT=https://llm.example.com/endpoint
       - JWT_SECRET=${JWT_SECRET}
       - AUDIT_LOG_DIR=/var/log/audit
     volumes:

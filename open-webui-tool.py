@@ -8,11 +8,10 @@ requirements:
 
 import httpx
 from pydantic import BaseModel, Field
-from typing import Optional, Dict, Any, List
+from typing import Optional, Dict, Any
 import json
 import logging
 import time
-import os
 
 
 class PromptOptimizer:

@@ -1,6 +1,12 @@
 # tests/conftest.py
 # This file sets up a dummy openai module for tests and patches environment variables
 
+import os
+import sys
+
+# Set LLM_PROVIDER to ollama to avoid import errors
+os.environ["LLM_PROVIDER"] = "ollama"
+os.environ["AUDIT_LOG_DIR"] = "/tmp/audit"
 
 # Create a dummy openai module with minimal ChatCompletion
 class DummyChatCompletion:
@@ -18,4 +24,8 @@ class DummyChatCompletion:
             def __init__(self):
                 self.choices = [DummyChoice()]
 
-        return """???"""
+        return DummyResponse()
+
+# Add dummy openai to sys.modules
+sys.modules["openai"] = type(sys)('openai')
+sys.modules["openai"].ChatCompletion = DummyChatCompletion

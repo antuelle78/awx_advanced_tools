@@ -49,7 +49,7 @@ class OpenAIClient(BaseLLMClient):
             raise ValueError(
                 "LLM_API_KEY environment variable is required for the default provider"
             )
-        self.max_tokens = int(os.getenv("LLM_MAX_TOKENS", "1500"))
+        self.max_tokens = int(os.getenv("LLM_MAX_TOKENS", "3000"))
         self.temperature = float(os.getenv("LLM_TEMPERATURE", "0.2"))
 
         self.openai.api_key = self.api_key
@@ -125,7 +125,12 @@ class OllamaClient(BaseLLMClient):
 def get_llm_client() -> BaseLLMClient:
     if settings.llm_provider == "ollama":
         return OllamaClient()
+    from importlib.util import find_spec
+    if find_spec("openai") is None:
+        # OpenAI SDK not available, fallback to Ollama if configured
+        if settings.llm_provider == "ollama":
+            return OllamaClient()
+        raise RuntimeError("OpenAI SDK not installed and llm_provider not set to ollama")
     return OpenAIClient()
-
 
 LLMClient = get_llm_client()

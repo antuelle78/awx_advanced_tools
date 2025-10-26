@@ -48,7 +48,11 @@ class PromptService:
             return _CACHE[key]
 
         # 4. Call LLM
-        result = await self.client.get_payload(prompt)
+        if action == "validate_schema":
+            temperature = 0.8
+        else:
+            temperature = 0.2
+        result = await self.client.get_payload(prompt, temperature=temperature)
 
         # 5. Validate result against schema
         schema = get_schema("AWX", action)

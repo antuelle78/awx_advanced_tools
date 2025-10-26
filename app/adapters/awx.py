@@ -323,3 +323,12 @@ async def delete_organization(organization_id: int):
         return await awx_client.delete_organization(organization_id)
     except httpx.HTTPStatusError as exc:  # pragma: no cover
         raise HTTPException(status_code=exc.response.status_code, detail=str(exc))
+
+
+# Activity Stream endpoints
+@router.get("/activity_stream")
+async def list_activity_stream(page: int = 1, page_size: int = 20):
+    try:
+        return await awx_client.list_activity_stream(page, page_size)
+    except httpx.HTTPStatusError as exc:  # pragma: no cover
+        raise HTTPException(status_code=exc.response.status_code, detail=str(exc))

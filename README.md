@@ -120,7 +120,7 @@ The easiest way to run the server is with Docker Compose.
 docker compose up -d
 ```
 
-The server will be available at `http://localhost:8001`. All API endpoints (except /health) require basic authentication (username: admin, password: password). The gateway provides authentication and proxies requests to the server.
+The server will be available at `http://localhost:8001`. All API endpoints (except /health and /login) require JWT authentication. Use the `/login` endpoint to obtain a JWT token, then include it in the `Authorization` header as `Bearer <token>`. The gateway provides authentication and proxies requests to the server.
 
 ---
 
@@ -196,6 +196,12 @@ The following endpoints are available. All endpoints (except /health) require ba
 | `/awx/users` | POST | Creates a new user in AWX. |
 | `/awx/users/{user_id}` | PATCH | Updates a user in AWX. |
 | `/awx/users/{user_id}` | DELETE | Deletes a user in AWX. |
+
+### Activity Stream
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/awx/activity_stream` | GET | Lists activity stream entries in AWX. |
+| `/activity_stream` | GET | Lists activity stream entries in AWX (alias). |
 
 ### Workflow Job Templates
 | Endpoint | Method | Description |
