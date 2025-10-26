@@ -85,7 +85,7 @@ schema_registry: Dict[str, Dict[str, Dict]] = {
             },
             "required": ["title", "description"],
             "additionalProperties": False,
-        }
+        },
     },
 }
 

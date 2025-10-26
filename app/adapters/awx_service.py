@@ -329,7 +329,9 @@ class AWXClient:
 
         users = resp.json()
         if username:
-            users["results"] = [u for u in users.get("results", []) if u["username"] == username]
+            users["results"] = [
+                u for u in users.get("results", []) if u["username"] == username
+            ]
             users["count"] = len(users["results"])
         return users
 

@@ -69,7 +69,10 @@ class PromptService:
                 raise ValueError(f"LLM payload does not match schema: {exc}") from exc
         else:
             import logging
-            logging.warning(f"No schema found for action '{action}', skipping validation")
+
+            logging.warning(
+                f"No schema found for action '{action}', skipping validation"
+            )
 
         # 6. Cache & return
         _CACHE[key] = result

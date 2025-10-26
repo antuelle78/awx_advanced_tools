@@ -25,58 +25,58 @@ class PromptOptimizer:
     def _load_tool_prompts(self) -> Dict[str, str]:
         """Load optimized prompts for each tool with standardized JSON format expectations."""
         return {
-            "list_templates": "Think step by step: 1. Understand the request for job templates. 2. Call list_templates to get available options. 3. Use the results to inform further actions. Example: Call this to find template IDs for launching jobs. Response format: {\"result\": [...]}",
+            "list_templates": 'Think step by step: 1. Understand the request for job templates. 2. Call list_templates to get available options. 3. Use the results to inform further actions. Example: Call this to find template IDs for launching jobs. Response format: {"result": [...]}',
             "launch_job_template": "Think step by step: 1. Identify the template_id from list_templates. 2. Prepare extra_vars if needed. 3. Call launch_job_template. Example: template_id=123, extra_vars={'branch': 'main'}. Response format: {\"result\": {\"job_id\": int, ...}}",
-            "list_jobs": "Think step by step: 1. Check if pagination is needed. 2. Call list_jobs with page if specified. 3. Review job statuses. Example: page=1 to get the first page of jobs. Response format: {\"result\": [...]}",
-            "get_job": "Think step by step: 1. Get the job_id from list_jobs. 2. Call get_job to check status. 3. Act based on the result. Example: job_id=456 to check if the job is running. Response format: {\"result\": {...}}",
-            "list_inventories": "Think step by step: 1. List inventories to find IDs. 2. Use for other operations. 3. Ensure no duplicates. Example: Call this before creating. Response format: {\"result\": [...]}",
+            "list_jobs": 'Think step by step: 1. Check if pagination is needed. 2. Call list_jobs with page if specified. 3. Review job statuses. Example: page=1 to get the first page of jobs. Response format: {"result": [...]}',
+            "get_job": 'Think step by step: 1. Get the job_id from list_jobs. 2. Call get_job to check status. 3. Act based on the result. Example: job_id=456 to check if the job is running. Response format: {"result": {...}}',
+            "list_inventories": 'Think step by step: 1. List inventories to find IDs. 2. Use for other operations. 3. Ensure no duplicates. Example: Call this before creating. Response format: {"result": [...]}',
             "create_inventory": "Think step by step: 1. Use list_organizations to get valid org ID. 2. Check if name exists. 3. Call create_inventory with name, org, variables. Example: name='infra', organization=2, variables={'ansible_user': 'admin'}. Response format: {\"result\": {...}}",
-            "get_inventory": "Think step by step: 1. Get inventory_id from list_inventories. 2. Call get_inventory. 3. Use details for further actions. Example: inventory_id=789. Response format: {\"result\": {...}}",
-            "delete_inventory": "Think step by step: 1. Confirm deletion with confirm=true. 2. Use dry_run if testing. 3. Call delete_inventory. Example: inventory_id=789, confirm=true. Response format: {\"result\": {...}}",
-            "sync_inventory": "Think step by step: 1. Get inventory_id. 2. Call sync_inventory. 3. Monitor the job. Example: inventory_id=789. Response format: {\"result\": {...}}",
-            "list_schedules": "Think step by step: 1. Get template_id. 2. Call list_schedules. 3. Review schedule details. Example: template_id=123. Response format: {\"result\": [...]}",
-            "get_schedule": "Think step by step: 1. Get schedule_id from list_schedules. 2. Call get_schedule. 3. Check status. Example: schedule_id=101. Response format: {\"result\": {...}}",
+            "get_inventory": 'Think step by step: 1. Get inventory_id from list_inventories. 2. Call get_inventory. 3. Use details for further actions. Example: inventory_id=789. Response format: {"result": {...}}',
+            "delete_inventory": 'Think step by step: 1. Confirm deletion with confirm=true. 2. Use dry_run if testing. 3. Call delete_inventory. Example: inventory_id=789, confirm=true. Response format: {"result": {...}}',
+            "sync_inventory": 'Think step by step: 1. Get inventory_id. 2. Call sync_inventory. 3. Monitor the job. Example: inventory_id=789. Response format: {"result": {...}}',
+            "list_schedules": 'Think step by step: 1. Get template_id. 2. Call list_schedules. 3. Review schedule details. Example: template_id=123. Response format: {"result": [...]}',
+            "get_schedule": 'Think step by step: 1. Get schedule_id from list_schedules. 2. Call get_schedule. 3. Check status. Example: schedule_id=101. Response format: {"result": {...}}',
             "create_schedule": "Think step by step: 1. Get template_id. 2. Define rrule. 3. Call create_schedule. Example: name='daily', rrule='FREQ=DAILY', job_template_id=123. Response format: {\"result\": {...}}",
-            "toggle_schedule": "Think step by step: 1. Get schedule_id. 2. Decide enabled status. 3. Call toggle_schedule. Example: schedule_id=101, enabled=true. Response format: {\"result\": {...}}",
-            "delete_schedule": "Think step by step: 1. Confirm deletion. 2. Call delete_schedule. 3. Verify removal. Example: schedule_id=101. Response format: {\"result\": {...}}",
-            "list_organizations": "Think step by step: 1. List organizations for IDs. 2. Use for creating resources. 3. Ensure valid org. Example: Call this before creating inventory. Response format: {\"result\": [...]}",
-            "get_organization": "Think step by step: 1. Get organization_id. 2. Call get_organization. 3. Use details. Example: organization_id=2. Response format: {\"result\": {...}}",
+            "toggle_schedule": 'Think step by step: 1. Get schedule_id. 2. Decide enabled status. 3. Call toggle_schedule. Example: schedule_id=101, enabled=true. Response format: {"result": {...}}',
+            "delete_schedule": 'Think step by step: 1. Confirm deletion. 2. Call delete_schedule. 3. Verify removal. Example: schedule_id=101. Response format: {"result": {...}}',
+            "list_organizations": 'Think step by step: 1. List organizations for IDs. 2. Use for creating resources. 3. Ensure valid org. Example: Call this before creating inventory. Response format: {"result": [...]}',
+            "get_organization": 'Think step by step: 1. Get organization_id. 2. Call get_organization. 3. Use details. Example: organization_id=2. Response format: {"result": {...}}',
             "create_organization": "Think step by step: 1. Check if name exists. 2. Call create_organization. 3. Verify creation. Example: name='IT Team', description='Infrastructure team'. Response format: {\"result\": {...}}",
             "update_organization": "Think step by step: 1. Get organization_id. 2. Call update_organization. 3. Confirm changes. Example: organization_id=2, name='Updated IT'. Response format: {\"result\": {...}}",
-            "delete_organization": "Think step by step: 1. Confirm deletion. 2. Call delete_organization. 3. Verify removal. Example: organization_id=2. Response format: {\"result\": {...}}",
-            "list_projects": "Think step by step: 1. List projects for IDs. 2. Use for other operations. 3. Ensure no duplicates. Example: Call this before creating. Response format: {\"result\": [...]}",
-            "get_project": "Think step by step: 1. Get project_id. 2. Call get_project. 3. Use details. Example: project_id=5. Response format: {\"result\": {...}}",
+            "delete_organization": 'Think step by step: 1. Confirm deletion. 2. Call delete_organization. 3. Verify removal. Example: organization_id=2. Response format: {"result": {...}}',
+            "list_projects": 'Think step by step: 1. List projects for IDs. 2. Use for other operations. 3. Ensure no duplicates. Example: Call this before creating. Response format: {"result": [...]}',
+            "get_project": 'Think step by step: 1. Get project_id. 2. Call get_project. 3. Use details. Example: project_id=5. Response format: {"result": {...}}',
             "create_project": "Think step by step: 1. Check if name exists. 2. Call create_project. 3. Verify creation. Example: name='my-repo', scm_type='git', scm_url='https://github.com/user/repo.git'. Response format: {\"result\": {...}}",
             "update_project": "Think step by step: 1. Get project_id. 2. Call update_project. 3. Confirm changes. Example: project_id=5, name='updated-repo'. Response format: {\"result\": {...}}",
-            "delete_project": "Think step by step: 1. Confirm deletion with confirm=true. 2. Use dry_run if testing. 3. Call delete_project. Example: project_id=5, confirm=true. Response format: {\"result\": {...}}",
-            "sync_project": "Think step by step: 1. Get project_id. 2. Call sync_project. 3. Monitor the job. Example: project_id=5. Response format: {\"result\": {...}}",
-            "list_credentials": "Think step by step: 1. List credentials for IDs. 2. Use for other operations. 3. Ensure no duplicates. Example: Call this before creating. Response format: {\"result\": [...]}",
-            "get_credential": "Think step by step: 1. Get credential_id. 2. Call get_credential. 3. Use details. Example: credential_id=10. Response format: {\"result\": {...}}",
+            "delete_project": 'Think step by step: 1. Confirm deletion with confirm=true. 2. Use dry_run if testing. 3. Call delete_project. Example: project_id=5, confirm=true. Response format: {"result": {...}}',
+            "sync_project": 'Think step by step: 1. Get project_id. 2. Call sync_project. 3. Monitor the job. Example: project_id=5. Response format: {"result": {...}}',
+            "list_credentials": 'Think step by step: 1. List credentials for IDs. 2. Use for other operations. 3. Ensure no duplicates. Example: Call this before creating. Response format: {"result": [...]}',
+            "get_credential": 'Think step by step: 1. Get credential_id. 2. Call get_credential. 3. Use details. Example: credential_id=10. Response format: {"result": {...}}',
             "create_credential": "Think step by step: 1. Check if name exists. 2. Call create_credential. 3. Verify creation. Example: name='ssh-key', credential_type=1, inputs={'username': 'admin'}. Response format: {\"result\": {...}}",
             "update_credential": "Think step by step: 1. Get credential_id. 2. Call update_credential. 3. Confirm changes. Example: credential_id=10, name='updated-key'. Response format: {\"result\": {...}}",
-            "delete_credential": "Think step by step: 1. Confirm deletion. 2. Call delete_credential. 3. Verify removal. Example: credential_id=10. Response format: {\"result\": {...}}",
-            "list_users": "Think step by step: 1. List users for IDs. 2. Use for other operations. 3. Ensure no duplicates. Example: Call this before creating. Response format: {\"result\": [...]}",
-            "get_user": "Think step by step: 1. Get user_id. 2. Call get_user. 3. Use details. Example: user_id=2. Response format: {\"result\": {...}}",
+            "delete_credential": 'Think step by step: 1. Confirm deletion. 2. Call delete_credential. 3. Verify removal. Example: credential_id=10. Response format: {"result": {...}}',
+            "list_users": 'Think step by step: 1. List users for IDs. 2. Use for other operations. 3. Ensure no duplicates. Example: Call this before creating. Response format: {"result": [...]}',
+            "get_user": 'Think step by step: 1. Get user_id. 2. Call get_user. 3. Use details. Example: user_id=2. Response format: {"result": {...}}',
             "create_user": "Think step by step: 1. Check if username exists. 2. Call create_user. 3. Verify creation. Example: username='newuser', password='pass123'. Response format: {\"result\": {...}}",
             "update_user": "Think step by step: 1. Get user_id. 2. Call update_user. 3. Confirm changes. Example: user_id=2, first_name='John'. Response format: {\"result\": {...}}",
-            "delete_user": "Think step by step: 1. Confirm deletion. 2. Call delete_user. 3. Verify removal. Example: user_id=2. Response format: {\"result\": {...}}",
-            "list_workflow_job_templates": "Think step by step: 1. List workflow templates for IDs. 2. Use for other operations. 3. Ensure no duplicates. Example: Call this before creating. Response format: {\"result\": [...]}",
-            "get_workflow_job_template": "Think step by step: 1. Get workflow_job_template_id. 2. Call get_workflow_job_template. 3. Use details. Example: workflow_job_template_id=7. Response format: {\"result\": {...}}",
+            "delete_user": 'Think step by step: 1. Confirm deletion. 2. Call delete_user. 3. Verify removal. Example: user_id=2. Response format: {"result": {...}}',
+            "list_workflow_job_templates": 'Think step by step: 1. List workflow templates for IDs. 2. Use for other operations. 3. Ensure no duplicates. Example: Call this before creating. Response format: {"result": [...]}',
+            "get_workflow_job_template": 'Think step by step: 1. Get workflow_job_template_id. 2. Call get_workflow_job_template. 3. Use details. Example: workflow_job_template_id=7. Response format: {"result": {...}}',
             "create_workflow_job_template": "Think step by step: 1. Check if name exists. 2. Call create_workflow_job_template. 3. Verify creation. Example: name='my-workflow', description='Automation workflow'. Response format: {\"result\": {...}}",
             "update_workflow_job_template": "Think step by step: 1. Get workflow_job_template_id. 2. Call update_workflow_job_template. 3. Confirm changes. Example: workflow_job_template_id=7, name='updated-workflow'. Response format: {\"result\": {...}}",
-            "delete_workflow_job_template": "Think step by step: 1. Confirm deletion. 2. Call delete_workflow_job_template. 3. Verify removal. Example: workflow_job_template_id=7. Response format: {\"result\": {...}}",
+            "delete_workflow_job_template": 'Think step by step: 1. Confirm deletion. 2. Call delete_workflow_job_template. 3. Verify removal. Example: workflow_job_template_id=7. Response format: {"result": {...}}',
             "launch_workflow_job_template": "Think step by step: 1. Get workflow_job_template_id. 2. Prepare extra_vars. 3. Call launch_workflow_job_template. Example: workflow_job_template_id=7, extra_vars={'env': 'prod'}. Response format: {\"result\": {...}}",
-            "list_notifications": "Think step by step: 1. List notifications for IDs. 2. Use for other operations. 3. Ensure no duplicates. Example: Call this before creating. Response format: {\"result\": [...]}",
-            "get_notification": "Think step by step: 1. Get notification_id. 2. Call get_notification. 3. Use details. Example: notification_id=8. Response format: {\"result\": {...}}",
+            "list_notifications": 'Think step by step: 1. List notifications for IDs. 2. Use for other operations. 3. Ensure no duplicates. Example: Call this before creating. Response format: {"result": [...]}',
+            "get_notification": 'Think step by step: 1. Get notification_id. 2. Call get_notification. 3. Use details. Example: notification_id=8. Response format: {"result": {...}}',
             "create_notification": "Think step by step: 1. Check if name exists. 2. Call create_notification. 3. Verify creation. Example: name='email-alert', notification_type='email', notification_configuration={'email': 'admin@example.com'}. Response format: {\"result\": {...}}",
             "update_notification": "Think step by step: 1. Get notification_id. 2. Call update_notification. 3. Confirm changes. Example: notification_id=8, name='updated-alert'. Response format: {\"result\": {...}}",
-            "delete_notification": "Think step by step: 1. Confirm deletion. 2. Call delete_notification. 3. Verify removal. Example: notification_id=8. Response format: {\"result\": {...}}",
-            "list_instance_groups": "Think step by step: 1. List instance groups for IDs. 2. Use for other operations. 3. Ensure no duplicates. Example: Call this before creating. Response format: {\"result\": [...]}",
-            "get_instance_group": "Think step by step: 1. Get instance_group_id. 2. Call get_instance_group. 3. Use details. Example: instance_group_id=9. Response format: {\"result\": {...}}",
+            "delete_notification": 'Think step by step: 1. Confirm deletion. 2. Call delete_notification. 3. Verify removal. Example: notification_id=8. Response format: {"result": {...}}',
+            "list_instance_groups": 'Think step by step: 1. List instance groups for IDs. 2. Use for other operations. 3. Ensure no duplicates. Example: Call this before creating. Response format: {"result": [...]}',
+            "get_instance_group": 'Think step by step: 1. Get instance_group_id. 2. Call get_instance_group. 3. Use details. Example: instance_group_id=9. Response format: {"result": {...}}',
             "create_instance_group": "Think step by step: 1. Check if name exists. 2. Call create_instance_group. 3. Verify creation. Example: name='prod-group'. Response format: {\"result\": {...}}",
             "update_instance_group": "Think step by step: 1. Get instance_group_id. 2. Call update_instance_group. 3. Confirm changes. Example: instance_group_id=9, name='updated-group'. Response format: {\"result\": {...}}",
-            "delete_instance_group": "Think step by step: 1. Confirm deletion. 2. Call delete_instance_group. 3. Verify removal. Example: instance_group_id=9. Response format: {\"result\": {...}}",
-            "list_activity_stream": "Think step by step: 1. List activity stream for events. 2. Use for monitoring. 3. Review recent actions. Example: page=1, page_size=20. Response format: {\"result\": [...]}",
+            "delete_instance_group": 'Think step by step: 1. Confirm deletion. 2. Call delete_instance_group. 3. Verify removal. Example: instance_group_id=9. Response format: {"result": {...}}',
+            "list_activity_stream": 'Think step by step: 1. List activity stream for events. 2. Use for monitoring. 3. Review recent actions. Example: page=1, page_size=20. Response format: {"result": [...]}',
         }
 
     def get_optimized_prompt(self, tool_name: str, **kwargs) -> str:
@@ -521,9 +521,11 @@ class Tools:
             existing_ids = [inv["id"] for inv in inventories.get("results", [])]
             if inventory_id in existing_ids:
                 self.log_tool_usage("delete_inventory", False, time.time() - start_time)
-                return json.dumps({
-                    "error": f"Inventory {inventory_id} was not deleted. It still exists in the list. Check AWX for issues."
-                })
+                return json.dumps(
+                    {
+                        "error": f"Inventory {inventory_id} was not deleted. It still exists in the list. Check AWX for issues."
+                    }
+                )
 
             self.log_tool_usage("delete_inventory", True, time.time() - start_time)
             return json.dumps(response.json())
@@ -535,19 +537,29 @@ class Tools:
                     inventories = json.loads(inventories_response)
                     existing_ids = [inv["id"] for inv in inventories.get("results", [])]
                     if inventory_id not in existing_ids:
-                        self.log_tool_usage("delete_inventory", True, time.time() - start_time)
+                        self.log_tool_usage(
+                            "delete_inventory", True, time.time() - start_time
+                        )
                         return json.dumps({"status": "deleted", "id": inventory_id})
                     else:
-                        self.log_tool_usage("delete_inventory", False, time.time() - start_time)
-                        return json.dumps({
-                            "error": f"Inventory {inventory_id} was not deleted despite 500 error. It still exists in the list. Check AWX for issues."
-                        })
+                        self.log_tool_usage(
+                            "delete_inventory", False, time.time() - start_time
+                        )
+                        return json.dumps(
+                            {
+                                "error": f"Inventory {inventory_id} was not deleted despite 500 error. It still exists in the list. Check AWX for issues."
+                            }
+                        )
                 except Exception:
-                    self.log_tool_usage("delete_inventory", False, time.time() - start_time)
-                    return json.dumps({
-                        "error": f"HTTP error occurred: {e.response.status_code}",
-                        "detail": e.response.text,
-                    })
+                    self.log_tool_usage(
+                        "delete_inventory", False, time.time() - start_time
+                    )
+                    return json.dumps(
+                        {
+                            "error": f"HTTP error occurred: {e.response.status_code}",
+                            "detail": e.response.text,
+                        }
+                    )
             self.log_tool_usage("delete_inventory", False, time.time() - start_time)
             return json.dumps(
                 {
@@ -948,9 +960,11 @@ class Tools:
             existing_ids = [proj["id"] for proj in projects.get("results", [])]
             if project_id in existing_ids:
                 self.log_tool_usage("delete_project", False, time.time() - start_time)
-                return json.dumps({
-                    "error": f"Project {project_id} was not deleted. It still exists in the list. Check AWX for issues."
-                })
+                return json.dumps(
+                    {
+                        "error": f"Project {project_id} was not deleted. It still exists in the list. Check AWX for issues."
+                    }
+                )
 
             self.log_tool_usage("delete_project", True, time.time() - start_time)
             return json.dumps(response.json())
@@ -963,19 +977,29 @@ class Tools:
                     projects = json.loads(projects_response)
                     existing_ids = [proj["id"] for proj in projects.get("results", [])]
                     if project_id not in existing_ids:
-                        self.log_tool_usage("delete_project", True, time.time() - start_time)
+                        self.log_tool_usage(
+                            "delete_project", True, time.time() - start_time
+                        )
                         return json.dumps({"status": "deleted", "id": project_id})
                     else:
-                        self.log_tool_usage("delete_project", False, time.time() - start_time)
-                        return json.dumps({
-                            "error": f"Project {project_id} was not deleted despite 500 error. It still exists in the list. Check AWX for issues."
-                        })
+                        self.log_tool_usage(
+                            "delete_project", False, time.time() - start_time
+                        )
+                        return json.dumps(
+                            {
+                                "error": f"Project {project_id} was not deleted despite 500 error. It still exists in the list. Check AWX for issues."
+                            }
+                        )
                 except Exception:
-                    self.log_tool_usage("delete_project", False, time.time() - start_time)
-                    return json.dumps({
-                        "error": f"HTTP error occurred: {e.response.status_code}",
-                        "detail": e.response.text,
-                    })
+                    self.log_tool_usage(
+                        "delete_project", False, time.time() - start_time
+                    )
+                    return json.dumps(
+                        {
+                            "error": f"HTTP error occurred: {e.response.status_code}",
+                            "detail": e.response.text,
+                        }
+                    )
             self.log_tool_usage("delete_project", False, time.time() - start_time)
             return json.dumps(
                 {
