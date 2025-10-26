@@ -33,12 +33,26 @@ CREATE_PROJECT_TEMPLATE = (
     "Only return a JSON object in the format {{\"result\": <AWX response JSON>}}, no markdown or explanations."
 )
 
+CREATE_HOST_TEMPLATE = (
+    "You are given host data including name and inventory.\n"
+    "Think step-by-step: Validate the data, then POST to '/api/v2/hosts/'.\n"
+    "Only return a JSON object in the format {{\"result\": <AWX response JSON>}}, no markdown or explanations."
+)
+
+CREATE_JOB_TEMPLATE_TEMPLATE = (
+    "You are given job template data including name, inventory, project, playbook.\n"
+    "Think step-by-step: Validate the data, then POST to '/api/v2/job_templates/'.\n"
+    "Only return a JSON object in the format {{\"result\": <AWX response JSON>}}, no markdown or explanations."
+)
+
 TEMPLATES = {
     "launch_job_template": LAUNCH_JOB_TEMPLATE,
     "validate_schema": VALIDATE_SCHEMA_TEMPLATE,
     "summarize_log": SUMMARIZE_LOG_TEMPLATE,
     "get_awx_status": GET_AWX_STATUS_TEMPLATE,
     "create_project": CREATE_PROJECT_TEMPLATE,
+    "create_host": CREATE_HOST_TEMPLATE,
+    "create_job_template": CREATE_JOB_TEMPLATE_TEMPLATE,
 }
 
 

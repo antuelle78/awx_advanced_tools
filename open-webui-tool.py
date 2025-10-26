@@ -76,8 +76,10 @@ class PromptOptimizer:
             "create_instance_group": "Think step by step: 1. Check if name exists. 2. Call create_instance_group. 3. Verify creation. Example: name='prod-group'. Response format: {\"result\": {...}}",
             "update_instance_group": "Think step by step: 1. Get instance_group_id. 2. Call update_instance_group. 3. Confirm changes. Example: instance_group_id=9, name='updated-group'. Response format: {\"result\": {...}}",
             "delete_instance_group": "Think step by step: 1. Confirm deletion. 2. Call delete_instance_group. 3. Verify removal. Example: instance_group_id=9. Response format: {\"result\": {...}}",
-            "list_activity_stream": "Think step by step: 1. List activity stream for events. 2. Use for monitoring. 3. Review recent actions. Example: page=1, page_size=20. Response format: {\"result\": [...]}",
-        }
+             "list_activity_stream": "Think step by step: 1. List activity stream for events. 2. Use for monitoring. 3. Review recent actions. Example: page=1, page_size=20. Response format: {\"result\": [...]}",
+             "create_host": "Think step by step: 1. Validate host data with required fields like name and inventory. 2. Call create_host with the data. 3. Verify creation. Example: name='web-server', inventory=1. Response format: {\"result\": {...}}",
+             "create_job_template": "Think step by step: 1. Validate job template data with required fields like name, inventory, project, playbook. 2. Call create_job_template. 3. Verify creation. Example: name='deploy-app', inventory=1, project=1, playbook='deploy.yml'. Response format: {\"result\": {...}}",
+         }
 
     def get_optimized_prompt(self, tool_name: str, **kwargs) -> str:
         """Generate an optimized prompt for a specific tool with ReAct-like structure and standardized format expectations."""
@@ -104,53 +106,83 @@ class PromptOptimizer:
         try:
             with open(self.log_file, "a") as f:
                 f.write(json.dumps(log_entry) + "\n")
-        except Exception as e:
-            logging.warning(f"Failed to log tool usage: {e}")
+         except Exception as e:
+             return json.dumps({"error": str(e)})
 
+     def create_host(self, host_data: dict) -> str:
+         """
+         Creates a new host in AWX.
 
-class Tools:
-    class Valves(BaseModel):
-        mcp_server_url: str = Field(
-            default="http://host.docker.internal:8001",
-            description="The base URL of MCP server.",
-        )
-        mcp_username: str = Field(
-            default="admin", description="Username for MCP server authentication."
-        )
-        mcp_password: str = Field(
-            default="password", description="Password for MCP server authentication."
-        )
+         :param host_data: A dictionary containing host details (e.g., name, inventory).
+         :return: A JSON string with the result of creating the host.
+         """
+         # Validate host data
+         if not self._validate_host_data(host_data):
+             return json.dumps({"error": "Invalid host data. Required fields: name, inventory."})
 
-    def __init__(self):
-        self.valves = self.Valves()
-        self.client = httpx.Client(
-            timeout=30.0, auth=(self.valves.mcp_username, self.valves.mcp_password)
-        )  # Add timeout and auth for requests
-        self.prompt_optimizer = PromptOptimizer()
+         url = f"{self.mcp_server_url}/awx/hosts"
+         try:
+             response = self.client.post(url, headers=self._get_headers(), json=host_data)
+             response.raise_for_status()
+             return json.dumps(response.json())
+         except httpx.HTTPStatusError as e:
+             return json.dumps(
+                 {
+                     "error": f"HTTP error occurred: {e.response.status_code}",
+                     "detail": e.response.text,
+                 }
+             )
+         except Exception as e:
+             return json.dumps({"error": str(e)})
 
-    def _get_headers(self) -> dict:
-        return {
-            "Content-Type": "application/json",
-            "Accept": "application/json",
-        }
+     def create_job_template(
+         self, name: str, inventory: int, project: int, playbook: str, description: Optional[str] = None, extra_vars: Optional[dict] = None
+     ) -> str:
+         """
+         Creates a new job template in AWX.
 
-    def get_optimized_prompt(self, tool_name: str, **kwargs) -> str:
-        """Get an optimized prompt for a specific tool."""
-        return self.prompt_optimizer.get_optimized_prompt(tool_name, **kwargs)
+         :param name: The name of the job template.
+         :param inventory: The ID of the inventory.
+         :param project: The ID of the project.
+         :param playbook: The playbook path.
+         :param description: Optional description.
+         :param extra_vars: Optional extra variables.
+         :return: A JSON string with the result of creating the job template.
+         """
+         # Validate required fields
+         if not name or not inventory or not project or not playbook:
+             return json.dumps({"error": "Missing required fields: name, inventory, project, playbook."})
 
-    def log_tool_usage(self, tool_name: str, success: bool, response_time: float):
-        """Log tool usage for feedback loop."""
-        self.prompt_optimizer.log_tool_usage(tool_name, success, response_time)
+         url = f"{self.mcp_server_url}/awx/job_templates"
+         payload = {"name": name, "inventory": inventory, "project": project, "playbook": playbook}
+         if description:
+             payload["description"] = description
+         if extra_vars:
+             payload["extra_vars"] = extra_vars
 
-    def get_all_optimized_prompts(self) -> Dict[str, str]:
-        """Get optimized prompts for all available tools."""
-        return self.prompt_optimizer.tool_prompts
+         try:
+             response = self.client.post(url, headers=self._get_headers(), json=payload)
+             response.raise_for_status()
+             return json.dumps(response.json())
+         except httpx.HTTPStatusError as e:
+             return json.dumps(
+                 {
+                     "error": f"HTTP error occurred: {e.response.status_code}",
+                     "detail": e.response.text,
+                 }
+             )
+         except Exception as e:
+             return json.dumps({"error": str(e)})
 
-    @property
-    def mcp_server_url(self) -> str:
-        return self.valves.mcp_server_url
+     def _validate_host_data(self, host_data: dict) -> bool:
+         """Validate host data."""
+         required_fields = ["name", "inventory"]
+         for field in required_fields:
+             if field not in host_data:
+                 return False
+         return True
 
-    def list_templates(self) -> str:
+     def list_templates(self) -> str:
         """
         Lists all job templates in AWX.
 
