@@ -48,7 +48,7 @@ class TestGetLLMClient:
 
 class TestOpenAIClient:
     @patch("app.llm.client.settings")
-    @patch("app.llm.client.openai")
+    @patch("app.llm.client.openai", create=True)
     def test_openai_client_init(self, mock_openai, mock_settings):
         if not hasattr(client_module, "openai"):
             pytest.skip("openai not available")
@@ -61,7 +61,7 @@ class TestOpenAIClient:
 
     @pytest.mark.asyncio
     @patch("app.llm.client.settings")
-    @patch("app.llm.client.openai")
+    @patch("app.llm.client.openai", create=True)
     async def test_openai_client_get_payload(self, mock_openai, mock_settings):
         if not hasattr(client_module, "openai"):
             pytest.skip("openai not available")
@@ -78,7 +78,7 @@ class TestOpenAIClient:
 
 class TestOllamaClient:
     @patch("app.llm.client.settings")
-    @patch("app.llm.client.ollama")
+    @patch("app.llm.client.ollama", create=True)
     def test_ollama_client_init(self, mock_ollama, mock_settings):
         if not hasattr(client_module, "ollama"):
             pytest.skip("ollama not available")
@@ -90,7 +90,7 @@ class TestOllamaClient:
 
     @pytest.mark.asyncio
     @patch("app.llm.client.settings")
-    @patch("app.llm.client.ollama")
+    @patch("app.llm.client.ollama", create=True)
     async def test_ollama_client_get_payload(self, mock_ollama, mock_settings):
         if not hasattr(client_module, "ollama"):
             pytest.skip("ollama not available")
