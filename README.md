@@ -120,14 +120,14 @@ The easiest way to run the server is with Docker Compose.
 docker compose up -d
 ```
 
-The server will be available at `http://localhost:8001`.
+The server will be available at `http://localhost:8001`. All API endpoints (except /health) require basic authentication (username: admin, password: password). The gateway provides authentication and proxies requests to the server.
 
 ---
 
 <a id="api-specification"></a>
 ## 6. API Specification
 
-The following endpoints are available:
+The following endpoints are available. All endpoints (except /health) require basic authentication (username: admin, password: password).
 
 ### Authentication
 | Endpoint | Method | Description |
@@ -245,7 +245,7 @@ This repository includes an `open-webui-tool.py` file that can be imported into 
 ### Configuration
 
 1.  Import the `open-webui-tool.py` file in the Open-WebUI interface.
-2.  In the tool's "Valves" settings, configure the `mcp_server_url`, `mcp_username`, and `mcp_password` fields (default: admin/password).
+2.  In the tool's "Valves" settings, configure the `mcp_server_url` (default: http://host.docker.internal:8001), `mcp_username` (default: admin), and `mcp_password` (default: password) fields.
 
 ---
 
