@@ -54,7 +54,7 @@ class OpenAIClient(BaseLLMClient):
 
         self.openai.api_key = self.api_key
         if self.endpoint:
-            self.openai.api_base = self.endpoint.split("/v1/")[0]  # strip path
+            self.openai.base_url = self.endpoint
 
     async def get_payload(
         self,

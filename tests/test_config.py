@@ -1,12 +1,17 @@
 from app.config import Settings
 
 
-def test_settings_default_values():
+def test_settings_default_values(monkeypatch):
+    monkeypatch.setenv("AWX_BASE_URL", "dummy")
+    monkeypatch.setenv("AWX_TOKEN", "your_awx_token")
+    monkeypatch.setenv("LLM_PROVIDER", "ollama")
+    monkeypatch.setenv("LLM_MODEL", "dummy")
+    monkeypatch.setenv("AUDIT_LOG_DIR", "/tmp/audit")
     settings = Settings()
     assert settings.llm_provider == "ollama"
     assert settings.llm_model == "dummy"
     assert settings.audit_log_dir == "/tmp/audit"
-    assert settings.awx_base_url == "https://awx.example.com"
+    assert settings.awx_base_url == "dummy"
     assert settings.awx_token == "your_awx_token"
 
 
