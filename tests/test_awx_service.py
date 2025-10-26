@@ -78,12 +78,12 @@ async def test_list_templates(mock_httpx):
 @pytest.mark.asyncio
 async def test_create_job_template(mock_httpx):
     result = await awx_client.create_job_template("Test Job Template", 1, 1, "playbook.yml")
-    assert result["json"]["name"] == "Test Job Template"
+    assert result.json()["json"]["name"] == "Test Job Template"
 
 @pytest.mark.asyncio
 async def test_create_host(mock_httpx):
     result = await awx_client.create_host({"name": "Test Host", "inventory": 1})
-    assert result.json()["name"] == "Test Host"
+    assert result.json()["json"]["name"] == "Test Host"
 
 @pytest.mark.asyncio
 async def test_validate_host_valid():
