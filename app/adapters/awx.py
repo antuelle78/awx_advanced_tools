@@ -113,6 +113,16 @@ async def list_inventories():
         raise HTTPException(status_code=exc.response.status_code, detail=str(exc))
 
 
+@router.post("/inventories")
+async def create_inventory(inventory: InventoryCreate):
+    try:
+        return await awx_client.create_inventory(
+            inventory.name, inventory.variables, inventory.organization
+        )
+    except httpx.HTTPStatusError as exc:  # pragma: no cover
+        raise HTTPException(status_code=exc.response.status_code, detail=str(exc))
+
+
 @router.get("/inventories/{inventory_id}")
 async def get_inventory(inventory_id: int):
     try:

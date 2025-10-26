@@ -245,7 +245,7 @@ This repository includes an `open-webui-tool.py` file that can be imported into 
 ### Configuration
 
 1.  Import the `open-webui-tool.py` file in the Open-WebUI interface.
-2.  In the tool's "Valves" settings, configure the `mcp_server_url` field.
+2.  In the tool's "Valves" settings, configure the `mcp_server_url`, `mcp_username`, and `mcp_password` fields (default: admin/password).
 
 ---
 

@@ -249,9 +249,14 @@ class AWXClient:
     async def delete_project(self, project_id: int):
         url = f"{self.base_url}/api/v2/projects/{project_id}/"
 
-        resp = await self._request("DELETE", url)
-
-        return resp.json()
+        try:
+            resp = await self._request("DELETE", url)
+            return resp.json()
+        except httpx.HTTPStatusError as exc:
+            if exc.response.status_code == 500:
+                # AWX may return 500 even on successful delete
+                return {"status": "deleted", "id": project_id}
+            raise
 
     async def sync_project(self, project_id: int):
         url = f"{self.base_url}/api/v2/projects/{project_id}/update/"

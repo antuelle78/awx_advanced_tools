@@ -31,7 +31,7 @@ class PromptOptimizer:
             "list_jobs": "List all jobs in AWX. Optionally provide a page number for pagination.",
             "get_job": "Get the status of a specific job in AWX. Provide the job_id.",
             "list_inventories": "List all inventories in AWX.",
-            "create_inventory": "Create a new inventory in AWX. Provide name, organization, and variables.",
+            "create_inventory": "Create a new inventory in AWX. First, use list_organizations to find a valid organization ID. Provide name, organization (numeric ID), and optional variables.",
             "get_inventory": "Get details of a specific inventory in AWX. Provide the inventory_id.",
             "delete_inventory": "Delete an inventory in AWX. Provide the inventory_id.",
             "sync_inventory": "Sync an inventory in AWX. Provide the inventory_id.",
@@ -111,12 +111,21 @@ class PromptOptimizer:
 class Tools:
     class Valves(BaseModel):
         mcp_server_url: str = Field(
-            default="http://localhost:8001", description="The base URL of MCP server."
+            default="http://host.docker.internal:8001", description="The base URL of MCP server."
+        )
+        mcp_username: str = Field(
+            default="admin", description="Username for MCP server authentication."
+        )
+        mcp_password: str = Field(
+            default="password", description="Password for MCP server authentication."
         )
 
     def __init__(self):
         self.valves = self.Valves()
-        self.client = httpx.Client(timeout=30.0)  # Add timeout for requests
+        self.client = httpx.Client(
+            timeout=30.0,
+            auth=(self.valves.mcp_username, self.valves.mcp_password)
+        )  # Add timeout and auth for requests
         self.prompt_optimizer = PromptOptimizer()
 
     def _get_headers(self) -> dict:
@@ -212,6 +221,30 @@ class Tools:
         :param variables: A dictionary of variables for inventory.
         :return: The result of create inventory action.
         """
+        # Validate organization ID by listing organizations
+        orgs_response = self.list_organizations()
+        try:
+            orgs = json.loads(orgs_response)
+            valid_org_ids = [org["id"] for org in orgs.get("results", [])]
+            if organization not in valid_org_ids:
+                return json.dumps({
+                    "error": f"Invalid organization ID {organization}. Valid IDs: {valid_org_ids}. Use list_organizations to see details."
+                })
+        except Exception:
+            pass  # If validation fails, proceed anyway
+
+        # Check if inventory with the same name already exists
+        inventories_response = self.list_inventories()
+        try:
+            inventories = json.loads(inventories_response)
+            existing_names = [inv["name"] for inv in inventories.get("results", [])]
+            if name in existing_names:
+                return json.dumps({
+                    "error": f"Inventory with name '{name}' already exists. Use list_inventories to see existing inventories."
+                })
+        except Exception:
+            pass  # If check fails, proceed anyway
+
         url = f"{self.mcp_server_url}/awx/inventories"
         payload = {"name": name, "organization": organization}
         if variables:
@@ -374,6 +407,18 @@ class Tools:
         :param job_template_id: The ID of job template to schedule.
         :return: A JSON string with details of newly created schedule.
         """
+        # Check if schedule with the same name already exists for the template
+        schedules_response = self.list_schedules(job_template_id)
+        try:
+            schedules = json.loads(schedules_response)
+            existing_names = [sched["name"] for sched in schedules.get("results", [])]
+            if name in existing_names:
+                return json.dumps({
+                    "error": f"Schedule with name '{name}' already exists for this job template. Use list_schedules to see existing schedules."
+                })
+        except Exception:
+            pass  # If check fails, proceed anyway
+
         url = f"{self.mcp_server_url}/awx/job_templates/{job_template_id}/schedules"
         payload = {"name": name, "rrule": rrule}
         try:
@@ -528,6 +573,18 @@ class Tools:
         :param description: The description of organization.
         :return: The result of create organization action.
         """
+        # Check if organization with the same name already exists
+        orgs_response = self.list_organizations()
+        try:
+            orgs = json.loads(orgs_response)
+            existing_names = [org["name"] for org in orgs.get("results", [])]
+            if name in existing_names:
+                return json.dumps({
+                    "error": f"Organization with name '{name}' already exists. Use list_organizations to see existing organizations."
+                })
+        except Exception:
+            pass  # If check fails, proceed anyway
+
         url = f"{self.mcp_server_url}/awx/organizations"
         payload = {"name": name}
         if description:
@@ -694,6 +751,18 @@ class Tools:
         :return: The result of create project action.
 
         """
+        # Check if project with the same name already exists
+        projects_response = self.list_projects()
+        try:
+            projects = json.loads(projects_response)
+            existing_names = [proj["name"] for proj in projects.get("results", [])]
+            if name in existing_names:
+                return json.dumps({
+                    "error": f"Project with name '{name}' already exists. Use list_projects to see existing projects."
+                })
+        except Exception:
+            pass  # If check fails, proceed anyway
+
         url = f"{self.mcp_server_url}/awx/projects"
 
         payload = {"name": name, "scm_type": scm_type, "scm_url": scm_url}
@@ -707,7 +776,6 @@ class Tools:
             response.raise_for_status()
 
             return json.dumps(response.json())
-
         except httpx.HTTPStatusError as e:
             return json.dumps(
                 {
@@ -715,7 +783,6 @@ class Tools:
                     "detail": e.response.text,
                 }
             )
-
         except Exception as e:
             return json.dumps({"error": str(e)})
 
@@ -904,6 +971,18 @@ class Tools:
         :return: The result of create credential action.
 
         """
+        # Check if credential with the same name already exists
+        creds_response = self.list_credentials()
+        try:
+            creds = json.loads(creds_response)
+            existing_names = [cred["name"] for cred in creds.get("results", [])]
+            if name in existing_names:
+                return json.dumps({
+                    "error": f"Credential with name '{name}' already exists. Use list_credentials to see existing credentials."
+                })
+        except Exception:
+            pass  # If check fails, proceed anyway
+
         url = f"{self.mcp_server_url}/awx/credentials"
 
         payload = {"name": name, "credential_type": credential_type, "inputs": inputs}
@@ -914,7 +993,6 @@ class Tools:
             response.raise_for_status()
 
             return json.dumps(response.json())
-
         except httpx.HTTPStatusError as e:
             return json.dumps(
                 {
@@ -922,7 +1000,6 @@ class Tools:
                     "detail": e.response.text,
                 }
             )
-
         except Exception as e:
             return json.dumps({"error": str(e)})
 
@@ -1081,6 +1158,18 @@ class Tools:
         :return: The result of create user action.
 
         """
+        # Check if user with the same username already exists
+        users_response = self.list_users()
+        try:
+            users = json.loads(users_response)
+            existing_usernames = [user["username"] for user in users.get("results", [])]
+            if username in existing_usernames:
+                return json.dumps({
+                    "error": f"User with username '{username}' already exists. Use list_users to see existing users."
+                })
+        except Exception:
+            pass  # If check fails, proceed anyway
+
         url = f"{self.mcp_server_url}/awx/users"
 
         payload = {"username": username, "password": password}
@@ -1100,7 +1189,6 @@ class Tools:
             response.raise_for_status()
 
             return json.dumps(response.json())
-
         except httpx.HTTPStatusError as e:
             return json.dumps(
                 {
@@ -1108,7 +1196,6 @@ class Tools:
                     "detail": e.response.text,
                 }
             )
-
         except Exception as e:
             return json.dumps({"error": str(e)})
 
@@ -1268,6 +1355,18 @@ class Tools:
         :return: The result of create workflow job template action.
 
         """
+        # Check if workflow job template with the same name already exists
+        wfts_response = self.list_workflow_job_templates()
+        try:
+            wfts = json.loads(wfts_response)
+            existing_names = [wft["name"] for wft in wfts.get("results", [])]
+            if name in existing_names:
+                return json.dumps({
+                    "error": f"Workflow job template with name '{name}' already exists. Use list_workflow_job_templates to see existing templates."
+                })
+        except Exception:
+            pass  # If check fails, proceed anyway
+
         url = f"{self.mcp_server_url}/awx/workflow_job_templates"
 
         payload = {"name": name}
@@ -1289,7 +1388,6 @@ class Tools:
                     "detail": e.response.text,
                 }
             )
-
         except Exception as e:
             return json.dumps({"error": str(e)})
 
@@ -1477,6 +1575,18 @@ class Tools:
         :return: The result of create notification action.
 
         """
+        # Check if notification with the same name already exists
+        notifs_response = self.list_notifications()
+        try:
+            notifs = json.loads(notifs_response)
+            existing_names = [notif["name"] for notif in notifs.get("results", [])]
+            if name in existing_names:
+                return json.dumps({
+                    "error": f"Notification with name '{name}' already exists. Use list_notifications to see existing notifications."
+                })
+        except Exception:
+            pass  # If check fails, proceed anyway
+
         url = f"{self.mcp_server_url}/awx/notifications"
 
         payload = {
@@ -1499,7 +1609,6 @@ class Tools:
                     "detail": e.response.text,
                 }
             )
-
         except Exception as e:
             return json.dumps({"error": str(e)})
 
@@ -1652,6 +1761,18 @@ class Tools:
         :return: The result of create instance group action.
 
         """
+        # Check if instance group with the same name already exists
+        igs_response = self.list_instance_groups()
+        try:
+            igs = json.loads(igs_response)
+            existing_names = [ig["name"] for ig in igs.get("results", [])]
+            if name in existing_names:
+                return json.dumps({
+                    "error": f"Instance group with name '{name}' already exists. Use list_instance_groups to see existing groups."
+                })
+        except Exception:
+            pass  # If check fails, proceed anyway
+
         url = f"{self.mcp_server_url}/awx/instance_groups"
 
         payload: Dict[str, Any] = {"name": name}
@@ -1676,7 +1797,6 @@ class Tools:
                     "detail": e.response.text,
                 }
             )
-
         except Exception as e:
             return json.dumps({"error": str(e)})
 
