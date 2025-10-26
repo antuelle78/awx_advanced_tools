@@ -1,6 +1,8 @@
 import httpx
+import logging
 from typing import Optional
 from app.config import settings
+from fastapi import HTTPException
 
 
 class AWXClient:
@@ -319,12 +321,17 @@ class AWXClient:
 
     # Users methods
 
-    async def list_users(self):
+    async def list_users(self, username: Optional[str] = None):
+        logging.info(f"DEBUG: list_users called with username = {username}")
         url = f"{self.base_url}/api/v2/users/"
 
         resp = await self._request("GET", url)
 
-        return resp.json()
+        users = resp.json()
+        if username:
+            users["results"] = [u for u in users.get("results", []) if u["username"] == username]
+            users["count"] = len(users["results"])
+        return users
 
     async def get_user(self, user_id: int):
         url = f"{self.base_url}/api/v2/users/{user_id}/"
@@ -332,6 +339,13 @@ class AWXClient:
         resp = await self._request("GET", url)
 
         return resp.json()
+
+    async def get_user_by_name(self, username: str):
+        users = await self.list_users()
+        for user in users.get("results", []):
+            if user["username"] == username:
+                return await self.get_user(user["id"])
+        raise HTTPException(status_code=404, detail=f"User '{username}' not found")
 
     async def create_user(
         self,

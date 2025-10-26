@@ -3,8 +3,9 @@ from pydantic import BaseModel
 from typing import Optional, Dict
 from app.adapters.awx_service import awx_client
 import httpx
+import logging
 
-router = APIRouter(prefix="/awx", tags=["AWX"])
+router = APIRouter(prefix="/awx2", tags=["AWX"])
 
 
 class InventoryCreate(BaseModel):
@@ -62,17 +63,28 @@ async def launch_job_template(template_id: int, extra_vars: dict | None = None):
 
 # User endpoints
 @router.get("/users")
-async def list_users():
-    try:
-        return await awx_client.list_users()
-    except httpx.HTTPStatusError as exc:
-        raise HTTPException(status_code=exc.response.status_code, detail=str(exc))
+async def list_users(username: str):
+    logging.info(f"DEBUG: adapter list_users called with username = {username}")
+    return {"debug": "called", "username": username}
+
+
+@router.get("/test")
+async def test():
+    return {"test": "ok"}
 
 
 @router.get("/users/{user_id}")
 async def get_user(user_id: int):
     try:
         return await awx_client.get_user(user_id)
+    except httpx.HTTPStatusError as exc:
+        raise HTTPException(status_code=exc.response.status_code, detail=str(exc))
+
+
+@router.get("/users/by-name/{username}")
+async def get_user_by_name(username: str):
+    try:
+        return await awx_client.get_user_by_name(username)
     except httpx.HTTPStatusError as exc:
         raise HTTPException(status_code=exc.response.status_code, detail=str(exc))
 

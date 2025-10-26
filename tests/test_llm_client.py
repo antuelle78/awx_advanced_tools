@@ -1,7 +1,7 @@
 import os
 import pytest
 from unittest.mock import patch, AsyncMock
-from app.llm.client import get_llm_client, OpenAIClient, OllamaClient, BaseLLMClient
+from app.llm.client import get_llm_client, OpenAIClient, OllamaClient
 
 # Set default provider to ollama to avoid import errors
 os.environ["LLM_PROVIDER"] = "ollama"

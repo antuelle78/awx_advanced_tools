@@ -6,7 +6,7 @@
 - **Lint**: `ruff check . --fix`
 - **Type-check**: `mypy --explicit-package-bases --ignore-missing-imports app`
 - **Run all tests**: `pytest`
-- **Run a single test**: `pytest tests/test_<module>.py -v`
+- **Run a single test**: `pytest tests/test_<module>.py -v` (e.g., `pytest tests/test_main.py -v`)
 - **Run tests matching a pattern**: `pytest -k <pattern>`
 - **Coverage**: `pytest --cov=app --cov-report term-missing`
 
@@ -18,6 +18,7 @@
 - **Error handling**: raise `FastAPI.HTTPException` for client errors; custom exceptions for internal logic.
 - **Logging**: `logging` module, JSON output, INFO level.
 - **Docstrings**: one-line for public functions.
+- **Async**: Use async/await for I/O operations.
 - **General**: strict adherence to these rules.
 
 ## CI / PR
