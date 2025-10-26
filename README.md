@@ -145,10 +145,10 @@ The following endpoints are available. All endpoints (except /health) require ba
 ### Inventories
 | Endpoint | Method | Description |
 |----------|--------|-------------|
-| `/awx/inventories` | POST | Creates a new inventory in AWX. |
+| `/awx/inventories` | POST | Creates a new inventory in AWX. Supports `dry_run` parameter for testing. |
 | `/awx/inventories` | GET | Lists inventories in AWX. |
 | `/awx/inventories/{inventory_id}` | GET | Retrieves an inventory in AWX. |
-| `/awx/inventories/{inventory_id}` | DELETE | Deletes an inventory in AWX. |
+| `/awx/inventories/{inventory_id}` | DELETE | Deletes an inventory in AWX. Requires `confirm=true` and supports `dry_run` for testing. |
 | `/awx/inventories/{inventory_id}/sync` | POST | Syncs an inventory in AWX. |
 
 ### Schedules
@@ -176,7 +176,7 @@ The following endpoints are available. All endpoints (except /health) require ba
 | `/awx/projects/{project_id}` | GET | Retrieves a project in AWX. |
 | `/awx/projects` | POST | Creates a new project in AWX. |
 | `/awx/projects/{project_id}` | PATCH | Updates a project in AWX. |
-| `/awx/projects/{project_id}` | DELETE | Deletes a project in AWX. |
+| `/awx/projects/{project_id}` | DELETE | Deletes a project in AWX. Requires `confirm=true` and supports `dry_run` for testing. |
 | `/awx/projects/{project_id}/sync` | POST | Syncs a project in AWX. |
 
 ### Credentials
@@ -235,12 +235,27 @@ The following endpoints are available. All endpoints (except /health) require ba
 |----------|--------|-------------|
 | `/docs` | GET | Swagger UI for interactive API documentation. |
 
+## 7. Safety Features for Critical Infrastructure
+
+To ensure trust in LLM-assisted maintenance of critical infrastructure, the following safety checks are implemented:
+
+- **Dry-Run Modes**: All create and delete operations support a `dry_run=true` parameter to simulate actions without execution, allowing testing of changes.
+- **Confirmation Prompts**: Destructive actions (e.g., delete operations) require a `confirm=true` parameter to prevent accidental deletions.
+- **Input Validation**: All inputs are validated using Pydantic models to ensure data integrity.
+- **Comprehensive Logging**: All operations are logged with timestamps, success/failure status, and response times for auditing and feedback loops.
+- **Existence Checks**: Create operations check for existing resources to prevent duplicates and provide actionable error messages.
+- **Authentication**: All endpoints (except /health) require basic authentication to secure access.
+
+These features ensure source of truth and minimize risks in production environments.
+
 ---
 
 <a id="open-webui-tool"></a>
 ## 7. Open-WebUI Tool
 
 This repository includes an `open-webui-tool.py` file that can be imported into Open-WebUI to allow an LLM to use this service. Additionally, extended prompts for AWX tools are provided in the `prompts/` folder to enhance LLM context.
+
+The tool includes safety features such as dry-run modes for testing actions, confirmation prompts for destructive operations, and comprehensive logging for auditing. For delete operations, set `confirm=true` and optionally `dry_run=true` to simulate without execution.
 
 ### Configuration
 
