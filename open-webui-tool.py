@@ -109,7 +109,7 @@ class PromptOptimizer:
          except Exception as e:
              return json.dumps({"error": str(e)})
 
-     def create_host(self, host_data: dict) -> str:
+    def create_host(self, host_data: dict) -> str:
          """
          Creates a new host in AWX.
 
@@ -135,9 +135,9 @@ class PromptOptimizer:
          except Exception as e:
              return json.dumps({"error": str(e)})
 
-     def create_job_template(
-         self, name: str, inventory: int, project: int, playbook: str, description: Optional[str] = None, extra_vars: Optional[dict] = None
-     ) -> str:
+    def create_job_template(
+        self, name: str, inventory: int, project: int, playbook: str, description: Optional[str] = None, extra_vars: Optional[dict] = None
+    ) -> str:
          """
          Creates a new job template in AWX.
 
@@ -174,7 +174,7 @@ class PromptOptimizer:
          except Exception as e:
              return json.dumps({"error": str(e)})
 
-     def _validate_host_data(self, host_data: dict) -> bool:
+    def _validate_host_data(self, host_data: dict) -> bool:
          """Validate host data."""
          required_fields = ["name", "inventory"]
          for field in required_fields:
@@ -182,7 +182,7 @@ class PromptOptimizer:
                  return False
          return True
 
-     def list_templates(self) -> str:
+    def list_templates(self) -> str:
         """
         Lists all job templates in AWX.
 
