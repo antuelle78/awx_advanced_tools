@@ -50,7 +50,7 @@ class TestOpenAIClient:
     @patch("app.llm.client.settings")
     @patch("app.llm.client.openai")
     def test_openai_client_init(self, mock_openai, mock_settings):
-        if not hasattr(client_module, 'openai'):
+        if not hasattr(client_module, "openai"):
             pytest.skip("openai not available")
         mock_settings.llm_endpoint = "http://example.com/v1/"
         mock_settings.llm_model = "gpt-3.5"
@@ -63,7 +63,7 @@ class TestOpenAIClient:
     @patch("app.llm.client.settings")
     @patch("app.llm.client.openai")
     async def test_openai_client_get_payload(self, mock_openai, mock_settings):
-        if not hasattr(client_module, 'openai'):
+        if not hasattr(client_module, "openai"):
             pytest.skip("openai not available")
         mock_settings.llm_model = "gpt-3.5"
         mock_settings.llm_api_key = "test_key"
@@ -80,7 +80,7 @@ class TestOllamaClient:
     @patch("app.llm.client.settings")
     @patch("app.llm.client.ollama")
     def test_ollama_client_init(self, mock_ollama, mock_settings):
-        if not hasattr(client_module, 'ollama'):
+        if not hasattr(client_module, "ollama"):
             pytest.skip("ollama not available")
         mock_settings.llm_endpoint = "http://example.com"
         mock_settings.llm_model = "llama2"
@@ -92,7 +92,7 @@ class TestOllamaClient:
     @patch("app.llm.client.settings")
     @patch("app.llm.client.ollama")
     async def test_ollama_client_get_payload(self, mock_ollama, mock_settings):
-        if not hasattr(client_module, 'ollama'):
+        if not hasattr(client_module, "ollama"):
             pytest.skip("ollama not available")
         mock_settings.llm_model = "llama2"
         mock_settings.llm_endpoint = "http://example.com"
