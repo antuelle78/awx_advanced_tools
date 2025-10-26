@@ -417,14 +417,6 @@ class AWXClient:
                 return False
         return True
 
-    def validate_host(self, host_data: dict) -> bool:
-        """Validate host data."""
-        required_fields = ["name", "inventory"]
-        for field in required_fields:
-            if field not in host_data:
-                return False
-        return True
-
     async def create_host(self, host_data: dict):
         """
         Create a new host with validation
