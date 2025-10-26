@@ -488,7 +488,9 @@ class Tools:
         except Exception as e:
             return json.dumps({"error": str(e)})
 
-    def delete_inventory(self, inventory_id: int, confirm: bool = False, dry_run: bool = False) -> str:
+    def delete_inventory(
+        self, inventory_id: int, confirm: bool = False, dry_run: bool = False
+    ) -> str:
         """
         Permanently deletes an inventory.
 
@@ -498,11 +500,15 @@ class Tools:
         :return: A confirmation message indicating success or failure.
         """
         if not confirm:
-            return json.dumps({
-                "error": f"Deletion of inventory {inventory_id} requires confirmation. Set confirm=true to proceed."
-            })
+            return json.dumps(
+                {
+                    "error": f"Deletion of inventory {inventory_id} requires confirmation. Set confirm=true to proceed."
+                }
+            )
         if dry_run:
-            return json.dumps({"status": "dry_run", "action": "delete_inventory", "id": inventory_id})
+            return json.dumps(
+                {"status": "dry_run", "action": "delete_inventory", "id": inventory_id}
+            )
         url = f"{self.mcp_server_url}/awx/inventories/{inventory_id}"
         start_time = time.time()
         try:
@@ -874,7 +880,9 @@ class Tools:
         except Exception as e:
             return json.dumps({"error": str(e)})
 
-    def delete_project(self, project_id: int, confirm: bool = False, dry_run: bool = False) -> str:
+    def delete_project(
+        self, project_id: int, confirm: bool = False, dry_run: bool = False
+    ) -> str:
         """
         Deletes a project in AWX.
 
@@ -886,11 +894,15 @@ class Tools:
 
         """
         if not confirm:
-            return json.dumps({
-                "error": f"Deletion of project {project_id} requires confirmation. Set confirm=true to proceed."
-            })
+            return json.dumps(
+                {
+                    "error": f"Deletion of project {project_id} requires confirmation. Set confirm=true to proceed."
+                }
+            )
         if dry_run:
-            return json.dumps({"status": "dry_run", "action": "delete_project", "id": project_id})
+            return json.dumps(
+                {"status": "dry_run", "action": "delete_project", "id": project_id}
+            )
         url = f"{self.mcp_server_url}/awx/projects/{project_id}"
 
         start_time = time.time()

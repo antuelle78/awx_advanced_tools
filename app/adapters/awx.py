@@ -116,7 +116,12 @@ async def list_inventories():
 @router.post("/inventories")
 async def create_inventory(inventory: InventoryCreate, dry_run: bool = False):
     if dry_run:
-        return {"status": "dry_run", "action": "create_inventory", "name": inventory.name, "organization": inventory.organization}
+        return {
+            "status": "dry_run",
+            "action": "create_inventory",
+            "name": inventory.name,
+            "organization": inventory.organization,
+        }
     try:
         return await awx_client.create_inventory(
             inventory.name, inventory.variables, inventory.organization
