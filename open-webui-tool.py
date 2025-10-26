@@ -515,6 +515,17 @@ class Tools:
         try:
             response = self.client.delete(url, headers=self._get_headers())
             response.raise_for_status()
+
+            # Verify deletion by checking if inventory still exists
+            inventories_response = self.list_inventories()
+            inventories = json.loads(inventories_response)
+            existing_ids = [inv["id"] for inv in inventories.get("results", [])]
+            if inventory_id in existing_ids:
+                self.log_tool_usage("delete_inventory", False, time.time() - start_time)
+                return json.dumps({
+                    "error": f"Inventory {inventory_id} was not deleted. It still exists in the list. Check AWX for issues."
+                })
+
             self.log_tool_usage("delete_inventory", True, time.time() - start_time)
             return json.dumps(response.json())
         except httpx.HTTPStatusError as e:
@@ -911,6 +922,16 @@ class Tools:
             response = self.client.delete(url, headers=self._get_headers())
 
             response.raise_for_status()
+
+            # Verify deletion by checking if project still exists
+            projects_response = self.list_projects()
+            projects = json.loads(projects_response)
+            existing_ids = [proj["id"] for proj in projects.get("results", [])]
+            if project_id in existing_ids:
+                self.log_tool_usage("delete_project", False, time.time() - start_time)
+                return json.dumps({
+                    "error": f"Project {project_id} was not deleted. It still exists in the list. Check AWX for issues."
+                })
 
             self.log_tool_usage("delete_project", True, time.time() - start_time)
             return json.dumps(response.json())
