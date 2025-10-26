@@ -263,10 +263,15 @@ This repository includes an `open-webui-tool.py` file that can be imported into 
 
 The tool includes safety features such as dry-run modes for testing actions, confirmation prompts for destructive operations, comprehensive logging for auditing, and post-operation verification for delete actions to ensure resources are actually removed. For delete operations, set `confirm=true` and optionally `dry_run=true` to simulate without execution.
 
+### System Prompt for AWXai Super Administrator
+
+To configure a custom LLM model as the AWXai super administrator, use the system prompt provided in `awxai_system_prompt.md`. This prompt instructs the LLM to manage AWX operations through the API endpoints, integrate LLM capabilities, and follow security guidelines.
+
 ### Configuration
 
 1.  Import the `open-webui-tool.py` file in the Open-WebUI interface.
 2.  In the tool's "Valves" settings, configure the `mcp_server_url` (default: http://host.docker.internal:8001), `mcp_username` (default: admin), and `mcp_password` (default: password) fields.
+3.  For the LLM, set the system prompt using the content from `awxai_system_prompt.md` to enable super administrator capabilities.
 
 ---
 

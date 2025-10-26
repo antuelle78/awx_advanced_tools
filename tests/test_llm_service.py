@@ -53,7 +53,7 @@ class TestPromptService:
         # First call
         await service.generate_payload("test_action", {"name": "test"})
         # Second call should use cache
-        result = await service.generate_payload("test_action", {"name": "test"})
+        await service.generate_payload("test_action", {"name": "test"})
         # LLM should only be called once
         mock_client.get_payload.assert_called_once()
 
