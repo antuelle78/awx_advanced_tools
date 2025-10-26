@@ -111,7 +111,8 @@ class PromptOptimizer:
 class Tools:
     class Valves(BaseModel):
         mcp_server_url: str = Field(
-            default="http://host.docker.internal:8001", description="The base URL of MCP server."
+            default="http://host.docker.internal:8001",
+            description="The base URL of MCP server.",
         )
         mcp_username: str = Field(
             default="admin", description="Username for MCP server authentication."
@@ -123,8 +124,7 @@ class Tools:
     def __init__(self):
         self.valves = self.Valves()
         self.client = httpx.Client(
-            timeout=30.0,
-            auth=(self.valves.mcp_username, self.valves.mcp_password)
+            timeout=30.0, auth=(self.valves.mcp_username, self.valves.mcp_password)
         )  # Add timeout and auth for requests
         self.prompt_optimizer = PromptOptimizer()
 
@@ -227,9 +227,11 @@ class Tools:
             orgs = json.loads(orgs_response)
             valid_org_ids = [org["id"] for org in orgs.get("results", [])]
             if organization not in valid_org_ids:
-                return json.dumps({
-                    "error": f"Invalid organization ID {organization}. Valid IDs: {valid_org_ids}. Use list_organizations to see details."
-                })
+                return json.dumps(
+                    {
+                        "error": f"Invalid organization ID {organization}. Valid IDs: {valid_org_ids}. Use list_organizations to see details."
+                    }
+                )
         except Exception:
             pass  # If validation fails, proceed anyway
 
@@ -239,9 +241,11 @@ class Tools:
             inventories = json.loads(inventories_response)
             existing_names = [inv["name"] for inv in inventories.get("results", [])]
             if name in existing_names:
-                return json.dumps({
-                    "error": f"Inventory with name '{name}' already exists. Use list_inventories to see existing inventories."
-                })
+                return json.dumps(
+                    {
+                        "error": f"Inventory with name '{name}' already exists. Use list_inventories to see existing inventories."
+                    }
+                )
         except Exception:
             pass  # If check fails, proceed anyway
 
@@ -413,9 +417,11 @@ class Tools:
             schedules = json.loads(schedules_response)
             existing_names = [sched["name"] for sched in schedules.get("results", [])]
             if name in existing_names:
-                return json.dumps({
-                    "error": f"Schedule with name '{name}' already exists for this job template. Use list_schedules to see existing schedules."
-                })
+                return json.dumps(
+                    {
+                        "error": f"Schedule with name '{name}' already exists for this job template. Use list_schedules to see existing schedules."
+                    }
+                )
         except Exception:
             pass  # If check fails, proceed anyway
 
@@ -579,9 +585,11 @@ class Tools:
             orgs = json.loads(orgs_response)
             existing_names = [org["name"] for org in orgs.get("results", [])]
             if name in existing_names:
-                return json.dumps({
-                    "error": f"Organization with name '{name}' already exists. Use list_organizations to see existing organizations."
-                })
+                return json.dumps(
+                    {
+                        "error": f"Organization with name '{name}' already exists. Use list_organizations to see existing organizations."
+                    }
+                )
         except Exception:
             pass  # If check fails, proceed anyway
 
@@ -757,9 +765,11 @@ class Tools:
             projects = json.loads(projects_response)
             existing_names = [proj["name"] for proj in projects.get("results", [])]
             if name in existing_names:
-                return json.dumps({
-                    "error": f"Project with name '{name}' already exists. Use list_projects to see existing projects."
-                })
+                return json.dumps(
+                    {
+                        "error": f"Project with name '{name}' already exists. Use list_projects to see existing projects."
+                    }
+                )
         except Exception:
             pass  # If check fails, proceed anyway
 
@@ -977,9 +987,11 @@ class Tools:
             creds = json.loads(creds_response)
             existing_names = [cred["name"] for cred in creds.get("results", [])]
             if name in existing_names:
-                return json.dumps({
-                    "error": f"Credential with name '{name}' already exists. Use list_credentials to see existing credentials."
-                })
+                return json.dumps(
+                    {
+                        "error": f"Credential with name '{name}' already exists. Use list_credentials to see existing credentials."
+                    }
+                )
         except Exception:
             pass  # If check fails, proceed anyway
 
@@ -1164,9 +1176,11 @@ class Tools:
             users = json.loads(users_response)
             existing_usernames = [user["username"] for user in users.get("results", [])]
             if username in existing_usernames:
-                return json.dumps({
-                    "error": f"User with username '{username}' already exists. Use list_users to see existing users."
-                })
+                return json.dumps(
+                    {
+                        "error": f"User with username '{username}' already exists. Use list_users to see existing users."
+                    }
+                )
         except Exception:
             pass  # If check fails, proceed anyway
 
@@ -1361,9 +1375,11 @@ class Tools:
             wfts = json.loads(wfts_response)
             existing_names = [wft["name"] for wft in wfts.get("results", [])]
             if name in existing_names:
-                return json.dumps({
-                    "error": f"Workflow job template with name '{name}' already exists. Use list_workflow_job_templates to see existing templates."
-                })
+                return json.dumps(
+                    {
+                        "error": f"Workflow job template with name '{name}' already exists. Use list_workflow_job_templates to see existing templates."
+                    }
+                )
         except Exception:
             pass  # If check fails, proceed anyway
 
@@ -1581,9 +1597,11 @@ class Tools:
             notifs = json.loads(notifs_response)
             existing_names = [notif["name"] for notif in notifs.get("results", [])]
             if name in existing_names:
-                return json.dumps({
-                    "error": f"Notification with name '{name}' already exists. Use list_notifications to see existing notifications."
-                })
+                return json.dumps(
+                    {
+                        "error": f"Notification with name '{name}' already exists. Use list_notifications to see existing notifications."
+                    }
+                )
         except Exception:
             pass  # If check fails, proceed anyway
 
@@ -1767,9 +1785,11 @@ class Tools:
             igs = json.loads(igs_response)
             existing_names = [ig["name"] for ig in igs.get("results", [])]
             if name in existing_names:
-                return json.dumps({
-                    "error": f"Instance group with name '{name}' already exists. Use list_instance_groups to see existing groups."
-                })
+                return json.dumps(
+                    {
+                        "error": f"Instance group with name '{name}' already exists. Use list_instance_groups to see existing groups."
+                    }
+                )
         except Exception:
             pass  # If check fails, proceed anyway
 
