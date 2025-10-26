@@ -409,6 +409,22 @@ class AWXClient:
 
     # Workflow Job Templates methods
 
+    def validate_host(self, host_data: dict) -> bool:
+        """Validate host data."""
+        required_fields = ["name", "inventory"]
+        for field in required_fields:
+            if field not in host_data:
+                return False
+        return True
+
+    def validate_host(self, host_data: dict) -> bool:
+        """Validate host data."""
+        required_fields = ["name", "inventory"]
+        for field in required_fields:
+            if field not in host_data:
+                return False
+        return True
+
     async def create_host(self, host_data: dict):
         """
         Create a new host with validation
@@ -418,21 +434,7 @@ class AWXClient:
             raise ValueError("Invalid host data")
 
         url = f"{self.base_url}/api/v2/hosts/"
-        return await self.post(url, json=host_data)
-        url = f"{self.base_url}/api/v2/workflow_job_templates/"
-
-        resp = await self._request("GET", url)
-
-        return resp.json()
-
-    async def get_workflow_job_template(self, workflow_job_template_id: int):
-        url = (
-            f"{self.base_url}/api/v2/workflow_job_templates/{workflow_job_template_id}/"
-        )
-
-        resp = await self._request("GET", url)
-
-        return resp.json()
+        return await self._request("POST", url, json=host_data)
 
     async def create_job_template(
         self, name: str, inventory: int, project: int, playbook: str, description: Optional[str] = None, extra_vars: Optional[dict] = None

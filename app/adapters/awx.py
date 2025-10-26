@@ -70,7 +70,8 @@ async def create_job_template(
 
 @router.post("/hosts/")
 async def create_host(host_data: dict):
-    return await awx_client.create_host(host_data)
+    try:
+        return await awx_client.create_host(host_data)
     except httpx.HTTPStatusError as exc:  # pragma: no cover
         raise HTTPException(status_code=exc.response.status_code, detail=str(exc))
 
