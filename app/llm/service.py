@@ -56,16 +56,20 @@ class PromptService:
 
         # 5. Validate result against schema
         schema = get_schema("AWX", action)
-        # FastAPI uses pydantic for validation – we can reuse that
-        from pydantic import BaseModel, ValidationError
+        if schema:
+            # FastAPI uses pydantic for validation – we can reuse that
+            from pydantic import BaseModel, ValidationError
 
-        class PayloadModel(BaseModel):
-            __root__: schema  # type: ignore
+            class PayloadModel(BaseModel):
+                __root__: schema  # type: ignore
 
-        try:
-            PayloadModel(**result)
-        except ValidationError as exc:  # pragma: no cover
-            raise ValueError(f"LLM payload does not match schema: {exc}") from exc
+            try:
+                PayloadModel(**result)
+            except ValidationError as exc:  # pragma: no cover
+                raise ValueError(f"LLM payload does not match schema: {exc}") from exc
+        else:
+            import logging
+            logging.warning(f"No schema found for action '{action}', skipping validation")
 
         # 6. Cache & return
         _CACHE[key] = result

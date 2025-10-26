@@ -1,42 +1,36 @@
-# LLM prompt templates
+# LLM prompt templates with standardized instructions and output format
 
-# Template for launching an AWX job template with strict JSON output
-# Template for launching an AWX job template with chain‑of‑thought examples and strict format
+# Template for launching an AWX job template
 LAUNCH_JOB_TEMPLATE = (
-    '{{\n  "template_id": {template_id},\n  "extra_vars": {extra_vars}\n}}\n\nThink step‑by‑step: first ensure template_id is a positive integer, then embed extra_vars as a JSON object.\n\nOnly return the JSON object, no markdown or explanations.'
+    "You are given a template_id and extra_vars.\n"
+    "Think step-by-step: first ensure template_id is a positive integer, then embed extra_vars as a JSON object.\n"
+    "Only return a JSON object in the format {{\"result\": {{\"template_id\": {template_id}, \"extra_vars\": {extra_vars}}}}}, no markdown or explanations."
 )
 
 # Template for validating a payload against a JSON schema
-# Template for validating a payload against a JSON schema with chain‑of‑thought examples
 VALIDATE_SCHEMA_TEMPLATE = (
-    "You are given a JSON payload and a JSON schema.\n" \
-    "Your task is to validate the payload against the schema.\n" \
-    "Return the validation result as \n{\n  \"valid\": true\n} if valid, or \n{\n  \"valid\": false,\n  \"errors\": [list of error messages]\n} if invalid.\n\nThink step‑by‑step: first identify missing required fields, then check field types, and finally ensure no additional properties are present.\n\nOnly return the JSON object, no markdown or explanations."
+    "You are given a JSON payload and a JSON schema.\n"
+    "Think step-by-step: first identify missing required fields, then check field types, and finally ensure no additional properties are present.\n"
+    "Only return a JSON object in the format {{\"result\": {{\"valid\": true}}}} if valid, or {{\"result\": {{\"valid\": false, \"errors\": [list of error messages]}}}} if invalid, no markdown or explanations."
 )
 
 # Template for summarizing AWX logs
-# Template for summarizing AWX logs with chain‑of‑thought and strict JSON
 SUMMARIZE_LOG_TEMPLATE = (
-    "You are given the following AWX log:\n" \
-    "{log}\n" \
-    "Provide a concise summary in JSON format.\n" \
-    "Summarize to 80 words.\n" \
-    "Only return the JSON object, no markdown or explanations."
+    "You are given the following AWX log:\n{log}\n"
+    "Think step-by-step: summarize the key events and outcomes in 80 words.\n"
+    "Only return a JSON object in the format {{\"result\": {{\"summary\": \"<concise summary>\"}}}}, no markdown or explanations."
 )
 
 GET_AWX_STATUS_TEMPLATE = (
     "You are given AWX instance URL and credentials.\n"
-    "Your task is to perform a GET request to '/api/v2/status/' and provide the HTTP status code and body as a JSON object.\n"
-    "Return {\n  \"code\": <int>,\n  \"body\": <string>\n} and do not return markdown.\n"
-    "Only return the JSON object, no markdown or explanations."
-
+    "Think step-by-step: perform a GET request to '/api/v2/status/' and extract the status code and body.\n"
+    "Only return a JSON object in the format {{\"result\": {{\"code\": <int>, \"body\": \"<string>\"}}}}, no markdown or explanations."
 )
 
 CREATE_PROJECT_TEMPLATE = (
     "You are given AWX instance information, a project name, and a JWT token.\n"
-    "Your task is to POST to '/api/v2/projects/' with a strict JSON body containing name=\'{project_name}\', organization=1, scm_type=\'git\', scm_url=repo_url.\n"
-    "Return the AWX project creation response as a JSON object.\n"
-    "Only return the JSON object, no markdown."
+    "Think step-by-step: POST to '/api/v2/projects/' with the required JSON body.\n"
+    "Only return a JSON object in the format {{\"result\": <AWX response JSON>}}, no markdown or explanations."
 )
 
 TEMPLATES = {
