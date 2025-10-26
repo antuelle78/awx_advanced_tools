@@ -148,7 +148,7 @@ The following endpoints are available. All endpoints (except /health) require ba
 | `/awx/inventories` | POST | Creates a new inventory in AWX. Supports `dry_run` parameter for testing. |
 | `/awx/inventories` | GET | Lists inventories in AWX. |
 | `/awx/inventories/{inventory_id}` | GET | Retrieves an inventory in AWX. |
-| `/awx/inventories/{inventory_id}` | DELETE | Deletes an inventory in AWX. Requires `confirm=true` and supports `dry_run` for testing. |
+| `/awx/inventories/{inventory_id}` | DELETE | Deletes an inventory in AWX. Requires `confirm=true` and supports `dry_run` for testing. Verifies deletion post-operation. |
 | `/awx/inventories/{inventory_id}/sync` | POST | Syncs an inventory in AWX. |
 
 ### Schedules
@@ -176,7 +176,7 @@ The following endpoints are available. All endpoints (except /health) require ba
 | `/awx/projects/{project_id}` | GET | Retrieves a project in AWX. |
 | `/awx/projects` | POST | Creates a new project in AWX. |
 | `/awx/projects/{project_id}` | PATCH | Updates a project in AWX. |
-| `/awx/projects/{project_id}` | DELETE | Deletes a project in AWX. Requires `confirm=true` and supports `dry_run` for testing. |
+| `/awx/projects/{project_id}` | DELETE | Deletes a project in AWX. Requires `confirm=true` and supports `dry_run` for testing. Verifies deletion post-operation. |
 | `/awx/projects/{project_id}/sync` | POST | Syncs a project in AWX. |
 
 ### Credentials
@@ -255,7 +255,7 @@ These features ensure source of truth and minimize risks in production environme
 
 This repository includes an `open-webui-tool.py` file that can be imported into Open-WebUI to allow an LLM to use this service. Additionally, extended prompts for AWX tools are provided in the `prompts/` folder to enhance LLM context.
 
-The tool includes safety features such as dry-run modes for testing actions, confirmation prompts for destructive operations, and comprehensive logging for auditing. For delete operations, set `confirm=true` and optionally `dry_run=true` to simulate without execution.
+The tool includes safety features such as dry-run modes for testing actions, confirmation prompts for destructive operations, comprehensive logging for auditing, and post-operation verification for delete actions to ensure resources are actually removed. For delete operations, set `confirm=true` and optionally `dry_run=true` to simulate without execution.
 
 ### Configuration
 
