@@ -114,7 +114,9 @@ async def list_inventories():
 
 
 @router.post("/inventories")
-async def create_inventory(inventory: InventoryCreate):
+async def create_inventory(inventory: InventoryCreate, dry_run: bool = False):
+    if dry_run:
+        return {"status": "dry_run", "action": "create_inventory", "name": inventory.name, "organization": inventory.organization}
     try:
         return await awx_client.create_inventory(
             inventory.name, inventory.variables, inventory.organization
@@ -132,9 +134,12 @@ async def get_inventory(inventory_id: int):
 
 
 @router.delete("/inventories/{inventory_id}")
-async def delete_inventory(inventory_id: int):
+async def delete_inventory(inventory_id: int, dry_run: bool = False):
+    if dry_run:
+        return {"status": "dry_run", "action": "delete_inventory", "id": inventory_id}
     try:
-        return await awx_client.delete_inventory(inventory_id)
+        await awx_client.delete_inventory(inventory_id)
+        return {"status": "deleted", "id": inventory_id}
     except httpx.HTTPStatusError as exc:  # pragma: no cover
         raise HTTPException(status_code=exc.response.status_code, detail=str(exc))
 
@@ -253,7 +258,9 @@ async def update_project(project_id: int, project: ProjectUpdate):
 
 
 @router.delete("/projects/{project_id}")
-async def delete_project(project_id: int):
+async def delete_project(project_id: int, dry_run: bool = False):
+    if dry_run:
+        return {"status": "dry_run", "action": "delete_project", "id": project_id}
     try:
         return await awx_client.delete_project(project_id)
     except httpx.HTTPStatusError as exc:  # pragma: no cover

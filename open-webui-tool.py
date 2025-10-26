@@ -488,19 +488,30 @@ class Tools:
         except Exception as e:
             return json.dumps({"error": str(e)})
 
-    def delete_inventory(self, inventory_id: int) -> str:
+    def delete_inventory(self, inventory_id: int, confirm: bool = False, dry_run: bool = False) -> str:
         """
         Permanently deletes an inventory.
 
         :param inventory_id: The ID of inventory to delete.
+        :param confirm: Set to true to confirm the deletion.
+        :param dry_run: Set to true to simulate the deletion without executing.
         :return: A confirmation message indicating success or failure.
         """
+        if not confirm:
+            return json.dumps({
+                "error": f"Deletion of inventory {inventory_id} requires confirmation. Set confirm=true to proceed."
+            })
+        if dry_run:
+            return json.dumps({"status": "dry_run", "action": "delete_inventory", "id": inventory_id})
         url = f"{self.mcp_server_url}/awx/inventories/{inventory_id}"
+        start_time = time.time()
         try:
             response = self.client.delete(url, headers=self._get_headers())
             response.raise_for_status()
+            self.log_tool_usage("delete_inventory", True, time.time() - start_time)
             return json.dumps(response.json())
         except httpx.HTTPStatusError as e:
+            self.log_tool_usage("delete_inventory", False, time.time() - start_time)
             return json.dumps(
                 {
                     "error": f"HTTP error occurred: {e.response.status_code}",
@@ -508,6 +519,7 @@ class Tools:
                 }
             )
         except Exception as e:
+            self.log_tool_usage("delete_inventory", False, time.time() - start_time)
             return json.dumps({"error": str(e)})
 
     def sync_inventory(self, inventory_id: int) -> str:
@@ -862,33 +874,44 @@ class Tools:
         except Exception as e:
             return json.dumps({"error": str(e)})
 
-    def delete_project(self, project_id: int) -> str:
+    def delete_project(self, project_id: int, confirm: bool = False, dry_run: bool = False) -> str:
         """
         Deletes a project in AWX.
 
         :param project_id: The ID of project to delete.
+        :param confirm: Set to true to confirm the deletion.
+        :param dry_run: Set to true to simulate the deletion without executing.
 
         :return: A confirmation message indicating success or failure.
 
         """
+        if not confirm:
+            return json.dumps({
+                "error": f"Deletion of project {project_id} requires confirmation. Set confirm=true to proceed."
+            })
+        if dry_run:
+            return json.dumps({"status": "dry_run", "action": "delete_project", "id": project_id})
         url = f"{self.mcp_server_url}/awx/projects/{project_id}"
 
+        start_time = time.time()
         try:
             response = self.client.delete(url, headers=self._get_headers())
 
             response.raise_for_status()
 
+            self.log_tool_usage("delete_project", True, time.time() - start_time)
             return json.dumps(response.json())
 
         except httpx.HTTPStatusError as e:
+            self.log_tool_usage("delete_project", False, time.time() - start_time)
             return json.dumps(
                 {
                     "error": f"HTTP error occurred: {e.response.status_code}",
                     "detail": e.response.text,
                 }
             )
-
         except Exception as e:
+            self.log_tool_usage("delete_project", False, time.time() - start_time)
             return json.dumps({"error": str(e)})
 
     def sync_project(self, project_id: int) -> str:
