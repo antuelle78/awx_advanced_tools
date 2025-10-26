@@ -409,7 +409,16 @@ class AWXClient:
 
     # Workflow Job Templates methods
 
-    async def list_workflow_job_templates(self):
+    async def create_host(self, host_data: dict):
+        """
+        Create a new host with validation
+        """
+        # Validate against schema
+        if not self.validate_host(host_data):
+            raise ValueError("Invalid host data")
+
+        url = f"{self.base_url}/api/v2/hosts/"
+        return await self.post(url, json=host_data)
         url = f"{self.base_url}/api/v2/workflow_job_templates/"
 
         resp = await self._request("GET", url)
@@ -423,6 +432,19 @@ class AWXClient:
 
         resp = await self._request("GET", url)
 
+        return resp.json()
+
+    async def create_job_template(
+        self, name: str, inventory: int, project: int, playbook: str, description: Optional[str] = None, extra_vars: Optional[dict] = None
+    ):
+        """Create a new job template."""
+        url = f"{self.base_url}/api/v2/job_templates/"
+        payload = {"name": name, "inventory": inventory, "project": project, "playbook": playbook}
+        if description:
+            payload["description"] = description
+        if extra_vars:
+            payload["extra_vars"] = extra_vars
+        resp = await self._request("POST", url, json=payload)
         return resp.json()
 
     async def create_workflow_job_template(

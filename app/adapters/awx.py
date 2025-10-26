@@ -55,8 +55,22 @@ class OrganizationUpdate(BaseModel):
 
 @router.post("/job_templates/{template_id}/launch")
 async def launch_job_template(template_id: int, extra_vars: dict | None = None):
-    try:
-        return await awx_client.launch_job_template(template_id, extra_vars)
+    return await awx_client.launch_job_template(template_id, extra_vars)
+
+@router.post("/job_templates/")
+async def create_job_template(
+    name: str,
+    inventory: int,
+    project: int,
+    playbook: str,
+    description: str | None = None,
+    extra_vars: dict | None = None,
+):
+    return await awx_client.create_job_template(name, inventory, project, playbook, description, extra_vars)
+
+@router.post("/hosts/")
+async def create_host(host_data: dict):
+    return await awx_client.create_host(host_data)
     except httpx.HTTPStatusError as exc:  # pragma: no cover
         raise HTTPException(status_code=exc.response.status_code, detail=str(exc))
 
