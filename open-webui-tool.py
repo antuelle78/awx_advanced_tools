@@ -26,58 +26,58 @@ class PromptOptimizer:
     def _load_tool_prompts(self) -> Dict[str, str]:
         """Load optimized prompts for each tool."""
         return {
-            "list_templates": "List all available job templates in AWX. Use this to see what automation jobs are available.",
-            "launch_job_template": "Launch a specific job template in AWX. Provide the template_id and any extra_vars as a JSON object.",
-            "list_jobs": "List all jobs in AWX. Optionally provide a page number for pagination.",
-            "get_job": "Get the status of a specific job in AWX. Provide the job_id.",
-            "list_inventories": "List all inventories in AWX.",
-            "create_inventory": "Create a new inventory in AWX. First, use list_organizations to find a valid organization ID. Provide name, organization (numeric ID), and optional variables.",
-            "get_inventory": "Get details of a specific inventory in AWX. Provide the inventory_id.",
-            "delete_inventory": "Delete an inventory in AWX. Provide the inventory_id.",
-            "sync_inventory": "Sync an inventory in AWX. Provide the inventory_id.",
-            "list_schedules": "List schedules for a job template in AWX. Provide the template_id.",
-            "get_schedule": "Get details of a schedule in AWX. Provide the schedule_id.",
-            "create_schedule": "Create a schedule for a job template in AWX. Provide name, rrule, and job_template_id.",
-            "toggle_schedule": "Enable or disable a schedule in AWX. Provide schedule_id and enabled status.",
-            "delete_schedule": "Delete a schedule in AWX. Provide the schedule_id.",
-            "list_organizations": "List all organizations in AWX.",
-            "get_organization": "Get details of an organization in AWX. Provide the organization_id.",
-            "create_organization": "Create a new organization in AWX. Provide name and description.",
-            "update_organization": "Update an organization in AWX. Provide organization_id, name, and description.",
-            "delete_organization": "Delete an organization in AWX. Provide the organization_id.",
-            "list_projects": "List all projects in AWX.",
-            "get_project": "Get details of a project in AWX. Provide the project_id.",
-            "create_project": "Create a new project in AWX. Provide name, scm_type, scm_url, and description.",
-            "update_project": "Update a project in AWX. Provide project_id and other parameters.",
-            "delete_project": "Delete a project in AWX. Provide the project_id.",
-            "sync_project": "Sync a project in AWX. Provide the project_id.",
-            "list_credentials": "List all credentials in AWX.",
-            "get_credential": "Get details of a credential in AWX. Provide the credential_id.",
-            "create_credential": "Create a new credential in AWX. Provide name, credential_type, and inputs.",
-            "update_credential": "Update a credential in AWX. Provide credential_id and other parameters.",
-            "delete_credential": "Delete a credential in AWX. Provide the credential_id.",
-            "list_users": "List all users in AWX.",
-            "get_user": "Get details of a user in AWX. Provide the user_id.",
-            "create_user": "Create a new user in AWX. Provide username, password, and other parameters.",
-            "update_user": "Update a user in AWX. Provide user_id and other parameters.",
-            "delete_user": "Delete a user in AWX. Provide the user_id.",
+            "list_templates": "List all available job templates in AWX. Use this to see what automation jobs are available. Example: Call this to find template IDs for launching jobs.",
+            "launch_job_template": "Launch a specific job template in AWX. Provide the template_id and any extra_vars as a JSON object. Example: template_id=123, extra_vars={'branch': 'main'}.",
+            "list_jobs": "List all jobs in AWX. Optionally provide a page number for pagination. Example: page=1 to get the first page of jobs.",
+            "get_job": "Get the status of a specific job in AWX. Provide the job_id. Example: job_id=456 to check if the job is running.",
+            "list_inventories": "List all inventories in AWX. Use this to find inventory IDs for other operations.",
+            "create_inventory": "Create a new inventory in AWX. First, use list_organizations to find a valid organization ID. Provide name, organization (numeric ID), and optional variables. Example: name='infra', organization=2, variables={'ansible_user': 'admin'}.",
+            "get_inventory": "Get details of a specific inventory in AWX. Provide the inventory_id. Example: inventory_id=789.",
+            "delete_inventory": "Delete an inventory in AWX. Provide the inventory_id. Example: inventory_id=789.",
+            "sync_inventory": "Sync an inventory in AWX. Provide the inventory_id. Example: inventory_id=789.",
+            "list_schedules": "List schedules for a job template in AWX. Provide the template_id. Example: template_id=123.",
+            "get_schedule": "Get details of a schedule in AWX. Provide the schedule_id. Example: schedule_id=101.",
+            "create_schedule": "Create a schedule for a job template in AWX. Provide name, rrule, and job_template_id. Example: name='daily', rrule='FREQ=DAILY', job_template_id=123.",
+            "toggle_schedule": "Enable or disable a schedule in AWX. Provide schedule_id and enabled status. Example: schedule_id=101, enabled=true.",
+            "delete_schedule": "Delete a schedule in AWX. Provide the schedule_id. Example: schedule_id=101.",
+            "list_organizations": "List all organizations in AWX. Use this to find organization IDs for creating inventories or other resources.",
+            "get_organization": "Get details of an organization in AWX. Provide the organization_id. Example: organization_id=2.",
+            "create_organization": "Create a new organization in AWX. Provide name and description. Example: name='IT Team', description='Infrastructure team'.",
+            "update_organization": "Update an organization in AWX. Provide organization_id, name, and description. Example: organization_id=2, name='Updated IT'.",
+            "delete_organization": "Delete an organization in AWX. Provide the organization_id. Example: organization_id=2.",
+            "list_projects": "List all projects in AWX. Use this to find project IDs.",
+            "get_project": "Get details of a project in AWX. Provide the project_id. Example: project_id=5.",
+            "create_project": "Create a new project in AWX. Provide name, scm_type, scm_url, and description. Example: name='my-repo', scm_type='git', scm_url='https://github.com/user/repo.git'.",
+            "update_project": "Update a project in AWX. Provide project_id and other parameters. Example: project_id=5, name='updated-repo'.",
+            "delete_project": "Delete a project in AWX. Provide the project_id. Example: project_id=5.",
+            "sync_project": "Sync a project in AWX. Provide the project_id. Example: project_id=5.",
+            "list_credentials": "List all credentials in AWX. Use this to find credential IDs.",
+            "get_credential": "Get details of a credential in AWX. Provide the credential_id. Example: credential_id=10.",
+            "create_credential": "Create a new credential in AWX. Provide name, credential_type, and inputs. Example: name='ssh-key', credential_type=1, inputs={'username': 'admin'}.",
+            "update_credential": "Update a credential in AWX. Provide credential_id and other parameters. Example: credential_id=10, name='updated-key'.",
+            "delete_credential": "Delete a credential in AWX. Provide the credential_id. Example: credential_id=10.",
+            "list_users": "List all users in AWX. Use this to find user IDs.",
+            "get_user": "Get details of a user in AWX. Provide the user_id. Example: user_id=2.",
+            "create_user": "Create a new user in AWX. Provide username, password, and other parameters. Example: username='newuser', password='pass123'.",
+            "update_user": "Update a user in AWX. Provide user_id and other parameters. Example: user_id=2, first_name='John'.",
+            "delete_user": "Delete a user in AWX. Provide the user_id. Example: user_id=2.",
             "list_workflow_job_templates": "List all workflow job templates in AWX.",
-            "get_workflow_job_template": "Get details of a workflow job template in AWX. Provide the workflow_job_template_id.",
-            "create_workflow_job_template": "Create a new workflow job template in AWX. Provide name and description.",
-            "update_workflow_job_template": "Update a workflow job template in AWX. Provide workflow_job_template_id and other parameters.",
-            "delete_workflow_job_template": "Delete a workflow job template in AWX. Provide the workflow_job_template_id.",
-            "launch_workflow_job_template": "Launch a workflow job template in AWX. Provide workflow_job_template_id and extra_vars.",
+            "get_workflow_job_template": "Get details of a workflow job template in AWX. Provide the workflow_job_template_id. Example: workflow_job_template_id=7.",
+            "create_workflow_job_template": "Create a new workflow job template in AWX. Provide name and description. Example: name='my-workflow', description='Automation workflow'.",
+            "update_workflow_job_template": "Update a workflow job template in AWX. Provide workflow_job_template_id and other parameters. Example: workflow_job_template_id=7, name='updated-workflow'.",
+            "delete_workflow_job_template": "Delete a workflow job template in AWX. Provide the workflow_job_template_id. Example: workflow_job_template_id=7.",
+            "launch_workflow_job_template": "Launch a workflow job template in AWX. Provide workflow_job_template_id and extra_vars. Example: workflow_job_template_id=7, extra_vars={'env': 'prod'}.",
             "list_notifications": "List all notification templates in AWX.",
-            "get_notification": "Get details of a notification template in AWX. Provide the notification_id.",
-            "create_notification": "Create a new notification template in AWX. Provide name, notification_type, and notification_configuration.",
-            "update_notification": "Update a notification template in AWX. Provide notification_id and other parameters.",
-            "delete_notification": "Delete a notification template in AWX. Provide the notification_id.",
+            "get_notification": "Get details of a notification template in AWX. Provide the notification_id. Example: notification_id=8.",
+            "create_notification": "Create a new notification template in AWX. Provide name, notification_type, and notification_configuration. Example: name='email-alert', notification_type='email', notification_configuration={'email': 'admin@example.com'}.",
+            "update_notification": "Update a notification template in AWX. Provide notification_id and other parameters. Example: notification_id=8, name='updated-alert'.",
+            "delete_notification": "Delete a notification template in AWX. Provide the notification_id. Example: notification_id=8.",
             "list_instance_groups": "List all instance groups in AWX.",
-            "get_instance_group": "Get details of an instance group in AWX. Provide the instance_group_id.",
-            "create_instance_group": "Create a new instance group in AWX. Provide name and other parameters.",
-            "update_instance_group": "Update an instance group in AWX. Provide instance_group_id and other parameters.",
-            "delete_instance_group": "Delete an instance group in AWX. Provide the instance_group_id.",
-            "list_activity_stream": "List activity stream events in AWX. Provide page and page_size.",
+            "get_instance_group": "Get details of an instance group in AWX. Provide the instance_group_id. Example: instance_group_id=9.",
+            "create_instance_group": "Create a new instance group in AWX. Provide name and other parameters. Example: name='prod-group'.",
+            "update_instance_group": "Update an instance group in AWX. Provide instance_group_id and other parameters. Example: instance_group_id=9, name='updated-group'.",
+            "delete_instance_group": "Delete an instance group in AWX. Provide the instance_group_id. Example: instance_group_id=9.",
+            "list_activity_stream": "List activity stream events in AWX. Provide page and page_size. Example: page=1, page_size=20.",
         }
 
     def get_optimized_prompt(self, tool_name: str, **kwargs) -> str:
@@ -366,11 +366,14 @@ class Tools:
         """
         url = f"{self.mcp_server_url}/awx/schedules/{schedule_id}"
         payload = {"enabled": enabled}
+        start_time = time.time()
         try:
-            response = self.client.patch(url, headers=self._get_headers(), json=payload)
+            response = self.client.post(url, headers=self._get_headers(), json=payload)
             response.raise_for_status()
+            self.log_tool_usage("create_inventory", True, time.time() - start_time)
             return json.dumps(response.json())
         except httpx.HTTPStatusError as e:
+            self.log_tool_usage("create_inventory", False, time.time() - start_time)
             return json.dumps(
                 {
                     "error": f"HTTP error occurred: {e.response.status_code}",
@@ -378,6 +381,7 @@ class Tools:
                 }
             )
         except Exception as e:
+            self.log_tool_usage("create_inventory", False, time.time() - start_time)
             return json.dumps({"error": str(e)})
 
     def delete_schedule(self, schedule_id: int) -> str:
@@ -780,13 +784,16 @@ class Tools:
         if description:
             payload["description"] = description
 
+        start_time = time.time()
         try:
             response = self.client.post(url, headers=self._get_headers(), json=payload)
 
             response.raise_for_status()
 
+            self.log_tool_usage("create_project", True, time.time() - start_time)
             return json.dumps(response.json())
         except httpx.HTTPStatusError as e:
+            self.log_tool_usage("create_project", False, time.time() - start_time)
             return json.dumps(
                 {
                     "error": f"HTTP error occurred: {e.response.status_code}",
@@ -794,6 +801,7 @@ class Tools:
                 }
             )
         except Exception as e:
+            self.log_tool_usage("create_project", False, time.time() - start_time)
             return json.dumps({"error": str(e)})
 
     def update_project(
