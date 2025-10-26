@@ -8,6 +8,7 @@ os.environ["LLM_PROVIDER"] = "ollama"
 
 
 class TestPromptService:
+    @pytest.mark.asyncio
     @patch("app.llm.service.get_llm_client")
     @patch("app.llm.service.TEMPLATES")
     @patch("app.llm.service.get_schema")
@@ -33,6 +34,7 @@ class TestPromptService:
         assert result == {"name": "test"}
         mock_client.get_payload.assert_called_once()
 
+    @pytest.mark.asyncio
     @patch("app.llm.service.get_llm_client")
     @patch("app.llm.service.TEMPLATES")
     async def test_generate_payload_unknown_action(
@@ -43,6 +45,7 @@ class TestPromptService:
         with pytest.raises(ValueError, match="Unknown action"):
             await service.generate_payload("unknown", {})
 
+    @pytest.mark.asyncio
     @patch("app.llm.service.get_llm_client")
     @patch("app.llm.service.TEMPLATES")
     @patch("app.llm.service.get_schema")
@@ -63,6 +66,7 @@ class TestPromptService:
         # LLM should only be called once
         mock_client.get_payload.assert_called_once()
 
+    @pytest.mark.asyncio
     @patch("app.llm.service.get_llm_client")
     @patch("app.llm.service.TEMPLATES")
     @patch("app.llm.service.get_schema")

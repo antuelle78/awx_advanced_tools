@@ -9,7 +9,7 @@ class Settings(BaseSettings):
     awx_password: Optional[str] = None
     llm_endpoint: Optional[str] = None
     llm_provider: str = "ollama"
-    llm_model: str = "gpt-4o"
+    llm_model: str = "dummy"
     llm_api_key: Optional[str] = None
     audit_log_dir: str = "/tmp/audit"
 
