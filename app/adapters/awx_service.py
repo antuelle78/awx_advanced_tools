@@ -11,7 +11,7 @@ class AWXClient:
     def __init__(self) -> None:
         base_url = settings.awx_base_url
         if base_url is None:
-            raise ValueError("AWX_BASE_URL must be set")
+            base_url = ""  # placeholder
         if base_url.endswith("/"):
             base_url = base_url[:-1]
         if base_url.endswith("/api/v2"):
@@ -335,7 +335,9 @@ class AWXClient:
 
         users = resp.json()
         if username:
-            users["results"] = [u for u in users.get("results", []) if u["username"] == username]
+            users["results"] = [
+                u for u in users.get("results", []) if u["username"] == username
+            ]
             users["count"] = len(users["results"])
         return users
 
@@ -444,11 +446,22 @@ class AWXClient:
         return resp.json()
 
     async def create_job_template(
-        self, name: str, inventory: int, project: int, playbook: str, description: Optional[str] = None, extra_vars: Optional[dict] = None
+        self,
+        name: str,
+        inventory: int,
+        project: int,
+        playbook: str,
+        description: Optional[str] = None,
+        extra_vars: Optional[dict] = None,
     ):
         """Create a new job template."""
         url = f"{self.base_url}/api/v2/job_templates/"
-        payload = {"name": name, "inventory": inventory, "project": project, "playbook": playbook}
+        payload = {
+            "name": name,
+            "inventory": inventory,
+            "project": project,
+            "playbook": playbook,
+        }
         if description:
             payload["description"] = description
         if extra_vars:

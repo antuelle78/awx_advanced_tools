@@ -1,13 +1,21 @@
 from app.config import Settings
 
 
-def test_settings_default_values():
+def test_settings_default_values(monkeypatch):
+    monkeypatch.delenv("AWX_BASE_URL", raising=False)
+    monkeypatch.delenv("AWX_TOKEN", raising=False)
+    monkeypatch.delenv("AWX_USERNAME", raising=False)
+    monkeypatch.delenv("AWX_PASSWORD", raising=False)
+    monkeypatch.delenv("LLM_ENDPOINT", raising=False)
+    monkeypatch.delenv("LLM_MODEL", raising=False)
+    monkeypatch.delenv("LLM_API_KEY", raising=False)
+    monkeypatch.delenv("JWT_SECRET", raising=False)
     settings = Settings()
     assert settings.llm_provider == "ollama"
     assert settings.llm_model == "gpt-4o"
     assert settings.audit_log_dir == "/tmp/audit"
-    assert settings.awx_base_url == "https://awx.example.com"
-    assert settings.awx_token == "your_awx_token"
+    assert settings.awx_base_url is None
+    assert settings.awx_token is None
 
 
 def test_settings_loading(monkeypatch):

@@ -7,7 +7,7 @@
 - **Format**: `ruff format .`
 - **Type-check**: `mypy --explicit-package-bases --ignore-missing-imports app`
 - **Run all tests**: `pytest`
-- **Run a single test**: `pytest tests/test_<module>.py -v`
+- **Run a single test**: `pytest tests/test_<module>.py -v` (replace <module> with specific test file)
 - **Run tests matching pattern**: `pytest -k <pattern>`
 - **Coverage**: `pytest --cov=app --cov-report term-missing`
 

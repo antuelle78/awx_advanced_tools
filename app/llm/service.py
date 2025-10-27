@@ -58,18 +58,45 @@ class PromptService:
         schema = get_schema("AWX", action)
         if schema:
             # FastAPI uses pydantic for validation – we can reuse that
-            from pydantic import BaseModel, ValidationError
+            from pydantic import ValidationError, create_model, Field, ConfigDict
 
-            class PayloadModel(BaseModel):
-                __root__: schema  # type: ignore
+            fields = {}
+            required = schema.get("required", [])
+            for prop, spec in schema.get("properties", {}).items():
+                if spec.get("type") == "string":
+                    if prop in required:
+                        fields[prop] = (str, Field())  # type: ignore
+                    else:
+                        fields[prop] = (str, Field(default=None))  # type: ignore
+                elif spec.get("type") == "integer":
+                    if prop in required:
+                        fields[prop] = (int, Field())  # type: ignore
+                    else:
+                        fields[prop] = (int, Field(default=None))  # type: ignore
+                # Add more types as needed
 
-            try:
-                PayloadModel(**result)
-            except ValidationError as exc:  # pragma: no cover
-                raise ValueError(f"LLM payload does not match schema: {exc}") from exc
+            if not fields and required:
+                for req in required:
+                    if req not in result:
+                        raise ValueError(
+                            f"LLM payload does not match schema: missing required field {req}"
+                        )
+            else:
+                PayloadModel = create_model(  # type: ignore
+                    "PayloadModel", **fields, __config__=ConfigDict(extra="ignore")
+                )
+                try:
+                    PayloadModel(**result)
+                except ValidationError as exc:  # pragma: no cover
+                    raise ValueError(
+                        f"LLM payload does not match schema: {exc}"
+                    ) from exc
         else:
             import logging
-            logging.warning(f"No schema found for action '{action}', skipping validation")
+
+            logging.warning(
+                f"No schema found for action '{action}', skipping validation"
+            )
 
         # 6. Cache & return
         _CACHE[key] = result

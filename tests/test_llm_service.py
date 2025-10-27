@@ -1,6 +1,6 @@
 import os
 import pytest
-from unittest.mock import patch, AsyncMock
+from unittest.mock import patch, AsyncMock, MagicMock
 from app.llm.service import PromptService
 
 # Set default provider to ollama to avoid import errors
@@ -11,7 +11,9 @@ class TestPromptService:
     @patch("app.llm.service.get_llm_client")
     @patch("app.llm.service.TEMPLATES")
     @patch("app.llm.service.get_schema")
-    async def test_generate_payload_success(self, mock_get_schema, mock_templates, mock_get_client):
+    async def test_generate_payload_success(
+        self, mock_get_schema, mock_templates, mock_get_client
+    ):
         # Mock LLM client
         mock_client = AsyncMock()
         mock_client.get_payload = AsyncMock(return_value={"name": "test"})
@@ -33,7 +35,9 @@ class TestPromptService:
 
     @patch("app.llm.service.get_llm_client")
     @patch("app.llm.service.TEMPLATES")
-    async def test_generate_payload_unknown_action(self, mock_templates, mock_get_client):
+    async def test_generate_payload_unknown_action(
+        self, mock_templates, mock_get_client
+    ):
         mock_templates.__contains__ = lambda self, key: False
         service = PromptService()
         with pytest.raises(ValueError, match="Unknown action"):
@@ -42,8 +46,14 @@ class TestPromptService:
     @patch("app.llm.service.get_llm_client")
     @patch("app.llm.service.TEMPLATES")
     @patch("app.llm.service.get_schema")
-    async def test_generate_payload_cache_hit(self, mock_get_schema, mock_templates, mock_get_client):
-        mock_client = AsyncMock()
+    async def test_generate_payload_cache_hit(
+        self, mock_get_schema, mock_templates, mock_get_client
+    ):
+        from app.llm.service import _CACHE
+
+        _CACHE.clear()
+        mock_client = MagicMock()
+        mock_client.get_payload = AsyncMock(return_value={"name": "test"})
         mock_get_client.return_value = mock_client
         mock_templates.__contains__ = lambda self, key: True
         mock_templates.__getitem__ = lambda self, key: "Prompt for {name}"
@@ -60,7 +70,9 @@ class TestPromptService:
     @patch("app.llm.service.get_llm_client")
     @patch("app.llm.service.TEMPLATES")
     @patch("app.llm.service.get_schema")
-    async def test_generate_payload_validation_error(self, mock_get_schema, mock_templates, mock_get_client):
+    async def test_generate_payload_validation_error(
+        self, mock_get_schema, mock_templates, mock_get_client
+    ):
         mock_client = AsyncMock()
         mock_client.get_payload = AsyncMock(return_value={"invalid": "data"})
         mock_get_client.return_value = mock_client
