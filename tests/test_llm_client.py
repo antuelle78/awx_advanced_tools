@@ -58,6 +58,7 @@ class TestOpenAIClient:
 
     @patch("app.llm.client.settings")
     @patch("app.llm.client.openai")
+    @pytest.mark.asyncio
     async def test_openai_client_get_payload(self, mock_openai, mock_settings):
         mock_settings.llm_model = "gpt-3.5"
         mock_settings.llm_api_key = "test_key"
@@ -81,6 +82,7 @@ class TestOllamaClient:
 
     @patch("app.llm.client.settings")
     @patch("app.llm.client.ollama")
+    @pytest.mark.asyncio
     async def test_ollama_client_get_payload(self, mock_ollama, mock_settings):
         mock_settings.llm_model = "llama2"
         mock_client = AsyncMock()

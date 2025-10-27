@@ -11,6 +11,7 @@ class TestPromptService:
     @patch("app.llm.service.get_llm_client")
     @patch("app.llm.service.TEMPLATES")
     @patch("app.llm.service.get_schema")
+    @pytest.mark.asyncio
     async def test_generate_payload_success(
         self, mock_get_schema, mock_templates, mock_get_client
     ):
@@ -35,6 +36,7 @@ class TestPromptService:
 
     @patch("app.llm.service.get_llm_client")
     @patch("app.llm.service.TEMPLATES")
+    @pytest.mark.asyncio
     async def test_generate_payload_unknown_action(
         self, mock_templates, mock_get_client
     ):
@@ -46,6 +48,7 @@ class TestPromptService:
     @patch("app.llm.service.get_llm_client")
     @patch("app.llm.service.TEMPLATES")
     @patch("app.llm.service.get_schema")
+    @pytest.mark.asyncio
     async def test_generate_payload_cache_hit(
         self, mock_get_schema, mock_templates, mock_get_client
     ):
@@ -70,6 +73,7 @@ class TestPromptService:
     @patch("app.llm.service.get_llm_client")
     @patch("app.llm.service.TEMPLATES")
     @patch("app.llm.service.get_schema")
+    @pytest.mark.asyncio
     async def test_generate_payload_validation_error(
         self, mock_get_schema, mock_templates, mock_get_client
     ):
