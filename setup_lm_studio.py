@@ -2,6 +2,7 @@
 import json
 import os
 
+
 def create_lm_studio_config(base_url: str, output_path: str = "~/.lmstudio/mcp.json"):
     """
     Creates a configuration file for LM Studio to integrate with the AWX MCP server.
@@ -10,7 +11,9 @@ def create_lm_studio_config(base_url: str, output_path: str = "~/.lmstudio/mcp.j
         base_url (str): The base URL of the AWX MCP server.
         output_path (str, optional): The path to save the configuration file. Defaults to "~/.lmstudio/mcp.json".
     """
-    mcp_server_path = os.environ.get("MCP_SERVER_PATH", os.path.join(os.path.dirname(__file__), "mcp_server.py"))
+    mcp_server_path = os.environ.get(
+        "MCP_SERVER_PATH", os.path.join(os.path.dirname(__file__), "mcp_server.py")
+    )
     awx_base_url = os.environ.get("AWX_BASE_URL", base_url)
 
     config = {
@@ -20,10 +23,7 @@ def create_lm_studio_config(base_url: str, output_path: str = "~/.lmstudio/mcp.j
                 "args": [mcp_server_path, awx_base_url],
                 "cwd": os.path.dirname(__file__),
                 "description": "AWX MCP Server Bridge",
-                "capabilities": [
-                    "tools",
-                    "resources"
-                ]
+                "capabilities": ["tools", "resources"],
             }
         }
     }

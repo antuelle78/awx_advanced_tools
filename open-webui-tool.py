@@ -113,14 +113,18 @@ class Tools:
             response.raise_for_status()
             return json.dumps(response.json())
         except httpx.HTTPStatusError as e:
-            return json.dumps({
-                "error": f"HTTP error occurred: {e.response.status_code}",
-                "detail": e.response.text,
-            })
+            return json.dumps(
+                {
+                    "error": f"HTTP error occurred: {e.response.status_code}",
+                    "detail": e.response.text,
+                }
+            )
         except Exception as e:
             return json.dumps({"error": str(e)})
 
-    def launch_job_template(self, template_id: int, extra_vars: Optional[Dict[str, Any]] = None) -> str:
+    def launch_job_template(
+        self, template_id: int, extra_vars: Optional[Dict[str, Any]] = None
+    ) -> str:
         """
         Launches an AWX job template to start a new job.
 
@@ -138,10 +142,12 @@ class Tools:
             response.raise_for_status()
             return json.dumps(response.json())
         except httpx.HTTPStatusError as e:
-            return json.dumps({
-                "error": f"HTTP error occurred: {e.response.status_code}",
-                "detail": e.response.text,
-            })
+            return json.dumps(
+                {
+                    "error": f"HTTP error occurred: {e.response.status_code}",
+                    "detail": e.response.text,
+                }
+            )
         except Exception as e:
             return json.dumps({"error": str(e)})
 
@@ -158,10 +164,12 @@ class Tools:
             response.raise_for_status()
             return json.dumps(response.json())
         except httpx.HTTPStatusError as e:
-            return json.dumps({
-                "error": f"HTTP error occurred: {e.response.status_code}",
-                "detail": e.response.text,
-            })
+            return json.dumps(
+                {
+                    "error": f"HTTP error occurred: {e.response.status_code}",
+                    "detail": e.response.text,
+                }
+            )
         except Exception as e:
             return json.dumps({"error": str(e)})
 
@@ -178,15 +186,24 @@ class Tools:
             response.raise_for_status()
             return json.dumps(response.json())
         except httpx.HTTPStatusError as e:
-            return json.dumps({
-                "error": f"HTTP error occurred: {e.response.status_code}",
-                "detail": e.response.text,
-            })
+            return json.dumps(
+                {
+                    "error": f"HTTP error occurred: {e.response.status_code}",
+                    "detail": e.response.text,
+                }
+            )
         except Exception as e:
             return json.dumps({"error": str(e)})
 
-    def create_job_template(self, name: str, inventory: int, project: int, playbook: str,
-                           description: Optional[str] = None, extra_vars: Optional[Dict[str, Any]] = None) -> str:
+    def create_job_template(
+        self,
+        name: str,
+        inventory: int,
+        project: int,
+        playbook: str,
+        description: Optional[str] = None,
+        extra_vars: Optional[Dict[str, Any]] = None,
+    ) -> str:
         """
         Creates a new job template in AWX.
 
@@ -203,7 +220,7 @@ class Tools:
             "name": name,
             "inventory": inventory,
             "project": project,
-            "playbook": playbook
+            "playbook": playbook,
         }
         if description:
             payload["description"] = description
@@ -215,10 +232,12 @@ class Tools:
             response.raise_for_status()
             return json.dumps(response.json())
         except httpx.HTTPStatusError as e:
-            return json.dumps({
-                "error": f"HTTP error occurred: {e.response.status_code}",
-                "detail": e.response.text,
-            })
+            return json.dumps(
+                {
+                    "error": f"HTTP error occurred: {e.response.status_code}",
+                    "detail": e.response.text,
+                }
+            )
         except Exception as e:
             return json.dumps({"error": str(e)})
 
@@ -239,14 +258,18 @@ class Tools:
             response.raise_for_status()
             return json.dumps(response.json())
         except httpx.HTTPStatusError as e:
-            return json.dumps({
-                "error": f"HTTP error occurred: {e.response.status_code}",
-                "detail": e.response.text,
-            })
+            return json.dumps(
+                {
+                    "error": f"HTTP error occurred: {e.response.status_code}",
+                    "detail": e.response.text,
+                }
+            )
         except Exception as e:
             return json.dumps({"error": str(e)})
 
-    def create_inventory(self, name: str, organization: int, variables: Optional[Dict[str, Any]] = None) -> str:
+    def create_inventory(
+        self, name: str, organization: int, variables: Optional[Dict[str, Any]] = None
+    ) -> str:
         """
         Creates a new inventory in AWX.
 
@@ -256,10 +279,7 @@ class Tools:
         :return: A JSON string containing the created inventory details.
         """
         url = f"{self.mcp_server_url}/awx/inventories"
-        payload = {
-            "name": name,
-            "organization": organization
-        }
+        payload = {"name": name, "organization": organization}
         if variables:
             payload["variables"] = variables
 
@@ -268,10 +288,12 @@ class Tools:
             response.raise_for_status()
             return json.dumps(response.json())
         except httpx.HTTPStatusError as e:
-            return json.dumps({
-                "error": f"HTTP error occurred: {e.response.status_code}",
-                "detail": e.response.text,
-            })
+            return json.dumps(
+                {
+                    "error": f"HTTP error occurred: {e.response.status_code}",
+                    "detail": e.response.text,
+                }
+            )
         except Exception as e:
             return json.dumps({"error": str(e)})
 
@@ -288,10 +310,12 @@ class Tools:
             response.raise_for_status()
             return json.dumps(response.json())
         except httpx.HTTPStatusError as e:
-            return json.dumps({
-                "error": f"HTTP error occurred: {e.response.status_code}",
-                "detail": e.response.text,
-            })
+            return json.dumps(
+                {
+                    "error": f"HTTP error occurred: {e.response.status_code}",
+                    "detail": e.response.text,
+                }
+            )
         except Exception as e:
             return json.dumps({"error": str(e)})
 
@@ -308,10 +332,12 @@ class Tools:
             response.raise_for_status()
             return json.dumps(response.json())
         except httpx.HTTPStatusError as e:
-            return json.dumps({
-                "error": f"HTTP error occurred: {e.response.status_code}",
-                "detail": e.response.text,
-            })
+            return json.dumps(
+                {
+                    "error": f"HTTP error occurred: {e.response.status_code}",
+                    "detail": e.response.text,
+                }
+            )
         except Exception as e:
             return json.dumps({"error": str(e)})
 
@@ -332,14 +358,18 @@ class Tools:
             response.raise_for_status()
             return json.dumps(response.json())
         except httpx.HTTPStatusError as e:
-            return json.dumps({
-                "error": f"HTTP error occurred: {e.response.status_code}",
-                "detail": e.response.text,
-            })
+            return json.dumps(
+                {
+                    "error": f"HTTP error occurred: {e.response.status_code}",
+                    "detail": e.response.text,
+                }
+            )
         except Exception as e:
             return json.dumps({"error": str(e)})
 
-    def create_project(self, name: str, scm_type: str, scm_url: str, description: Optional[str] = None) -> str:
+    def create_project(
+        self, name: str, scm_type: str, scm_url: str, description: Optional[str] = None
+    ) -> str:
         """
         Creates a new project in AWX.
 
@@ -350,11 +380,7 @@ class Tools:
         :return: A JSON string containing the created project details.
         """
         url = f"{self.mcp_server_url}/awx/projects"
-        payload = {
-            "name": name,
-            "scm_type": scm_type,
-            "scm_url": scm_url
-        }
+        payload = {"name": name, "scm_type": scm_type, "scm_url": scm_url}
         if description:
             payload["description"] = description
 
@@ -363,10 +389,12 @@ class Tools:
             response.raise_for_status()
             return json.dumps(response.json())
         except httpx.HTTPStatusError as e:
-            return json.dumps({
-                "error": f"HTTP error occurred: {e.response.status_code}",
-                "detail": e.response.text,
-            })
+            return json.dumps(
+                {
+                    "error": f"HTTP error occurred: {e.response.status_code}",
+                    "detail": e.response.text,
+                }
+            )
         except Exception as e:
             return json.dumps({"error": str(e)})
 
@@ -383,10 +411,12 @@ class Tools:
             response.raise_for_status()
             return json.dumps(response.json())
         except httpx.HTTPStatusError as e:
-            return json.dumps({
-                "error": f"HTTP error occurred: {e.response.status_code}",
-                "detail": e.response.text,
-            })
+            return json.dumps(
+                {
+                    "error": f"HTTP error occurred: {e.response.status_code}",
+                    "detail": e.response.text,
+                }
+            )
         except Exception as e:
             return json.dumps({"error": str(e)})
 
@@ -407,10 +437,12 @@ class Tools:
             response.raise_for_status()
             return json.dumps(response.json())
         except httpx.HTTPStatusError as e:
-            return json.dumps({
-                "error": f"HTTP error occurred: {e.response.status_code}",
-                "detail": e.response.text,
-            })
+            return json.dumps(
+                {
+                    "error": f"HTTP error occurred: {e.response.status_code}",
+                    "detail": e.response.text,
+                }
+            )
         except Exception as e:
             return json.dumps({"error": str(e)})
 
@@ -432,10 +464,12 @@ class Tools:
             response.raise_for_status()
             return json.dumps(response.json())
         except httpx.HTTPStatusError as e:
-            return json.dumps({
-                "error": f"HTTP error occurred: {e.response.status_code}",
-                "detail": e.response.text,
-            })
+            return json.dumps(
+                {
+                    "error": f"HTTP error occurred: {e.response.status_code}",
+                    "detail": e.response.text,
+                }
+            )
         except Exception as e:
             return json.dumps({"error": str(e)})
 
@@ -456,10 +490,12 @@ class Tools:
             response.raise_for_status()
             return json.dumps(response.json())
         except httpx.HTTPStatusError as e:
-            return json.dumps({
-                "error": f"HTTP error occurred: {e.response.status_code}",
-                "detail": e.response.text,
-            })
+            return json.dumps(
+                {
+                    "error": f"HTTP error occurred: {e.response.status_code}",
+                    "detail": e.response.text,
+                }
+            )
         except Exception as e:
             return json.dumps({"error": str(e)})
 
@@ -472,14 +508,18 @@ class Tools:
         """
         url = f"{self.mcp_server_url}/awx/hosts/"
         try:
-            response = self.client.post(url, headers=self._get_headers(), json=host_data)
+            response = self.client.post(
+                url, headers=self._get_headers(), json=host_data
+            )
             response.raise_for_status()
             return json.dumps(response.json())
         except httpx.HTTPStatusError as e:
-            return json.dumps({
-                "error": f"HTTP error occurred: {e.response.status_code}",
-                "detail": e.response.text,
-            })
+            return json.dumps(
+                {
+                    "error": f"HTTP error occurred: {e.response.status_code}",
+                    "detail": e.response.text,
+                }
+            )
         except Exception as e:
             return json.dumps({"error": str(e)})
 
@@ -496,15 +536,23 @@ class Tools:
             response.raise_for_status()
             return json.dumps(response.json())
         except httpx.HTTPStatusError as e:
-            return json.dumps({
-                "error": f"HTTP error occurred: {e.response.status_code}",
-                "detail": e.response.text,
-            })
+            return json.dumps(
+                {
+                    "error": f"HTTP error occurred: {e.response.status_code}",
+                    "detail": e.response.text,
+                }
+            )
         except Exception as e:
             return json.dumps({"error": str(e)})
 
-    def create_user(self, username: str, password: str, first_name: Optional[str] = None,
-                   last_name: Optional[str] = None, email: Optional[str] = None) -> str:
+    def create_user(
+        self,
+        username: str,
+        password: str,
+        first_name: Optional[str] = None,
+        last_name: Optional[str] = None,
+        email: Optional[str] = None,
+    ) -> str:
         """
         Creates a new user in AWX.
 
@@ -516,10 +564,7 @@ class Tools:
         :return: A JSON string containing the created user details.
         """
         url = f"{self.mcp_server_url}/awx/users"
-        payload = {
-            "username": username,
-            "password": password
-        }
+        payload = {"username": username, "password": password}
         if first_name:
             payload["first_name"] = first_name
         if last_name:
@@ -532,10 +577,12 @@ class Tools:
             response.raise_for_status()
             return json.dumps(response.json())
         except httpx.HTTPStatusError as e:
-            return json.dumps({
-                "error": f"HTTP error occurred: {e.response.status_code}",
-                "detail": e.response.text,
-            })
+            return json.dumps(
+                {
+                    "error": f"HTTP error occurred: {e.response.status_code}",
+                    "detail": e.response.text,
+                }
+            )
         except Exception as e:
             return json.dumps({"error": str(e)})
 
@@ -552,10 +599,12 @@ class Tools:
             response.raise_for_status()
             return json.dumps(response.json())
         except httpx.HTTPStatusError as e:
-            return json.dumps({
-                "error": f"HTTP error occurred: {e.response.status_code}",
-                "detail": e.response.text,
-            })
+            return json.dumps(
+                {
+                    "error": f"HTTP error occurred: {e.response.status_code}",
+                    "detail": e.response.text,
+                }
+            )
         except Exception as e:
             return json.dumps({"error": str(e)})
 
@@ -572,15 +621,23 @@ class Tools:
             response.raise_for_status()
             return json.dumps(response.json())
         except httpx.HTTPStatusError as e:
-            return json.dumps({
-                "error": f"HTTP error occurred: {e.response.status_code}",
-                "detail": e.response.text,
-            })
+            return json.dumps(
+                {
+                    "error": f"HTTP error occurred: {e.response.status_code}",
+                    "detail": e.response.text,
+                }
+            )
         except Exception as e:
             return json.dumps({"error": str(e)})
 
-    def update_user(self, user_id: int, username: Optional[str] = None, first_name: Optional[str] = None,
-                   last_name: Optional[str] = None, email: Optional[str] = None) -> str:
+    def update_user(
+        self,
+        user_id: int,
+        username: Optional[str] = None,
+        first_name: Optional[str] = None,
+        last_name: Optional[str] = None,
+        email: Optional[str] = None,
+    ) -> str:
         """
         Updates an existing user in AWX.
 
@@ -607,10 +664,12 @@ class Tools:
             response.raise_for_status()
             return json.dumps(response.json())
         except httpx.HTTPStatusError as e:
-            return json.dumps({
-                "error": f"HTTP error occurred: {e.response.status_code}",
-                "detail": e.response.text,
-            })
+            return json.dumps(
+                {
+                    "error": f"HTTP error occurred: {e.response.status_code}",
+                    "detail": e.response.text,
+                }
+            )
         except Exception as e:
             return json.dumps({"error": str(e)})
 
@@ -627,10 +686,12 @@ class Tools:
             response.raise_for_status()
             return json.dumps(response.json())
         except httpx.HTTPStatusError as e:
-            return json.dumps({
-                "error": f"HTTP error occurred: {e.response.status_code}",
-                "detail": e.response.text,
-            })
+            return json.dumps(
+                {
+                    "error": f"HTTP error occurred: {e.response.status_code}",
+                    "detail": e.response.text,
+                }
+            )
         except Exception as e:
             return json.dumps({"error": str(e)})
 
@@ -648,10 +709,12 @@ class Tools:
             response.raise_for_status()
             return json.dumps(response.json())
         except httpx.HTTPStatusError as e:
-            return json.dumps({
-                "error": f"HTTP error occurred: {e.response.status_code}",
-                "detail": e.response.text,
-            })
+            return json.dumps(
+                {
+                    "error": f"HTTP error occurred: {e.response.status_code}",
+                    "detail": e.response.text,
+                }
+            )
         except Exception as e:
             return json.dumps({"error": str(e)})
 
@@ -668,10 +731,12 @@ class Tools:
             response.raise_for_status()
             return json.dumps(response.json())
         except httpx.HTTPStatusError as e:
-            return json.dumps({
-                "error": f"HTTP error occurred: {e.response.status_code}",
-                "detail": e.response.text,
-            })
+            return json.dumps(
+                {
+                    "error": f"HTTP error occurred: {e.response.status_code}",
+                    "detail": e.response.text,
+                }
+            )
         except Exception as e:
             return json.dumps({"error": str(e)})
 
@@ -685,25 +750,29 @@ class Tools:
         :return: A JSON string containing the created schedule details.
         """
         url = f"{self.mcp_server_url}/awx/job_templates/{template_id}/schedules"
-        payload = {
-            "name": name,
-            "rrule": rrule
-        }
+        payload = {"name": name, "rrule": rrule}
 
         try:
             response = self.client.post(url, headers=self._get_headers(), json=payload)
             response.raise_for_status()
             return json.dumps(response.json())
         except httpx.HTTPStatusError as e:
-            return json.dumps({
-                "error": f"HTTP error occurred: {e.response.status_code}",
-                "detail": e.response.text,
-            })
+            return json.dumps(
+                {
+                    "error": f"HTTP error occurred: {e.response.status_code}",
+                    "detail": e.response.text,
+                }
+            )
         except Exception as e:
             return json.dumps({"error": str(e)})
 
-    def update_schedule(self, schedule_id: int, name: Optional[str] = None, rrule: Optional[str] = None,
-                       enabled: Optional[bool] = None) -> str:
+    def update_schedule(
+        self,
+        schedule_id: int,
+        name: Optional[str] = None,
+        rrule: Optional[str] = None,
+        enabled: Optional[bool] = None,
+    ) -> str:
         """
         Updates an existing schedule.
 
@@ -727,10 +796,12 @@ class Tools:
             response.raise_for_status()
             return json.dumps(response.json())
         except httpx.HTTPStatusError as e:
-            return json.dumps({
-                "error": f"HTTP error occurred: {e.response.status_code}",
-                "detail": e.response.text,
-            })
+            return json.dumps(
+                {
+                    "error": f"HTTP error occurred: {e.response.status_code}",
+                    "detail": e.response.text,
+                }
+            )
         except Exception as e:
             return json.dumps({"error": str(e)})
 
@@ -747,10 +818,12 @@ class Tools:
             response.raise_for_status()
             return json.dumps({"status": "deleted", "id": schedule_id})
         except httpx.HTTPStatusError as e:
-            return json.dumps({
-                "error": f"HTTP error occurred: {e.response.status_code}",
-                "detail": e.response.text,
-            })
+            return json.dumps(
+                {
+                    "error": f"HTTP error occurred: {e.response.status_code}",
+                    "detail": e.response.text,
+                }
+            )
         except Exception as e:
             return json.dumps({"error": str(e)})
 
@@ -767,10 +840,12 @@ class Tools:
             response.raise_for_status()
             return json.dumps(response.json())
         except httpx.HTTPStatusError as e:
-            return json.dumps({
-                "error": f"HTTP error occurred: {e.response.status_code}",
-                "detail": e.response.text,
-            })
+            return json.dumps(
+                {
+                    "error": f"HTTP error occurred: {e.response.status_code}",
+                    "detail": e.response.text,
+                }
+            )
         except Exception as e:
             return json.dumps({"error": str(e)})
 
@@ -787,10 +862,12 @@ class Tools:
             response.raise_for_status()
             return json.dumps({"status": "deleted", "id": inventory_id})
         except httpx.HTTPStatusError as e:
-            return json.dumps({
-                "error": f"HTTP error occurred: {e.response.status_code}",
-                "detail": e.response.text,
-            })
+            return json.dumps(
+                {
+                    "error": f"HTTP error occurred: {e.response.status_code}",
+                    "detail": e.response.text,
+                }
+            )
         except Exception as e:
             return json.dumps({"error": str(e)})
 
@@ -807,15 +884,23 @@ class Tools:
             response.raise_for_status()
             return json.dumps(response.json())
         except httpx.HTTPStatusError as e:
-            return json.dumps({
-                "error": f"HTTP error occurred: {e.response.status_code}",
-                "detail": e.response.text,
-            })
+            return json.dumps(
+                {
+                    "error": f"HTTP error occurred: {e.response.status_code}",
+                    "detail": e.response.text,
+                }
+            )
         except Exception as e:
             return json.dumps({"error": str(e)})
 
-    def update_project(self, project_id: int, name: Optional[str] = None, scm_type: Optional[str] = None,
-                      scm_url: Optional[str] = None, description: Optional[str] = None) -> str:
+    def update_project(
+        self,
+        project_id: int,
+        name: Optional[str] = None,
+        scm_type: Optional[str] = None,
+        scm_url: Optional[str] = None,
+        description: Optional[str] = None,
+    ) -> str:
         """
         Updates an existing project in AWX.
 
@@ -842,10 +927,12 @@ class Tools:
             response.raise_for_status()
             return json.dumps(response.json())
         except httpx.HTTPStatusError as e:
-            return json.dumps({
-                "error": f"HTTP error occurred: {e.response.status_code}",
-                "detail": e.response.text,
-            })
+            return json.dumps(
+                {
+                    "error": f"HTTP error occurred: {e.response.status_code}",
+                    "detail": e.response.text,
+                }
+            )
         except Exception as e:
             return json.dumps({"error": str(e)})
 
@@ -862,10 +949,12 @@ class Tools:
             response.raise_for_status()
             return json.dumps({"status": "deleted", "id": project_id})
         except httpx.HTTPStatusError as e:
-            return json.dumps({
-                "error": f"HTTP error occurred: {e.response.status_code}",
-                "detail": e.response.text,
-            })
+            return json.dumps(
+                {
+                    "error": f"HTTP error occurred: {e.response.status_code}",
+                    "detail": e.response.text,
+                }
+            )
         except Exception as e:
             return json.dumps({"error": str(e)})
 
@@ -882,15 +971,21 @@ class Tools:
             response.raise_for_status()
             return json.dumps(response.json())
         except httpx.HTTPStatusError as e:
-            return json.dumps({
-                "error": f"HTTP error occurred: {e.response.status_code}",
-                "detail": e.response.text,
-            })
+            return json.dumps(
+                {
+                    "error": f"HTTP error occurred: {e.response.status_code}",
+                    "detail": e.response.text,
+                }
+            )
         except Exception as e:
             return json.dumps({"error": str(e)})
 
-    def update_organization(self, organization_id: int, name: Optional[str] = None,
-                           description: Optional[str] = None) -> str:
+    def update_organization(
+        self,
+        organization_id: int,
+        name: Optional[str] = None,
+        description: Optional[str] = None,
+    ) -> str:
         """
         Updates an existing organization in AWX.
 
@@ -911,10 +1006,12 @@ class Tools:
             response.raise_for_status()
             return json.dumps(response.json())
         except httpx.HTTPStatusError as e:
-            return json.dumps({
-                "error": f"HTTP error occurred: {e.response.status_code}",
-                "detail": e.response.text,
-            })
+            return json.dumps(
+                {
+                    "error": f"HTTP error occurred: {e.response.status_code}",
+                    "detail": e.response.text,
+                }
+            )
         except Exception as e:
             return json.dumps({"error": str(e)})
 
@@ -931,10 +1028,12 @@ class Tools:
             response.raise_for_status()
             return json.dumps({"status": "deleted", "id": organization_id})
         except httpx.HTTPStatusError as e:
-            return json.dumps({
-                "error": f"HTTP error occurred: {e.response.status_code}",
-                "detail": e.response.text,
-            })
+            return json.dumps(
+                {
+                    "error": f"HTTP error occurred: {e.response.status_code}",
+                    "detail": e.response.text,
+                }
+            )
         except Exception as e:
             return json.dumps({"error": str(e)})
 
@@ -953,9 +1052,11 @@ class Tools:
             response.raise_for_status()
             return json.dumps(response.json())
         except httpx.HTTPStatusError as e:
-            return json.dumps({
-                "error": f"HTTP error occurred: {e.response.status_code}",
-                "detail": e.response.text,
-            })
+            return json.dumps(
+                {
+                    "error": f"HTTP error occurred: {e.response.status_code}",
+                    "detail": e.response.text,
+                }
+            )
         except Exception as e:
             return json.dumps({"error": str(e)})
