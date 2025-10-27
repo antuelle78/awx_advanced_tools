@@ -10,7 +10,6 @@ import httpx
 from pydantic import BaseModel, Field
 from typing import Optional, Dict, Any
 import json
-import logging
 import time
 
 
@@ -23,205 +22,111 @@ class PromptOptimizer:
         self.log_file = "tool_usage.log"
 
     def _load_tool_prompts(self) -> Dict[str, str]:
-        """Load optimized prompts for each tool with standardized JSON format expectations."""
+        """Load optimized prompts for each tool."""
         return {
-            "list_templates": "Think step by step: 1. Understand the request for job templates. 2. Call list_templates to get available options. 3. Use the results to inform further actions. Example: Call this to find template IDs for launching jobs. Response format: {\"result\": [...]}",
-            "launch_job_template": "Think step by step: 1. Identify the template_id from list_templates. 2. Prepare extra_vars if needed. 3. Call launch_job_template. Example: template_id=123, extra_vars={'branch': 'main'}. Response format: {\"result\": {\"job_id\": int, ...}}",
-            "list_jobs": "Think step by step: 1. Check if pagination is needed. 2. Call list_jobs with page if specified. 3. Review job statuses. Example: page=1 to get the first page of jobs. Response format: {\"result\": [...]}",
-            "get_job": "Think step by step: 1. Get the job_id from list_jobs. 2. Call get_job to check status. 3. Act based on the result. Example: job_id=456 to check if the job is running. Response format: {\"result\": {...}}",
-            "list_inventories": "Think step by step: 1. List inventories to find IDs. 2. Use for other operations. 3. Ensure no duplicates. Example: Call this before creating. Response format: {\"result\": [...]}",
-            "create_inventory": "Think step by step: 1. Use list_organizations to get valid org ID. 2. Check if name exists. 3. Call create_inventory with name, org, variables. Example: name='infra', organization=2, variables={'ansible_user': 'admin'}. Response format: {\"result\": {...}}",
-            "get_inventory": "Think step by step: 1. Get inventory_id from list_inventories. 2. Call get_inventory. 3. Use details for further actions. Example: inventory_id=789. Response format: {\"result\": {...}}",
-            "delete_inventory": "Think step by step: 1. Confirm deletion with confirm=true. 2. Use dry_run if testing. 3. Call delete_inventory. Example: inventory_id=789, confirm=true. Response format: {\"result\": {...}}",
-            "sync_inventory": "Think step by step: 1. Get inventory_id. 2. Call sync_inventory. 3. Monitor the job. Example: inventory_id=789. Response format: {\"result\": {...}}",
-            "list_schedules": "Think step by step: 1. Get template_id. 2. Call list_schedules. 3. Review schedule details. Example: template_id=123. Response format: {\"result\": [...]}",
-            "get_schedule": "Think step by step: 1. Get schedule_id from list_schedules. 2. Call get_schedule. 3. Check status. Example: schedule_id=101. Response format: {\"result\": {...}}",
-            "create_schedule": "Think step by step: 1. Get template_id. 2. Define rrule. 3. Call create_schedule. Example: name='daily', rrule='FREQ=DAILY', job_template_id=123. Response format: {\"result\": {...}}",
-            "toggle_schedule": "Think step by step: 1. Get schedule_id. 2. Decide enabled status. 3. Call toggle_schedule. Example: schedule_id=101, enabled=true. Response format: {\"result\": {...}}",
-            "delete_schedule": "Think step by step: 1. Confirm deletion. 2. Call delete_schedule. 3. Verify removal. Example: schedule_id=101. Response format: {\"result\": {...}}",
-            "list_organizations": "Think step by step: 1. List organizations for IDs. 2. Use for creating resources. 3. Ensure valid org. Example: Call this before creating inventory. Response format: {\"result\": [...]}",
-            "get_organization": "Think step by step: 1. Get organization_id. 2. Call get_organization. 3. Use details. Example: organization_id=2. Response format: {\"result\": {...}}",
-            "create_organization": "Think step by step: 1. Check if name exists. 2. Call create_organization. 3. Verify creation. Example: name='IT Team', description='Infrastructure team'. Response format: {\"result\": {...}}",
-            "update_organization": "Think step by step: 1. Get organization_id. 2. Call update_organization. 3. Confirm changes. Example: organization_id=2, name='Updated IT'. Response format: {\"result\": {...}}",
-            "delete_organization": "Think step by step: 1. Confirm deletion. 2. Call delete_organization. 3. Verify removal. Example: organization_id=2. Response format: {\"result\": {...}}",
-            "list_projects": "Think step by step: 1. List projects for IDs. 2. Use for other operations. 3. Ensure no duplicates. Example: Call this before creating. Response format: {\"result\": [...]}",
-            "get_project": "Think step by step: 1. Get project_id. 2. Call get_project. 3. Use details. Example: project_id=5. Response format: {\"result\": {...}}",
-            "create_project": "Think step by step: 1. Check if name exists. 2. Call create_project. 3. Verify creation. Example: name='my-repo', scm_type='git', scm_url='https://github.com/user/repo.git'. Response format: {\"result\": {...}}",
-            "update_project": "Think step by step: 1. Get project_id. 2. Call update_project. 3. Confirm changes. Example: project_id=5, name='updated-repo'. Response format: {\"result\": {...}}",
-            "delete_project": "Think step by step: 1. Confirm deletion with confirm=true. 2. Use dry_run if testing. 3. Call delete_project. Example: project_id=5, confirm=true. Response format: {\"result\": {...}}",
-            "sync_project": "Think step by step: 1. Get project_id. 2. Call sync_project. 3. Monitor the job. Example: project_id=5. Response format: {\"result\": {...}}",
-            "list_credentials": "Think step by step: 1. List credentials for IDs. 2. Use for other operations. 3. Ensure no duplicates. Example: Call this before creating. Response format: {\"result\": [...]}",
-            "get_credential": "Think step by step: 1. Get credential_id. 2. Call get_credential. 3. Use details. Example: credential_id=10. Response format: {\"result\": {...}}",
-            "create_credential": "Think step by step: 1. Check if name exists. 2. Call create_credential. 3. Verify creation. Example: name='ssh-key', credential_type=1, inputs={'username': 'admin'}. Response format: {\"result\": {...}}",
-            "update_credential": "Think step by step: 1. Get credential_id. 2. Call update_credential. 3. Confirm changes. Example: credential_id=10, name='updated-key'. Response format: {\"result\": {...}}",
-            "delete_credential": "Think step by step: 1. Confirm deletion. 2. Call delete_credential. 3. Verify removal. Example: credential_id=10. Response format: {\"result\": {...}}",
-            "list_users": "Think step by step: 1. List users for IDs. 2. Use for other operations. 3. Ensure no duplicates. Example: Call this before creating. Response format: {\"result\": [...]}",
-            "get_user": "Think step by step: 1. Get user_id. 2. Call get_user. 3. Use details. Example: user_id=2. Response format: {\"result\": {...}}",
-            "create_user": "Think step by step: 1. Check if username exists. 2. Call create_user. 3. Verify creation. Example: username='newuser', password='pass123'. Response format: {\"result\": {...}}",
-            "update_user": "Think step by step: 1. Get user_id. 2. Call update_user. 3. Confirm changes. Example: user_id=2, first_name='John'. Response format: {\"result\": {...}}",
-            "delete_user": "Think step by step: 1. Confirm deletion. 2. Call delete_user. 3. Verify removal. Example: user_id=2. Response format: {\"result\": {...}}",
-            "list_workflow_job_templates": "Think step by step: 1. List workflow templates for IDs. 2. Use for other operations. 3. Ensure no duplicates. Example: Call this before creating. Response format: {\"result\": [...]}",
-            "get_workflow_job_template": "Think step by step: 1. Get workflow_job_template_id. 2. Call get_workflow_job_template. 3. Use details. Example: workflow_job_template_id=7. Response format: {\"result\": {...}}",
-            "create_workflow_job_template": "Think step by step: 1. Check if name exists. 2. Call create_workflow_job_template. 3. Verify creation. Example: name='my-workflow', description='Automation workflow'. Response format: {\"result\": {...}}",
-            "update_workflow_job_template": "Think step by step: 1. Get workflow_job_template_id. 2. Call update_workflow_job_template. 3. Confirm changes. Example: workflow_job_template_id=7, name='updated-workflow'. Response format: {\"result\": {...}}",
-            "delete_workflow_job_template": "Think step by step: 1. Confirm deletion. 2. Call delete_workflow_job_template. 3. Verify removal. Example: workflow_job_template_id=7. Response format: {\"result\": {...}}",
-            "launch_workflow_job_template": "Think step by step: 1. Get workflow_job_template_id. 2. Prepare extra_vars. 3. Call launch_workflow_job_template. Example: workflow_job_template_id=7, extra_vars={'env': 'prod'}. Response format: {\"result\": {...}}",
-            "list_notifications": "Think step by step: 1. List notifications for IDs. 2. Use for other operations. 3. Ensure no duplicates. Example: Call this before creating. Response format: {\"result\": [...]}",
-            "get_notification": "Think step by step: 1. Get notification_id. 2. Call get_notification. 3. Use details. Example: notification_id=8. Response format: {\"result\": {...}}",
-            "create_notification": "Think step by step: 1. Check if name exists. 2. Call create_notification. 3. Verify creation. Example: name='email-alert', notification_type='email', notification_configuration={'email': 'admin@example.com'}. Response format: {\"result\": {...}}",
-            "update_notification": "Think step by step: 1. Get notification_id. 2. Call update_notification. 3. Confirm changes. Example: notification_id=8, name='updated-alert'. Response format: {\"result\": {...}}",
-            "delete_notification": "Think step by step: 1. Confirm deletion. 2. Call delete_notification. 3. Verify removal. Example: notification_id=8. Response format: {\"result\": {...}}",
-            "list_instance_groups": "Think step by step: 1. List instance groups for IDs. 2. Use for other operations. 3. Ensure no duplicates. Example: Call this before creating. Response format: {\"result\": [...]}",
-            "get_instance_group": "Think step by step: 1. Get instance_group_id. 2. Call get_instance_group. 3. Use details. Example: instance_group_id=9. Response format: {\"result\": {...}}",
-            "create_instance_group": "Think step by step: 1. Check if name exists. 2. Call create_instance_group. 3. Verify creation. Example: name='prod-group'. Response format: {\"result\": {...}}",
-            "update_instance_group": "Think step by step: 1. Get instance_group_id. 2. Call update_instance_group. 3. Confirm changes. Example: instance_group_id=9, name='updated-group'. Response format: {\"result\": {...}}",
-            "delete_instance_group": "Think step by step: 1. Confirm deletion. 2. Call delete_instance_group. 3. Verify removal. Example: instance_group_id=9. Response format: {\"result\": {...}}",
-             "list_activity_stream": "Think step by step: 1. List activity stream for events. 2. Use for monitoring. 3. Review recent actions. Example: page=1, page_size=20. Response format: {\"result\": [...]}",
-             "create_host": "Think step by step: 1. Validate host data with required fields like name and inventory. 2. Call create_host with the data. 3. Verify creation. Example: name='web-server', inventory=1. Response format: {\"result\": {...}}",
-             "create_job_template": "Think step by step: 1. Validate job template data with required fields like name, inventory, project, playbook. 2. Call create_job_template. 3. Verify creation. Example: name='deploy-app', inventory=1, project=1, playbook='deploy.yml'. Response format: {\"result\": {...}}",
-         }
+            "list_templates": "Think step by step: 1. Understand the request for job templates. 2. Call list_templates with name parameter to filter. 3. Use the results to inform further actions. Example: list_templates(name='Demo Job Template') to find specific template.",
+            "launch_job_template": "Think step by step: 1. Identify the template_id from list_templates. 2. Prepare extra_vars if needed. 3. Call launch_job_template. Example: template_id=123, extra_vars={'branch': 'main'}.",
+            "list_jobs": "Think step by step: 1. Check if pagination is needed. 2. Call list_jobs with page if specified. 3. Review job statuses. Example: page=1 to get the first page of jobs.",
+            "get_job": "Think step by step: 1. Get the job_id from list_jobs. 2. Call get_job to check status. 3. Act based on the result. Example: job_id=456 to check if the job is running.",
+            "list_inventories": "Think step by step: 1. List inventories to find IDs by name. 2. Use name parameter to filter. 3. Use for other operations. Example: list_inventories(name='Sample Inventory 1') to find specific inventory.",
+            "create_inventory": "Think step by step: 1. Use list_organizations to get valid org ID. 2. Check if name exists. 3. Call create_inventory with name, org, variables. Example: name='infra', organization=2, variables={'ansible_user': 'admin'}.",
+            "get_inventory": "Think step by step: 1. Get inventory_id from list_inventories. 2. Call get_inventory. 3. Use details for further actions. Example: inventory_id=789.",
+            "delete_inventory": "Think step by step: 1. Confirm deletion with confirm=true. 2. Use dry_run if testing. 3. Call delete_inventory. Example: inventory_id=789, confirm=true.",
+            "sync_inventory": "Think step by step: 1. Get inventory_id. 2. Call sync_inventory. 3. Monitor the job. Example: inventory_id=789.",
+            "list_users": "Think step by step: 1. List users to find IDs. 2. Use for other operations. 3. Ensure no duplicates. Example: Call this before creating.",
+            "list_hosts": "Think step by step: 1. List hosts to see what's available. 2. Use inventory parameter to filter by inventory. 3. Use for other operations. Example: list_hosts(inventory=5) to see hosts in a specific inventory.",
+            "get_user": "Think step by step: 1. Get user_id from list_users. 2. Call get_user. 3. Use details. Example: user_id=2.",
+            "create_user": "Think step by step: 1. Check if username exists. 2. Call create_user. 3. Verify creation. Example: username='newuser', password='pass123'.",
+            "update_user": "Think step by step: 1. Get user_id. 2. Call update_user. 3. Confirm changes. Example: user_id=2, first_name='John'.",
+            "delete_user": "Think step by step: 1. Confirm deletion. 2. Call delete_user. 3. Verify removal. Example: user_id=2.",
+        }
 
     def get_optimized_prompt(self, tool_name: str, **kwargs) -> str:
-        """Generate an optimized prompt for a specific tool with ReAct-like structure and standardized format expectations."""
-        base_prompt = self.tool_prompts.get(
-            tool_name, "Use this tool to interact with AWX."
-        )
-        confidence_cues = [
-            "I am confident this is the correct tool.",
-            "This tool call should succeed.",
-            "Using the appropriate AWX API endpoint.",
-        ]
-        cue = confidence_cues[hash(tool_name) % len(confidence_cues)]
-        reasoning = f"Thought: {base_prompt} Action: Call {tool_name} with appropriate parameters. Observation: Wait for response in standardized JSON format {{'result': ...}} and act accordingly."
-        return f"{cue} {reasoning}"
+        """Get an optimized prompt for a specific tool."""
+        if tool_name in self.tool_prompts:
+            return self.tool_prompts[tool_name]
+        return f"Use the {tool_name} tool appropriately."
 
     def log_tool_usage(self, tool_name: str, success: bool, response_time: float):
         """Log tool usage for feedback loop."""
-        log_entry = {
-            "tool": tool_name,
-            "success": success,
-            "response_time": response_time,
-            "timestamp": time.time(),
-        }
         try:
             with open(self.log_file, "a") as f:
-                f.write(json.dumps(log_entry) + "\n")
-         except Exception as e:
-             return json.dumps({"error": str(e)})
+                f.write(f"{time.time()},{tool_name},{success},{response_time}\n")
+        except Exception:
+            pass  # Ignore logging errors
 
-    def create_host(self, host_data: dict) -> str:
-         """
-         Creates a new host in AWX.
 
-         :param host_data: A dictionary containing host details (e.g., name, inventory).
-         :return: A JSON string with the result of creating the host.
-         """
-         # Validate host data
-         if not self._validate_host_data(host_data):
-             return json.dumps({"error": "Invalid host data. Required fields: name, inventory."})
+class Tools:
+    class Valves(BaseModel):
+        mcp_server_url: str = Field(
+            default="http://host.docker.internal:8001",
+            description="The base URL of MCP server.",
+        )
+        mcp_username: str = Field(
+            default="openwebui", description="Username for MCP server authentication."
+        )
+        mcp_password: str = Field(
+            default="openwebui", description="Password for MCP server authentication."
+        )
 
-         url = f"{self.mcp_server_url}/awx/hosts"
-         try:
-             response = self.client.post(url, headers=self._get_headers(), json=host_data)
-             response.raise_for_status()
-             return json.dumps(response.json())
-         except httpx.HTTPStatusError as e:
-             return json.dumps(
-                 {
-                     "error": f"HTTP error occurred: {e.response.status_code}",
-                     "detail": e.response.text,
-                 }
-             )
-         except Exception as e:
-             return json.dumps({"error": str(e)})
+    def __init__(self):
+        self.valves = self.Valves()
+        self.client = httpx.Client(
+            timeout=30.0, auth=(self.valves.mcp_username, self.valves.mcp_password)
+        )  # Add timeout and auth for requests
+        self.prompt_optimizer = PromptOptimizer()
 
-    def create_job_template(
-        self, name: str, inventory: int, project: int, playbook: str, description: Optional[str] = None, extra_vars: Optional[dict] = None
-    ) -> str:
-         """
-         Creates a new job template in AWX.
+    def _get_headers(self) -> Dict[str, str]:
+        """Get headers for API requests."""
+        return {"Content-Type": "application/json"}
 
-         :param name: The name of the job template.
-         :param inventory: The ID of the inventory.
-         :param project: The ID of the project.
-         :param playbook: The playbook path.
-         :param description: Optional description.
-         :param extra_vars: Optional extra variables.
-         :return: A JSON string with the result of creating the job template.
-         """
-         # Validate required fields
-         if not name or not inventory or not project or not playbook:
-             return json.dumps({"error": "Missing required fields: name, inventory, project, playbook."})
+    @property
+    def mcp_server_url(self) -> str:
+        return self.valves.mcp_server_url
 
-         url = f"{self.mcp_server_url}/awx/job_templates"
-         payload = {"name": name, "inventory": inventory, "project": project, "playbook": playbook}
-         if description:
-             payload["description"] = description
-         if extra_vars:
-             payload["extra_vars"] = extra_vars
+    def get_optimized_prompt(self, tool_name: str, **kwargs) -> str:
+        """Get an optimized prompt for a specific tool."""
+        return self.prompt_optimizer.get_optimized_prompt(tool_name, **kwargs)
 
-         try:
-             response = self.client.post(url, headers=self._get_headers(), json=payload)
-             response.raise_for_status()
-             return json.dumps(response.json())
-         except httpx.HTTPStatusError as e:
-             return json.dumps(
-                 {
-                     "error": f"HTTP error occurred: {e.response.status_code}",
-                     "detail": e.response.text,
-                 }
-             )
-         except Exception as e:
-             return json.dumps({"error": str(e)})
+    def log_tool_usage(self, tool_name: str, success: bool, response_time: float):
+        """Log tool usage for feedback loop."""
+        self.prompt_optimizer.log_tool_usage(tool_name, success, response_time)
 
-    def _validate_host_data(self, host_data: dict) -> bool:
-         """Validate host data."""
-         required_fields = ["name", "inventory"]
-         for field in required_fields:
-             if field not in host_data:
-                 return False
-         return True
+    def get_all_optimized_prompts(self) -> Dict[str, str]:
+        """Get optimized prompts for all available tools."""
+        return self.prompt_optimizer.tool_prompts
 
-    def list_templates(self) -> str:
+    def list_templates(self, name: Optional[str] = None) -> str:
         """
-        Lists all job templates in AWX.
+        Lists all job templates in AWX, optionally filtered by name.
 
-        :return: A JSON string containing a list of users and their details.
+        :param name: Optional name to filter job templates
+        :return: A JSON string containing a list of job templates.
 
         """
-        start_time = time.time()
         url = f"{self.mcp_server_url}/awx/templates"
-
+        params = {}
+        if name:
+            params["name"] = name
         try:
-            response = self.client.get(url, headers=self._get_headers())
-
+            response = self.client.get(url, headers=self._get_headers(), params=params)
             response.raise_for_status()
-
-            self.log_tool_usage("list_templates", True, time.time() - start_time)
             return json.dumps(response.json())
-
         except httpx.HTTPStatusError as e:
-            self.log_tool_usage("list_templates", False, time.time() - start_time)
-            return json.dumps(
-                {
-                    "error": f"HTTP error occurred: {e.response.status_code}",
-                    "detail": e.response.text,
-                }
-            )
-
+            return json.dumps({
+                "error": f"HTTP error occurred: {e.response.status_code}",
+                "detail": e.response.text,
+            })
         except Exception as e:
-            self.log_tool_usage("list_templates", False, time.time() - start_time)
             return json.dumps({"error": str(e)})
 
-    def launch_job_template(
-        self, template_id: int, extra_vars: Optional[Dict[str, Any]] = None
-    ) -> str:
+    def launch_job_template(self, template_id: int, extra_vars: Optional[Dict[str, Any]] = None) -> str:
         """
         Launches an AWX job template to start a new job.
 
         :param template_id: The ID of job template to launch.
         :param extra_vars: A dictionary of extra variables to pass to job.
-        :return: A JSON string containing details of newly created job, including its 'id'. This 'id' should be used with 'get_job' tool to check job's status.
+        :return: A JSON string containing details of newly created job.
         """
         url = f"{self.mcp_server_url}/awx/job_templates/{template_id}/launch"
         payload: Dict[str, Any] = {}
@@ -233,100 +138,18 @@ class PromptOptimizer:
             response.raise_for_status()
             return json.dumps(response.json())
         except httpx.HTTPStatusError as e:
-            return json.dumps(
-                {
-                    "error": f"HTTP error occurred: {e.response.status_code}",
-                    "detail": e.response.text,
-                }
-            )
-        except Exception as e:
-            return json.dumps({"error": str(e)})
-
-    def create_inventory(
-        self, name: str, organization: int, variables: Optional[dict] = None
-    ) -> str:
-        """
-        Creates a new inventory in AWX.
-
-        :param name: The name of inventory.
-        :param organization: The ID of organization for inventory.
-        :param variables: A dictionary of variables for inventory.
-        :return: The result of create inventory action.
-        """
-        # Validate organization ID by listing organizations
-        orgs_response = self.list_organizations()
-        try:
-            orgs = json.loads(orgs_response)
-            valid_org_ids = [org["id"] for org in orgs.get("results", [])]
-            if organization not in valid_org_ids:
-                return json.dumps(
-                    {
-                        "error": f"Invalid organization ID {organization}. Valid IDs: {valid_org_ids}. Use list_organizations to see details."
-                    }
-                )
-        except Exception:
-            pass  # If validation fails, proceed anyway
-
-        # Check if inventory with the same name already exists
-        inventories_response = self.list_inventories()
-        try:
-            inventories = json.loads(inventories_response)
-            existing_names = [inv["name"] for inv in inventories.get("results", [])]
-            if name in existing_names:
-                return json.dumps(
-                    {
-                        "error": f"Inventory with name '{name}' already exists. Use list_inventories to see existing inventories."
-                    }
-                )
-        except Exception:
-            pass  # If check fails, proceed anyway
-
-        url = f"{self.mcp_server_url}/awx/inventories"
-        payload = {"name": name, "organization": organization}
-        if variables:
-            payload["variables"] = variables
-
-        try:
-            response = self.client.post(url, headers=self._get_headers(), json=payload)
-            response.raise_for_status()
-            return json.dumps(response.json())
-        except httpx.HTTPStatusError as e:
-            return json.dumps(
-                {
-                    "error": f"HTTP error occurred: {e.response.status_code}",
-                    "detail": e.response.text,
-                }
-            )
-        except Exception as e:
-            return json.dumps({"error": str(e)})
-
-    def list_jobs(self, page: int = 1) -> str:
-        """
-        Lists all jobs in AWX with pagination.
-
-        :param page: The page number to retrieve (default: 1).
-        :return: A JSON string containing a list of jobs and their details.
-        """
-        url = f"{self.mcp_server_url}/awx/jobs?page={page}"
-        try:
-            response = self.client.get(url, headers=self._get_headers())
-            response.raise_for_status()
-            return json.dumps(response.json())
-        except httpx.HTTPStatusError as e:
-            return json.dumps(
-                {
-                    "error": f"HTTP error occurred: {e.response.status_code}",
-                    "detail": e.response.text,
-                }
-            )
+            return json.dumps({
+                "error": f"HTTP error occurred: {e.response.status_code}",
+                "detail": e.response.text,
+            })
         except Exception as e:
             return json.dumps({"error": str(e)})
 
     def get_job(self, job_id: int) -> str:
         """
-        Retrieves current status and details of a specific job, such as one started by 'launch_job_template'.
+        Retrieves current status and details of a specific job.
 
-        :param job_id: The ID of job to retrieve. This is the 'id' returned by 'launch_job_template' tool.
+        :param job_id: The ID of job to retrieve.
         :return: A JSON string containing status and details of job.
         """
         url = f"{self.mcp_server_url}/awx/jobs/{job_id}"
@@ -335,166 +158,120 @@ class PromptOptimizer:
             response.raise_for_status()
             return json.dumps(response.json())
         except httpx.HTTPStatusError as e:
-            return json.dumps(
-                {
-                    "error": f"HTTP error occurred: {e.response.status_code}",
-                    "detail": e.response.text,
-                }
-            )
+            return json.dumps({
+                "error": f"HTTP error occurred: {e.response.status_code}",
+                "detail": e.response.text,
+            })
         except Exception as e:
             return json.dumps({"error": str(e)})
 
-    def list_schedules(self, template_id: int) -> str:
+    def list_jobs(self, page: int = 1) -> str:
         """
-        Lists all schedules associated with a specific job template.
+        Lists all jobs in AWX with pagination.
 
-        :param template_id: The ID of job template to query.
-        :return: A JSON string containing a list of schedules and their details.
+        :param page: The page number for pagination.
+        :return: A JSON string containing a list of jobs.
         """
-        url = f"{self.mcp_server_url}/awx/job_templates/{template_id}/schedules"
+        url = f"{self.mcp_server_url}/awx/jobs?page={page}"
         try:
             response = self.client.get(url, headers=self._get_headers())
             response.raise_for_status()
             return json.dumps(response.json())
         except httpx.HTTPStatusError as e:
-            return json.dumps(
-                {
-                    "error": f"HTTP error occurred: {e.response.status_code}",
-                    "detail": e.response.text,
-                }
-            )
+            return json.dumps({
+                "error": f"HTTP error occurred: {e.response.status_code}",
+                "detail": e.response.text,
+            })
         except Exception as e:
             return json.dumps({"error": str(e)})
 
-    def get_schedule(self, schedule_id: int) -> str:
+    def create_job_template(self, name: str, inventory: int, project: int, playbook: str,
+                           description: Optional[str] = None, extra_vars: Optional[Dict[str, Any]] = None) -> str:
         """
-        Retrieves details of a specific schedule.
+        Creates a new job template in AWX.
 
-        :param schedule_id: The ID of schedule to retrieve.
-        :return: A JSON string containing details of schedule.
+        :param name: Name of the job template.
+        :param inventory: ID of the inventory to use.
+        :param project: ID of the project containing the playbook.
+        :param playbook: Path to the playbook file.
+        :param description: Optional description.
+        :param extra_vars: Optional extra variables.
+        :return: A JSON string containing the created job template details.
         """
-        url = f"{self.mcp_server_url}/awx/schedules/{schedule_id}"
-        try:
-            response = self.client.get(url, headers=self._get_headers())
-            response.raise_for_status()
-            return json.dumps(response.json())
-        except httpx.HTTPStatusError as e:
-            return json.dumps(
-                {
-                    "error": f"HTTP error occurred: {e.response.status_code}",
-                    "detail": e.response.text,
-                }
-            )
-        except Exception as e:
-            return json.dumps({"error": str(e)})
+        url = f"{self.mcp_server_url}/awx/job_templates/"
+        payload = {
+            "name": name,
+            "inventory": inventory,
+            "project": project,
+            "playbook": playbook
+        }
+        if description:
+            payload["description"] = description
+        if extra_vars:
+            payload["extra_vars"] = extra_vars
 
-    def toggle_schedule(self, schedule_id: int, enabled: bool) -> str:
-        """
-        Enables or disables a specific job schedule.
-
-        :param schedule_id: The ID of schedule to modify. Use list_schedules to find this ID.
-        :param enabled: Set to true to enable schedule, or false to disable it.
-        :return: A JSON string with updated schedule details.
-        """
-        url = f"{self.mcp_server_url}/awx/schedules/{schedule_id}"
-        payload = {"enabled": enabled}
-        start_time = time.time()
-        try:
-            response = self.client.post(url, headers=self._get_headers(), json=payload)
-            response.raise_for_status()
-            self.log_tool_usage("create_inventory", True, time.time() - start_time)
-            return json.dumps(response.json())
-        except httpx.HTTPStatusError as e:
-            self.log_tool_usage("create_inventory", False, time.time() - start_time)
-            return json.dumps(
-                {
-                    "error": f"HTTP error occurred: {e.response.status_code}",
-                    "detail": e.response.text,
-                }
-            )
-        except Exception as e:
-            self.log_tool_usage("create_inventory", False, time.time() - start_time)
-            return json.dumps({"error": str(e)})
-
-    def delete_schedule(self, schedule_id: int) -> str:
-        """
-        Permanently deletes a job schedule.
-
-        :param schedule_id: The ID of schedule to delete.
-        :return: A confirmation message indicating success or failure.
-        """
-        url = f"{self.mcp_server_url}/awx/schedules/{schedule_id}"
-        try:
-            response = self.client.delete(url, headers=self._get_headers())
-            response.raise_for_status()
-            return json.dumps(response.json())
-        except httpx.HTTPStatusError as e:
-            return json.dumps(
-                {
-                    "error": f"HTTP error occurred: {e.response.status_code}",
-                    "detail": e.response.text,
-                }
-            )
-        except Exception as e:
-            return json.dumps({"error": str(e)})
-
-    def create_schedule(self, name: str, rrule: str, job_template_id: int) -> str:
-        """
-        Creates a new schedule for a job template.
-
-        :param name: The name of schedule.
-        :param rrule: The recurrence rule for schedule (e.g., 'DTSTART:20251024T120000Z RRULE:FREQ=DAILY;INTERVAL=1').
-        :param job_template_id: The ID of job template to schedule.
-        :return: A JSON string with details of newly created schedule.
-        """
-        # Check if schedule with the same name already exists for the template
-        schedules_response = self.list_schedules(job_template_id)
-        try:
-            schedules = json.loads(schedules_response)
-            existing_names = [sched["name"] for sched in schedules.get("results", [])]
-            if name in existing_names:
-                return json.dumps(
-                    {
-                        "error": f"Schedule with name '{name}' already exists for this job template. Use list_schedules to see existing schedules."
-                    }
-                )
-        except Exception:
-            pass  # If check fails, proceed anyway
-
-        url = f"{self.mcp_server_url}/awx/job_templates/{job_template_id}/schedules"
-        payload = {"name": name, "rrule": rrule}
         try:
             response = self.client.post(url, headers=self._get_headers(), json=payload)
             response.raise_for_status()
             return json.dumps(response.json())
         except httpx.HTTPStatusError as e:
-            return json.dumps(
-                {
-                    "error": f"HTTP error occurred: {e.response.status_code}",
-                    "detail": e.response.text,
-                }
-            )
+            return json.dumps({
+                "error": f"HTTP error occurred: {e.response.status_code}",
+                "detail": e.response.text,
+            })
         except Exception as e:
             return json.dumps({"error": str(e)})
 
-    def list_inventories(self) -> str:
+    # Inventory Management
+    def list_inventories(self, name: Optional[str] = None) -> str:
         """
-        Lists all inventories in AWX.
+        Lists all inventories in AWX, optionally filtered by name.
 
-        :return: A JSON string containing a list of inventories and their details.
+        :param name: Optional name to filter inventories
+        :return: A JSON string containing a list of inventories.
         """
         url = f"{self.mcp_server_url}/awx/inventories"
+        params = {}
+        if name:
+            params["name"] = name
         try:
-            response = self.client.get(url, headers=self._get_headers())
+            response = self.client.get(url, headers=self._get_headers(), params=params)
             response.raise_for_status()
             return json.dumps(response.json())
         except httpx.HTTPStatusError as e:
-            return json.dumps(
-                {
-                    "error": f"HTTP error occurred: {e.response.status_code}",
-                    "detail": e.response.text,
-                }
-            )
+            return json.dumps({
+                "error": f"HTTP error occurred: {e.response.status_code}",
+                "detail": e.response.text,
+            })
+        except Exception as e:
+            return json.dumps({"error": str(e)})
+
+    def create_inventory(self, name: str, organization: int, variables: Optional[Dict[str, Any]] = None) -> str:
+        """
+        Creates a new inventory in AWX.
+
+        :param name: Name of the inventory.
+        :param organization: ID of the organization.
+        :param variables: Optional variables for the inventory.
+        :return: A JSON string containing the created inventory details.
+        """
+        url = f"{self.mcp_server_url}/awx/inventories"
+        payload = {
+            "name": name,
+            "organization": organization
+        }
+        if variables:
+            payload["variables"] = variables
+
+        try:
+            response = self.client.post(url, headers=self._get_headers(), json=payload)
+            response.raise_for_status()
+            return json.dumps(response.json())
+        except httpx.HTTPStatusError as e:
+            return json.dumps({
+                "error": f"HTTP error occurred: {e.response.status_code}",
+                "detail": e.response.text,
+            })
         except Exception as e:
             return json.dumps({"error": str(e)})
 
@@ -503,7 +280,7 @@ class PromptOptimizer:
         Retrieves details of a specific inventory.
 
         :param inventory_id: The ID of inventory to retrieve.
-        :return: A JSON string containing details of inventory.
+        :return: A JSON string containing inventory details.
         """
         url = f"{self.mcp_server_url}/awx/inventories/{inventory_id}"
         try:
@@ -511,92 +288,19 @@ class PromptOptimizer:
             response.raise_for_status()
             return json.dumps(response.json())
         except httpx.HTTPStatusError as e:
-            return json.dumps(
-                {
-                    "error": f"HTTP error occurred: {e.response.status_code}",
-                    "detail": e.response.text,
-                }
-            )
+            return json.dumps({
+                "error": f"HTTP error occurred: {e.response.status_code}",
+                "detail": e.response.text,
+            })
         except Exception as e:
-            return json.dumps({"error": str(e)})
-
-    def delete_inventory(
-        self, inventory_id: int, confirm: bool = False, dry_run: bool = False
-    ) -> str:
-        """
-        Permanently deletes an inventory.
-
-        :param inventory_id: The ID of inventory to delete.
-        :param confirm: Set to true to confirm the deletion.
-        :param dry_run: Set to true to simulate the deletion without executing.
-        :return: A confirmation message indicating success or failure.
-        """
-        if not confirm:
-            return json.dumps(
-                {
-                    "error": f"Deletion of inventory {inventory_id} requires confirmation. Set confirm=true to proceed."
-                }
-            )
-        if dry_run:
-            return json.dumps(
-                {"status": "dry_run", "action": "delete_inventory", "id": inventory_id}
-            )
-        url = f"{self.mcp_server_url}/awx/inventories/{inventory_id}"
-        start_time = time.time()
-        try:
-            response = self.client.delete(url, headers=self._get_headers())
-            response.raise_for_status()
-
-            # Verify deletion by checking if inventory still exists
-            inventories_response = self.list_inventories()
-            inventories = json.loads(inventories_response)
-            existing_ids = [inv["id"] for inv in inventories.get("results", [])]
-            if inventory_id in existing_ids:
-                self.log_tool_usage("delete_inventory", False, time.time() - start_time)
-                return json.dumps({
-                    "error": f"Inventory {inventory_id} was not deleted. It still exists in the list. Check AWX for issues."
-                })
-
-            self.log_tool_usage("delete_inventory", True, time.time() - start_time)
-            return json.dumps(response.json())
-        except httpx.HTTPStatusError as e:
-            if e.response.status_code == 500:
-                # AWX may return 500 even on successful delete, verify
-                try:
-                    inventories_response = self.list_inventories()
-                    inventories = json.loads(inventories_response)
-                    existing_ids = [inv["id"] for inv in inventories.get("results", [])]
-                    if inventory_id not in existing_ids:
-                        self.log_tool_usage("delete_inventory", True, time.time() - start_time)
-                        return json.dumps({"status": "deleted", "id": inventory_id})
-                    else:
-                        self.log_tool_usage("delete_inventory", False, time.time() - start_time)
-                        return json.dumps({
-                            "error": f"Inventory {inventory_id} was not deleted despite 500 error. It still exists in the list. Check AWX for issues."
-                        })
-                except Exception:
-                    self.log_tool_usage("delete_inventory", False, time.time() - start_time)
-                    return json.dumps({
-                        "error": f"HTTP error occurred: {e.response.status_code}",
-                        "detail": e.response.text,
-                    })
-            self.log_tool_usage("delete_inventory", False, time.time() - start_time)
-            return json.dumps(
-                {
-                    "error": f"HTTP error occurred: {e.response.status_code}",
-                    "detail": e.response.text,
-                }
-            )
-        except Exception as e:
-            self.log_tool_usage("delete_inventory", False, time.time() - start_time)
             return json.dumps({"error": str(e)})
 
     def sync_inventory(self, inventory_id: int) -> str:
         """
-        Triggers a sync of an inventory.
+        Synchronizes an inventory with its source.
 
         :param inventory_id: The ID of inventory to sync.
-        :return: A JSON string with details of sync job.
+        :return: A JSON string containing sync job details.
         """
         url = f"{self.mcp_server_url}/awx/inventories/{inventory_id}/sync"
         try:
@@ -604,55 +308,109 @@ class PromptOptimizer:
             response.raise_for_status()
             return json.dumps(response.json())
         except httpx.HTTPStatusError as e:
-            return json.dumps(
-                {
-                    "error": f"HTTP error occurred: {e.response.status_code}",
-                    "detail": e.response.text,
-                }
-            )
+            return json.dumps({
+                "error": f"HTTP error occurred: {e.response.status_code}",
+                "detail": e.response.text,
+            })
         except Exception as e:
             return json.dumps({"error": str(e)})
 
-    def list_organizations(self) -> str:
+    # Project Management
+    def list_projects(self, name: Optional[str] = None) -> str:
         """
-        Lists all organizations in AWX.
+        Lists all projects in AWX, optionally filtered by name.
 
-        :return: A JSON string containing a list of organizations and their details.
+        :param name: Optional name to filter projects
+        :return: A JSON string containing a list of projects.
+        """
+        url = f"{self.mcp_server_url}/awx/projects"
+        params = {}
+        if name:
+            params["name"] = name
+        try:
+            response = self.client.get(url, headers=self._get_headers(), params=params)
+            response.raise_for_status()
+            return json.dumps(response.json())
+        except httpx.HTTPStatusError as e:
+            return json.dumps({
+                "error": f"HTTP error occurred: {e.response.status_code}",
+                "detail": e.response.text,
+            })
+        except Exception as e:
+            return json.dumps({"error": str(e)})
+
+    def create_project(self, name: str, scm_type: str, scm_url: str, description: Optional[str] = None) -> str:
+        """
+        Creates a new project in AWX.
+
+        :param name: Name of the project.
+        :param scm_type: Type of source control (git, svn, etc.).
+        :param scm_url: URL of the source repository.
+        :param description: Optional description.
+        :return: A JSON string containing the created project details.
+        """
+        url = f"{self.mcp_server_url}/awx/projects"
+        payload = {
+            "name": name,
+            "scm_type": scm_type,
+            "scm_url": scm_url
+        }
+        if description:
+            payload["description"] = description
+
+        try:
+            response = self.client.post(url, headers=self._get_headers(), json=payload)
+            response.raise_for_status()
+            return json.dumps(response.json())
+        except httpx.HTTPStatusError as e:
+            return json.dumps({
+                "error": f"HTTP error occurred: {e.response.status_code}",
+                "detail": e.response.text,
+            })
+        except Exception as e:
+            return json.dumps({"error": str(e)})
+
+    def sync_project(self, project_id: int) -> str:
+        """
+        Synchronizes a project with its source repository.
+
+        :param project_id: The ID of project to sync.
+        :return: A JSON string containing sync job details.
+        """
+        url = f"{self.mcp_server_url}/awx/projects/{project_id}/sync"
+        try:
+            response = self.client.post(url, headers=self._get_headers())
+            response.raise_for_status()
+            return json.dumps(response.json())
+        except httpx.HTTPStatusError as e:
+            return json.dumps({
+                "error": f"HTTP error occurred: {e.response.status_code}",
+                "detail": e.response.text,
+            })
+        except Exception as e:
+            return json.dumps({"error": str(e)})
+
+    # Organization Management
+    def list_organizations(self, name: Optional[str] = None) -> str:
+        """
+        Lists all organizations in AWX, optionally filtered by name.
+
+        :param name: Optional name to filter organizations
+        :return: A JSON string containing a list of organizations.
         """
         url = f"{self.mcp_server_url}/awx/organizations"
+        params = {}
+        if name:
+            params["name"] = name
         try:
-            response = self.client.get(url, headers=self._get_headers())
+            response = self.client.get(url, headers=self._get_headers(), params=params)
             response.raise_for_status()
             return json.dumps(response.json())
         except httpx.HTTPStatusError as e:
-            return json.dumps(
-                {
-                    "error": f"HTTP error occurred: {e.response.status_code}",
-                    "detail": e.response.text,
-                }
-            )
-        except Exception as e:
-            return json.dumps({"error": str(e)})
-
-    def get_organization(self, organization_id: int) -> str:
-        """
-        Retrieves details of a specific organization.
-
-        :param organization_id: The ID of organization to retrieve.
-        :return: A JSON string containing details of organization.
-        """
-        url = f"{self.mcp_server_url}/awx/organizations/{organization_id}"
-        try:
-            response = self.client.get(url, headers=self._get_headers())
-            response.raise_for_status()
-            return json.dumps(response.json())
-        except httpx.HTTPStatusError as e:
-            return json.dumps(
-                {
-                    "error": f"HTTP error occurred: {e.response.status_code}",
-                    "detail": e.response.text,
-                }
-            )
+            return json.dumps({
+                "error": f"HTTP error occurred: {e.response.status_code}",
+                "detail": e.response.text,
+            })
         except Exception as e:
             return json.dumps({"error": str(e)})
 
@@ -660,596 +418,124 @@ class PromptOptimizer:
         """
         Creates a new organization in AWX.
 
-        :param name: The name of organization.
-        :param description: The description of organization.
-        :return: The result of create organization action.
+        :param name: Name of the organization.
+        :param description: Optional description.
+        :return: A JSON string containing the created organization details.
         """
-        # Check if organization with the same name already exists
-        orgs_response = self.list_organizations()
-        try:
-            orgs = json.loads(orgs_response)
-            existing_names = [org["name"] for org in orgs.get("results", [])]
-            if name in existing_names:
-                return json.dumps(
-                    {
-                        "error": f"Organization with name '{name}' already exists. Use list_organizations to see existing organizations."
-                    }
-                )
-        except Exception:
-            pass  # If check fails, proceed anyway
-
         url = f"{self.mcp_server_url}/awx/organizations"
         payload = {"name": name}
         if description:
             payload["description"] = description
+
         try:
             response = self.client.post(url, headers=self._get_headers(), json=payload)
             response.raise_for_status()
             return json.dumps(response.json())
         except httpx.HTTPStatusError as e:
-            return json.dumps(
-                {
-                    "error": f"HTTP error occurred: {e.response.status_code}",
-                    "detail": e.response.text,
-                }
-            )
+            return json.dumps({
+                "error": f"HTTP error occurred: {e.response.status_code}",
+                "detail": e.response.text,
+            })
         except Exception as e:
             return json.dumps({"error": str(e)})
 
-    def update_organization(
-        self,
-        organization_id: int,
-        name: Optional[str] = None,
-        description: Optional[str] = None,
-    ) -> str:
+    # Host Management
+    def list_hosts(self, inventory: Optional[int] = None) -> str:
         """
-        Updates an organization in AWX.
+        Lists all hosts in AWX, optionally filtered by inventory.
 
-        :param organization_id: The ID of organization to update.
-
-        :param name: The new name of organization.
-
-        :param description: The new description of organization.
-
-        :return: The result of update organization action.
-
+        :param inventory: Optional inventory ID to filter hosts
+        :return: A JSON string containing a list of hosts.
         """
-        url = f"{self.mcp_server_url}/awx/organizations/{organization_id}"
-
-        payload: Dict[str, Any] = {}
-
-        if name:
-            payload["name"] = name
-
-        if description:
-            payload["description"] = description
-
+        url = f"{self.mcp_server_url}/awx/hosts/"
+        params = {}
+        if inventory:
+            params["inventory"] = inventory
         try:
-            response = self.client.patch(url, headers=self._get_headers(), json=payload)
-
+            response = self.client.get(url, headers=self._get_headers(), params=params)
             response.raise_for_status()
-
-            return json.dumps(response.json())
-
-        except httpx.HTTPStatusError as e:
-            return json.dumps(
-                {
-                    "error": f"HTTP error occurred: {e.response.status_code}",
-                    "detail": e.response.text,
-                }
-            )
-
-        except Exception as e:
-            return json.dumps({"error": str(e)})
-
-    def delete_organization(self, organization_id: int) -> str:
-        """
-        Deletes an organization in AWX.
-
-        :param organization_id: The ID of organization to delete.
-
-        :return: A confirmation message indicating success or failure.
-
-        """
-        url = f"{self.mcp_server_url}/awx/organizations/{organization_id}"
-
-        try:
-            response = self.client.delete(url, headers=self._get_headers())
-
-            response.raise_for_status()
-
-            return json.dumps(response.json())
-
-        except httpx.HTTPStatusError as e:
-            return json.dumps(
-                {
-                    "error": f"HTTP error occurred: {e.response.status_code}",
-                    "detail": e.response.text,
-                }
-            )
-
-        except Exception as e:
-            return json.dumps({"error": str(e)})
-
-    def list_projects(self) -> str:
-        """
-        Lists all projects in AWX.
-
-        :return: A JSON string containing a list of projects and their details.
-
-        """
-        url = f"{self.mcp_server_url}/awx/projects"
-
-        try:
-            response = self.client.get(url, headers=self._get_headers())
-
-            response.raise_for_status()
-
-            return json.dumps(response.json())
-
-        except httpx.HTTPStatusError as e:
-            return json.dumps(
-                {
-                    "error": f"HTTP error occurred: {e.response.status_code}",
-                    "detail": e.response.text,
-                }
-            )
-
-        except Exception as e:
-            return json.dumps({"error": str(e)})
-
-    def get_project(self, project_id: int) -> str:
-        """
-        Retrieves details of a specific project.
-
-        :param project_id: The ID of project to retrieve.
-
-        :return: A JSON string containing details of project.
-
-        """
-        url = f"{self.mcp_server_url}/awx/projects/{project_id}"
-
-        try:
-            response = self.client.get(url, headers=self._get_headers())
-
-            response.raise_for_status()
-
-            return json.dumps(response.json())
-
-        except httpx.HTTPStatusError as e:
-            return json.dumps(
-                {
-                    "error": f"HTTP error occurred: {e.response.status_code}",
-                    "detail": e.response.text,
-                }
-            )
-
-        except Exception as e:
-            return json.dumps({"error": str(e)})
-
-    def create_project(
-        self, name: str, scm_type: str, scm_url: str, description: Optional[str] = None
-    ) -> str:
-        """
-        Creates a new project in AWX.
-
-        :param name: The name of project.
-
-        :param scm_type: The type of SCM (e.g., git).
-
-        :param scm_url: The URL of SCM repository.
-
-        :param description: The description of project.
-
-        :return: The result of create project action.
-
-        """
-        # Check if project with the same name already exists
-        projects_response = self.list_projects()
-        try:
-            projects = json.loads(projects_response)
-            existing_names = [proj["name"] for proj in projects.get("results", [])]
-            if name in existing_names:
-                return json.dumps(
-                    {
-                        "error": f"Project with name '{name}' already exists. Use list_projects to see existing projects."
-                    }
-                )
-        except Exception:
-            pass  # If check fails, proceed anyway
-
-        url = f"{self.mcp_server_url}/awx/projects"
-
-        payload = {"name": name, "scm_type": scm_type, "scm_url": scm_url}
-
-        if description:
-            payload["description"] = description
-
-        start_time = time.time()
-        try:
-            response = self.client.post(url, headers=self._get_headers(), json=payload)
-
-            response.raise_for_status()
-
-            self.log_tool_usage("create_project", True, time.time() - start_time)
             return json.dumps(response.json())
         except httpx.HTTPStatusError as e:
-            self.log_tool_usage("create_project", False, time.time() - start_time)
-            return json.dumps(
-                {
-                    "error": f"HTTP error occurred: {e.response.status_code}",
-                    "detail": e.response.text,
-                }
-            )
-        except Exception as e:
-            self.log_tool_usage("create_project", False, time.time() - start_time)
-            return json.dumps({"error": str(e)})
-
-    def update_project(
-        self,
-        project_id: int,
-        name: Optional[str] = None,
-        scm_type: Optional[str] = None,
-        scm_url: Optional[str] = None,
-        description: Optional[str] = None,
-    ) -> str:
-        """
-        Updates a project in AWX.
-
-        :param project_id: The ID of project to update.
-
-        :param name: The new name of project.
-
-        :param scm_type: The new SCM type.
-
-        :param scm_url: The new SCM URL.
-
-        :param description: The new description of project.
-
-        :return: The result of update project action.
-
-        """
-        url = f"{self.mcp_server_url}/awx/projects/{project_id}"
-
-        payload: Dict[str, Any] = {}
-
-        if name:
-            payload["name"] = name
-
-        if scm_type:
-            payload["scm_type"] = scm_type
-
-        if scm_url:
-            payload["scm_url"] = scm_url
-
-        if description:
-            payload["description"] = description
-
-        try:
-            response = self.client.patch(url, headers=self._get_headers(), json=payload)
-
-            response.raise_for_status()
-
-            return json.dumps(response.json())
-
-        except httpx.HTTPStatusError as e:
-            return json.dumps(
-                {
-                    "error": f"HTTP error occurred: {e.response.status_code}",
-                    "detail": e.response.text,
-                }
-            )
-
+            return json.dumps({
+                "error": f"HTTP error occurred: {e.response.status_code}",
+                "detail": e.response.text,
+            })
         except Exception as e:
             return json.dumps({"error": str(e)})
 
-    def delete_project(
-        self, project_id: int, confirm: bool = False, dry_run: bool = False
-    ) -> str:
+    def create_host(self, host_data: Dict[str, Any]) -> str:
         """
-        Deletes a project in AWX.
+        Creates a new host in AWX.
 
-        :param project_id: The ID of project to delete.
-        :param confirm: Set to true to confirm the deletion.
-        :param dry_run: Set to true to simulate the deletion without executing.
-
-        :return: A confirmation message indicating success or failure.
-
+        :param host_data: A dictionary containing host details (name, inventory, etc.).
+        :return: A JSON string containing the created host details.
         """
-        if not confirm:
-            return json.dumps(
-                {
-                    "error": f"Deletion of project {project_id} requires confirmation. Set confirm=true to proceed."
-                }
-            )
-        if dry_run:
-            return json.dumps(
-                {"status": "dry_run", "action": "delete_project", "id": project_id}
-            )
-        url = f"{self.mcp_server_url}/awx/projects/{project_id}"
-
-        start_time = time.time()
+        url = f"{self.mcp_server_url}/awx/hosts/"
         try:
-            response = self.client.delete(url, headers=self._get_headers())
-
+            response = self.client.post(url, headers=self._get_headers(), json=host_data)
             response.raise_for_status()
-
-            # Verify deletion by checking if project still exists
-            projects_response = self.list_projects()
-            projects = json.loads(projects_response)
-            existing_ids = [proj["id"] for proj in projects.get("results", [])]
-            if project_id in existing_ids:
-                self.log_tool_usage("delete_project", False, time.time() - start_time)
-                return json.dumps({
-                    "error": f"Project {project_id} was not deleted. It still exists in the list. Check AWX for issues."
-                })
-
-            self.log_tool_usage("delete_project", True, time.time() - start_time)
-            return json.dumps(response.json())
-
-        except httpx.HTTPStatusError as e:
-            if e.response.status_code == 500:
-                # AWX may return 500 even on successful delete, verify
-                try:
-                    projects_response = self.list_projects()
-                    projects = json.loads(projects_response)
-                    existing_ids = [proj["id"] for proj in projects.get("results", [])]
-                    if project_id not in existing_ids:
-                        self.log_tool_usage("delete_project", True, time.time() - start_time)
-                        return json.dumps({"status": "deleted", "id": project_id})
-                    else:
-                        self.log_tool_usage("delete_project", False, time.time() - start_time)
-                        return json.dumps({
-                            "error": f"Project {project_id} was not deleted despite 500 error. It still exists in the list. Check AWX for issues."
-                        })
-                except Exception:
-                    self.log_tool_usage("delete_project", False, time.time() - start_time)
-                    return json.dumps({
-                        "error": f"HTTP error occurred: {e.response.status_code}",
-                        "detail": e.response.text,
-                    })
-            self.log_tool_usage("delete_project", False, time.time() - start_time)
-            return json.dumps(
-                {
-                    "error": f"HTTP error occurred: {e.response.status_code}",
-                    "detail": e.response.text,
-                }
-            )
-        except Exception as e:
-            self.log_tool_usage("delete_project", False, time.time() - start_time)
-            return json.dumps({"error": str(e)})
-
-    def sync_project(self, project_id: int) -> str:
-        """
-        Triggers a sync of a project in AWX.
-
-        :param project_id: The ID of project to sync.
-
-        :return: A JSON string with details of sync job.
-
-        """
-        url = f"{self.mcp_server_url}/awx/projects/{project_id}/sync"
-
-        try:
-            response = self.client.post(url, headers=self._get_headers())
-
-            response.raise_for_status()
-
-            return json.dumps(response.json())
-
-        except httpx.HTTPStatusError as e:
-            return json.dumps(
-                {
-                    "error": f"HTTP error occurred: {e.response.status_code}",
-                    "detail": e.response.text,
-                }
-            )
-
-        except Exception as e:
-            return json.dumps({"error": str(e)})
-
-    def list_credentials(self) -> str:
-        """
-        Lists all credentials in AWX.
-
-        :return: A JSON string containing a list of credentials and their details.
-
-        """
-        url = f"{self.mcp_server_url}/awx/credentials"
-
-        try:
-            response = self.client.get(url, headers=self._get_headers())
-
-            response.raise_for_status()
-
-            return json.dumps(response.json())
-
-        except httpx.HTTPStatusError as e:
-            return json.dumps(
-                {
-                    "error": f"HTTP error occurred: {e.response.status_code}",
-                    "detail": e.response.text,
-                }
-            )
-
-        except Exception as e:
-            return json.dumps({"error": str(e)})
-
-    def get_credential(self, credential_id: int) -> str:
-        """
-        Retrieves details of a specific credential.
-
-        :param credential_id: The ID of credential to retrieve.
-
-        :return: A JSON string containing details of credential.
-
-        """
-        url = f"{self.mcp_server_url}/awx/credentials/{credential_id}"
-
-        try:
-            response = self.client.get(url, headers=self._get_headers())
-
-            response.raise_for_status()
-
-            return json.dumps(response.json())
-
-        except httpx.HTTPStatusError as e:
-            return json.dumps(
-                {
-                    "error": f"HTTP error occurred: {e.response.status_code}",
-                    "detail": e.response.text,
-                }
-            )
-
-        except Exception as e:
-            return json.dumps({"error": str(e)})
-
-    def create_credential(self, name: str, credential_type: int, inputs: dict) -> str:
-        """
-        Creates a new credential in AWX.
-
-        :param name: The name of credential.
-
-        :param credential_type: The ID of credential type.
-
-        :param inputs: A dictionary of inputs for credential.
-
-        :return: The result of create credential action.
-
-        """
-        # Check if credential with the same name already exists
-        creds_response = self.list_credentials()
-        try:
-            creds = json.loads(creds_response)
-            existing_names = [cred["name"] for cred in creds.get("results", [])]
-            if name in existing_names:
-                return json.dumps(
-                    {
-                        "error": f"Credential with name '{name}' already exists. Use list_credentials to see existing credentials."
-                    }
-                )
-        except Exception:
-            pass  # If check fails, proceed anyway
-
-        url = f"{self.mcp_server_url}/awx/credentials"
-
-        payload = {"name": name, "credential_type": credential_type, "inputs": inputs}
-
-        try:
-            response = self.client.post(url, headers=self._get_headers(), json=payload)
-
-            response.raise_for_status()
-
             return json.dumps(response.json())
         except httpx.HTTPStatusError as e:
-            return json.dumps(
-                {
-                    "error": f"HTTP error occurred: {e.response.status_code}",
-                    "detail": e.response.text,
-                }
-            )
+            return json.dumps({
+                "error": f"HTTP error occurred: {e.response.status_code}",
+                "detail": e.response.text,
+            })
         except Exception as e:
             return json.dumps({"error": str(e)})
 
-    def update_credential(
-        self,
-        credential_id: int,
-        name: Optional[str] = None,
-        inputs: Optional[Dict[str, Any]] = None,
-    ) -> str:
-        """
-        Updates a credential in AWX.
-
-        :param credential_id: The ID of credential to update.
-
-        :param name: The new name of credential.
-
-        :param inputs: The new inputs for credential.
-
-        :return: The result of update credential action.
-
-        """
-        url = f"{self.mcp_server_url}/awx/credentials/{credential_id}"
-
-        payload: Dict[str, Any] = {}
-
-        if name:
-            payload["name"] = name
-
-        if inputs:
-            payload["inputs"] = inputs
-
-        try:
-            response = self.client.patch(url, headers=self._get_headers(), json=payload)
-
-            response.raise_for_status()
-
-            return json.dumps(response.json())
-
-        except httpx.HTTPStatusError as e:
-            return json.dumps(
-                {
-                    "error": f"HTTP error occurred: {e.response.status_code}",
-                    "detail": e.response.text,
-                }
-            )
-
-        except Exception as e:
-            return json.dumps({"error": str(e)})
-
-    def delete_credential(self, credential_id: int) -> str:
-        """
-        Deletes a credential in AWX.
-
-        :param credential_id: The ID of credential to delete.
-
-        :return: A confirmation message indicating success or failure.
-
-        """
-        url = f"{self.mcp_server_url}/awx/credentials/{credential_id}"
-
-        try:
-            response = self.client.delete(url, headers=self._get_headers())
-
-            response.raise_for_status()
-
-            return json.dumps(response.json())
-
-        except httpx.HTTPStatusError as e:
-            return json.dumps(
-                {
-                    "error": f"HTTP error occurred: {e.response.status_code}",
-                    "detail": e.response.text,
-                }
-            )
-
-        except Exception as e:
-            return json.dumps({"error": str(e)})
-
+    # User Management
     def list_users(self) -> str:
         """
         Lists all users in AWX.
 
-        :return: A JSON string containing a list of users and their details.
-
+        :return: A JSON string containing a list of users.
         """
-        url = f"{self.mcp_server_url}/awx/users?current_=1"
-
+        url = f"{self.mcp_server_url}/awx/users"
         try:
             response = self.client.get(url, headers=self._get_headers())
-
             response.raise_for_status()
-
             return json.dumps(response.json())
-
         except httpx.HTTPStatusError as e:
-            return json.dumps(
-                {
-                    "error": f"HTTP error occurred: {e.response.status_code}",
-                    "detail": e.response.text,
-                }
-            )
+            return json.dumps({
+                "error": f"HTTP error occurred: {e.response.status_code}",
+                "detail": e.response.text,
+            })
+        except Exception as e:
+            return json.dumps({"error": str(e)})
 
+    def create_user(self, username: str, password: str, first_name: Optional[str] = None,
+                   last_name: Optional[str] = None, email: Optional[str] = None) -> str:
+        """
+        Creates a new user in AWX.
+
+        :param username: Username for the new user.
+        :param password: Password for the new user.
+        :param first_name: Optional first name.
+        :param last_name: Optional last name.
+        :param email: Optional email address.
+        :return: A JSON string containing the created user details.
+        """
+        url = f"{self.mcp_server_url}/awx/users"
+        payload = {
+            "username": username,
+            "password": password
+        }
+        if first_name:
+            payload["first_name"] = first_name
+        if last_name:
+            payload["last_name"] = last_name
+        if email:
+            payload["email"] = email
+
+        try:
+            response = self.client.post(url, headers=self._get_headers(), json=payload)
+            response.raise_for_status()
+            return json.dumps(response.json())
+        except httpx.HTTPStatusError as e:
+            return json.dumps({
+                "error": f"HTTP error occurred: {e.response.status_code}",
+                "detail": e.response.text,
+            })
         except Exception as e:
             return json.dumps({"error": str(e)})
 
@@ -1258,812 +544,418 @@ class PromptOptimizer:
         Retrieves details of a specific user.
 
         :param user_id: The ID of user to retrieve.
-
-        :return: A JSON string containing details of user.
-
+        :return: A JSON string containing user details.
         """
         url = f"{self.mcp_server_url}/awx/users/{user_id}"
-
         try:
             response = self.client.get(url, headers=self._get_headers())
-
             response.raise_for_status()
-
             return json.dumps(response.json())
-
         except httpx.HTTPStatusError as e:
-            return json.dumps(
-                {
-                    "error": f"HTTP error occurred: {e.response.status_code}",
-                    "detail": e.response.text,
-                }
-            )
-
+            return json.dumps({
+                "error": f"HTTP error occurred: {e.response.status_code}",
+                "detail": e.response.text,
+            })
         except Exception as e:
             return json.dumps({"error": str(e)})
 
-    def create_user(
-        self,
-        username: str,
-        password: str,
-        first_name: Optional[str] = None,
-        last_name: Optional[str] = None,
-        email: Optional[str] = None,
-    ) -> str:
+    def get_user_by_name(self, username: str) -> str:
         """
-        Creates a new user in AWX.
+        Retrieves user details by username.
 
-        :param username: The username of user.
-
-        :param password: The password of user.
-
-        :param first_name: The first name of user.
-
-        :param last_name: The last name of user.
-
-        :param email: The email of user.
-
-        :return: The result of create user action.
-
+        :param username: The username to search for.
+        :return: A JSON string containing user details.
         """
-        # Check if user with the same username already exists
-        users_response = self.list_users()
+        url = f"{self.mcp_server_url}/awx/users/by-name/{username}"
         try:
-            users = json.loads(users_response)
-            existing_usernames = [user["username"] for user in users.get("results", [])]
-            if username in existing_usernames:
-                return json.dumps(
-                    {
-                        "error": f"User with username '{username}' already exists. Use list_users to see existing users."
-                    }
-                )
-        except Exception:
-            pass  # If check fails, proceed anyway
-
-        url = f"{self.mcp_server_url}/awx/users"
-
-        payload = {"username": username, "password": password}
-
-        if first_name:
-            payload["first_name"] = first_name
-
-        if last_name:
-            payload["last_name"] = last_name
-
-        if email:
-            payload["email"] = email
-
-        try:
-            response = self.client.post(url, headers=self._get_headers(), json=payload)
-
+            response = self.client.get(url, headers=self._get_headers())
             response.raise_for_status()
-
             return json.dumps(response.json())
         except httpx.HTTPStatusError as e:
-            return json.dumps(
-                {
-                    "error": f"HTTP error occurred: {e.response.status_code}",
-                    "detail": e.response.text,
-                }
-            )
+            return json.dumps({
+                "error": f"HTTP error occurred: {e.response.status_code}",
+                "detail": e.response.text,
+            })
         except Exception as e:
             return json.dumps({"error": str(e)})
 
-    def update_user(
-        self,
-        user_id: int,
-        username: Optional[str] = None,
-        first_name: Optional[str] = None,
-        last_name: Optional[str] = None,
-        email: Optional[str] = None,
-    ) -> str:
+    def update_user(self, user_id: int, username: Optional[str] = None, first_name: Optional[str] = None,
+                   last_name: Optional[str] = None, email: Optional[str] = None) -> str:
         """
-        Updates a user in AWX.
+        Updates an existing user in AWX.
 
         :param user_id: The ID of user to update.
-
-        :param username: The new username of user.
-
-        :param first_name: The new first name of user.
-
-        :param last_name: The new last name of user.
-
-        :param email: The new email of user.
-
-        :return: The result of update user action.
-
+        :param username: Optional new username.
+        :param first_name: Optional new first name.
+        :param last_name: Optional new last name.
+        :param email: Optional new email address.
+        :return: A JSON string containing the updated user details.
         """
         url = f"{self.mcp_server_url}/awx/users/{user_id}"
-
-        payload: Dict[str, Any] = {}
-
+        payload = {}
         if username:
             payload["username"] = username
-
         if first_name:
             payload["first_name"] = first_name
-
         if last_name:
             payload["last_name"] = last_name
-
         if email:
             payload["email"] = email
 
         try:
             response = self.client.patch(url, headers=self._get_headers(), json=payload)
-
             response.raise_for_status()
-
             return json.dumps(response.json())
-
         except httpx.HTTPStatusError as e:
-            return json.dumps(
-                {
-                    "error": f"HTTP error occurred: {e.response.status_code}",
-                    "detail": e.response.text,
-                }
-            )
-
+            return json.dumps({
+                "error": f"HTTP error occurred: {e.response.status_code}",
+                "detail": e.response.text,
+            })
         except Exception as e:
             return json.dumps({"error": str(e)})
 
     def delete_user(self, user_id: int) -> str:
         """
-        Deletes a user in AWX.
+        Deletes a user from AWX.
 
         :param user_id: The ID of user to delete.
-
-        :return: A confirmation message indicating success or failure.
-
+        :return: A JSON string containing deletion confirmation.
         """
         url = f"{self.mcp_server_url}/awx/users/{user_id}"
-
         try:
             response = self.client.delete(url, headers=self._get_headers())
-
             response.raise_for_status()
-
             return json.dumps(response.json())
-
         except httpx.HTTPStatusError as e:
-            return json.dumps(
-                {
-                    "error": f"HTTP error occurred: {e.response.status_code}",
-                    "detail": e.response.text,
-                }
-            )
-
+            return json.dumps({
+                "error": f"HTTP error occurred: {e.response.status_code}",
+                "detail": e.response.text,
+            })
         except Exception as e:
             return json.dumps({"error": str(e)})
 
-    def list_workflow_job_templates(self) -> str:
+    # Schedule Management
+    def list_schedules(self, template_id: int) -> str:
         """
-        Lists all workflow job templates in AWX.
+        Lists all schedules for a specific job template.
 
-        :return: A JSON string containing a list of workflow job templates and their details.
-
+        :param template_id: The ID of job template to list schedules for.
+        :return: A JSON string containing a list of schedules.
         """
-        url = f"{self.mcp_server_url}/awx/workflow_job_templates"
-
+        url = f"{self.mcp_server_url}/awx/job_templates/{template_id}/schedules"
         try:
             response = self.client.get(url, headers=self._get_headers())
-
             response.raise_for_status()
-
             return json.dumps(response.json())
-
         except httpx.HTTPStatusError as e:
-            return json.dumps(
-                {
-                    "error": f"HTTP error occurred: {e.response.status_code}",
-                    "detail": e.response.text,
-                }
-            )
-
+            return json.dumps({
+                "error": f"HTTP error occurred: {e.response.status_code}",
+                "detail": e.response.text,
+            })
         except Exception as e:
             return json.dumps({"error": str(e)})
 
-    def get_workflow_job_template(self, workflow_job_template_id: int) -> str:
+    def get_schedule(self, schedule_id: int) -> str:
         """
-        Retrieves details of a specific workflow job template.
+        Retrieves details of a specific schedule.
 
-        :param workflow_job_template_id: The ID of workflow job template to retrieve.
-
-        :return: A JSON string containing details of workflow job template.
-
+        :param schedule_id: The ID of schedule to retrieve.
+        :return: A JSON string containing schedule details.
         """
-        url = f"{self.mcp_server_url}/awx/workflow_job_templates/{workflow_job_template_id}"
-
+        url = f"{self.mcp_server_url}/awx/schedules/{schedule_id}"
         try:
             response = self.client.get(url, headers=self._get_headers())
-
             response.raise_for_status()
-
             return json.dumps(response.json())
-
         except httpx.HTTPStatusError as e:
-            return json.dumps(
-                {
-                    "error": f"HTTP error occurred: {e.response.status_code}",
-                    "detail": e.response.text,
-                }
-            )
-
+            return json.dumps({
+                "error": f"HTTP error occurred: {e.response.status_code}",
+                "detail": e.response.text,
+            })
         except Exception as e:
             return json.dumps({"error": str(e)})
 
-    def create_workflow_job_template(
-        self, name: str, description: Optional[str] = None
-    ) -> str:
+    def create_schedule(self, template_id: int, name: str, rrule: str) -> str:
         """
-        Creates a new workflow job template in AWX.
+        Creates a new schedule for a job template.
 
-        :param name: The name of workflow job template.
-
-        :param description: The description of workflow job template.
-
-        :return: The result of create workflow job template action.
-
+        :param template_id: The ID of job template to create schedule for.
+        :param name: Name of the schedule.
+        :param rrule: RRULE string defining the schedule recurrence.
+        :return: A JSON string containing the created schedule details.
         """
-        # Check if workflow job template with the same name already exists
-        wfts_response = self.list_workflow_job_templates()
-        try:
-            wfts = json.loads(wfts_response)
-            existing_names = [wft["name"] for wft in wfts.get("results", [])]
-            if name in existing_names:
-                return json.dumps(
-                    {
-                        "error": f"Workflow job template with name '{name}' already exists. Use list_workflow_job_templates to see existing templates."
-                    }
-                )
-        except Exception:
-            pass  # If check fails, proceed anyway
-
-        url = f"{self.mcp_server_url}/awx/workflow_job_templates"
-
-        payload = {"name": name}
-
-        if description:
-            payload["description"] = description
-
-        try:
-            response = self.client.post(url, headers=self._get_headers(), json=payload)
-
-            response.raise_for_status()
-
-            return json.dumps(response.json())
-
-        except httpx.HTTPStatusError as e:
-            return json.dumps(
-                {
-                    "error": f"HTTP error occurred: {e.response.status_code}",
-                    "detail": e.response.text,
-                }
-            )
-        except Exception as e:
-            return json.dumps({"error": str(e)})
-
-    def update_workflow_job_template(
-        self,
-        workflow_job_template_id: int,
-        name: Optional[str] = None,
-        description: Optional[str] = None,
-    ) -> str:
-        """
-        Updates a workflow job template in AWX.
-
-        :param workflow_job_template_id: The ID of workflow job template to update.
-
-        :param name: The new name of workflow job template.
-
-        :param description: The new description of workflow job template.
-
-        :return: The result of update workflow job template action.
-
-        """
-        url = f"{self.mcp_server_url}/awx/workflow_job_templates/{workflow_job_template_id}"
-
-        payload: Dict[str, Any] = {}
-
-        if name:
-            payload["name"] = name
-
-        if description:
-            payload["description"] = description
-
-        try:
-            response = self.client.patch(url, headers=self._get_headers(), json=payload)
-
-            response.raise_for_status()
-
-            return json.dumps(response.json())
-
-        except httpx.HTTPStatusError as e:
-            return json.dumps(
-                {
-                    "error": f"HTTP error occurred: {e.response.status_code}",
-                    "detail": e.response.text,
-                }
-            )
-
-        except Exception as e:
-            return json.dumps({"error": str(e)})
-
-    def delete_workflow_job_template(self, workflow_job_template_id: int) -> str:
-        """
-        Deletes a workflow job template in AWX.
-
-        :param workflow_job_template_id: The ID of workflow job template to delete.
-
-        :return: A confirmation message indicating success or failure.
-
-        """
-        url = f"{self.mcp_server_url}/awx/workflow_job_templates/{workflow_job_template_id}"
-
-        try:
-            response = self.client.delete(url, headers=self._get_headers())
-
-            response.raise_for_status()
-
-            return json.dumps(response.json())
-
-        except httpx.HTTPStatusError as e:
-            return json.dumps(
-                {
-                    "error": f"HTTP error occurred: {e.response.status_code}",
-                    "detail": e.response.text,
-                }
-            )
-
-        except Exception as e:
-            return json.dumps({"error": str(e)})
-
-    def launch_workflow_job_template(
-        self, workflow_job_template_id: int, extra_vars: Optional[Dict[str, Any]] = None
-    ) -> str:
-        """
-        Launches a workflow job template in AWX.
-
-        :param workflow_job_template_id: The ID of workflow job template to launch.
-
-        :param extra_vars: A dictionary of extra variables to pass to workflow job.
-
-        :return: The result of launch workflow job template action.
-
-        """
-        url = f"{self.mcp_server_url}/awx/workflow_job_templates/{workflow_job_template_id}/launch"
-
-        payload: Dict[str, Any] = {}
-
-        if extra_vars:
-            payload["extra_vars"] = extra_vars
-
-        try:
-            response = self.client.post(url, headers=self._get_headers(), json=payload)
-
-            response.raise_for_status()
-
-            return json.dumps(response.json())
-
-        except httpx.HTTPStatusError as e:
-            return json.dumps(
-                {
-                    "error": f"HTTP error occurred: {e.response.status_code}",
-                    "detail": e.response.text,
-                }
-            )
-
-        except Exception as e:
-            return json.dumps({"error": str(e)})
-
-    def list_notifications(self) -> str:
-        """
-        Lists all notifications in AWX.
-
-        :return: A JSON string containing a list of notifications and their details.
-
-        """
-        url = f"{self.mcp_server_url}/awx/notifications"
-
-        try:
-            response = self.client.get(url, headers=self._get_headers())
-
-            response.raise_for_status()
-
-            return json.dumps(response.json())
-
-        except httpx.HTTPStatusError as e:
-            return json.dumps(
-                {
-                    "error": f"HTTP error occurred: {e.response.status_code}",
-                    "detail": e.response.text,
-                }
-            )
-
-        except Exception as e:
-            return json.dumps({"error": str(e)})
-
-    def get_notification(self, notification_id: int) -> str:
-        """
-        Retrieves details of a specific notification.
-
-        :param notification_id: The ID of notification to retrieve.
-
-        :return: A JSON string containing details of notification.
-
-        """
-        url = f"{self.mcp_server_url}/awx/notifications/{notification_id}"
-
-        try:
-            response = self.client.get(url, headers=self._get_headers())
-
-            response.raise_for_status()
-
-            return json.dumps(response.json())
-
-        except httpx.HTTPStatusError as e:
-            return json.dumps(
-                {
-                    "error": f"HTTP error occurred: {e.response.status_code}",
-                    "detail": e.response.text,
-                }
-            )
-
-        except Exception as e:
-            return json.dumps({"error": str(e)})
-
-    def create_notification(
-        self, name: str, notification_type: str, notification_configuration: dict
-    ) -> str:
-        """
-        Creates a new notification in AWX.
-
-        :param name: The name of notification.
-
-        :param notification_type: The type of notification.
-
-        :param notification_configuration: The configuration for notification.
-
-        :return: The result of create notification action.
-
-        """
-        # Check if notification with the same name already exists
-        notifs_response = self.list_notifications()
-        try:
-            notifs = json.loads(notifs_response)
-            existing_names = [notif["name"] for notif in notifs.get("results", [])]
-            if name in existing_names:
-                return json.dumps(
-                    {
-                        "error": f"Notification with name '{name}' already exists. Use list_notifications to see existing notifications."
-                    }
-                )
-        except Exception:
-            pass  # If check fails, proceed anyway
-
-        url = f"{self.mcp_server_url}/awx/notifications"
-
+        url = f"{self.mcp_server_url}/awx/job_templates/{template_id}/schedules"
         payload = {
             "name": name,
-            "notification_type": notification_type,
-            "notification_configuration": notification_configuration,
+            "rrule": rrule
         }
 
         try:
             response = self.client.post(url, headers=self._get_headers(), json=payload)
-
             response.raise_for_status()
-
             return json.dumps(response.json())
-
         except httpx.HTTPStatusError as e:
-            return json.dumps(
-                {
-                    "error": f"HTTP error occurred: {e.response.status_code}",
-                    "detail": e.response.text,
-                }
-            )
+            return json.dumps({
+                "error": f"HTTP error occurred: {e.response.status_code}",
+                "detail": e.response.text,
+            })
         except Exception as e:
             return json.dumps({"error": str(e)})
 
-    def update_notification(
-        self,
-        notification_id: int,
-        name: Optional[str] = None,
-        notification_configuration: Optional[Dict[str, Any]] = None,
-    ) -> str:
+    def update_schedule(self, schedule_id: int, name: Optional[str] = None, rrule: Optional[str] = None,
+                       enabled: Optional[bool] = None) -> str:
         """
-        Updates a notification in AWX.
+        Updates an existing schedule.
 
-        :param notification_id: The ID of notification to update.
-
-        :param name: The new name of notification.
-
-        :param notification_configuration: The new configuration for notification.
-
-        :return: The result of update notification action.
-
+        :param schedule_id: The ID of schedule to update.
+        :param name: Optional new name.
+        :param rrule: Optional new RRULE string.
+        :param enabled: Optional enabled/disabled status.
+        :return: A JSON string containing the updated schedule details.
         """
-        url = f"{self.mcp_server_url}/awx/notifications/{notification_id}"
-
-        payload: Dict[str, Any] = {}
-
+        url = f"{self.mcp_server_url}/awx/schedules/{schedule_id}"
+        payload = {}
         if name:
             payload["name"] = name
-
-        if notification_configuration:
-            payload["notification_configuration"] = notification_configuration
+        if rrule:
+            payload["rrule"] = rrule
+        if enabled is not None:
+            payload["enabled"] = enabled
 
         try:
             response = self.client.patch(url, headers=self._get_headers(), json=payload)
-
             response.raise_for_status()
-
             return json.dumps(response.json())
-
         except httpx.HTTPStatusError as e:
-            return json.dumps(
-                {
-                    "error": f"HTTP error occurred: {e.response.status_code}",
-                    "detail": e.response.text,
-                }
-            )
-
+            return json.dumps({
+                "error": f"HTTP error occurred: {e.response.status_code}",
+                "detail": e.response.text,
+            })
         except Exception as e:
             return json.dumps({"error": str(e)})
 
-    def delete_notification(self, notification_id: int) -> str:
+    def delete_schedule(self, schedule_id: int) -> str:
         """
-        Deletes a notification in AWX.
+        Deletes a schedule from AWX.
 
-        :param notification_id: The ID of notification to delete.
-
-        :return: A confirmation message indicating success or failure.
-
+        :param schedule_id: The ID of schedule to delete.
+        :return: A JSON string containing deletion confirmation.
         """
-        url = f"{self.mcp_server_url}/awx/notifications/{notification_id}"
-
+        url = f"{self.mcp_server_url}/awx/schedules/{schedule_id}"
         try:
             response = self.client.delete(url, headers=self._get_headers())
-
             response.raise_for_status()
-
-            return json.dumps(response.json())
-
+            return json.dumps({"status": "deleted", "id": schedule_id})
         except httpx.HTTPStatusError as e:
-            return json.dumps(
-                {
-                    "error": f"HTTP error occurred: {e.response.status_code}",
-                    "detail": e.response.text,
-                }
-            )
-
+            return json.dumps({
+                "error": f"HTTP error occurred: {e.response.status_code}",
+                "detail": e.response.text,
+            })
         except Exception as e:
             return json.dumps({"error": str(e)})
 
-    def list_instance_groups(self) -> str:
+    # Test Endpoint
+    def test_connection(self) -> str:
         """
-        Lists all instance groups in AWX.
+        Tests the connection to the AWX server.
 
-        :return: A JSON string containing a list of instance groups and their details.
-
+        :return: A JSON string containing test results.
         """
-        url = f"{self.mcp_server_url}/awx/instance_groups"
-
+        url = f"{self.mcp_server_url}/awx/test"
         try:
             response = self.client.get(url, headers=self._get_headers())
-
             response.raise_for_status()
-
             return json.dumps(response.json())
-
         except httpx.HTTPStatusError as e:
-            return json.dumps(
-                {
-                    "error": f"HTTP error occurred: {e.response.status_code}",
-                    "detail": e.response.text,
-                }
-            )
-
+            return json.dumps({
+                "error": f"HTTP error occurred: {e.response.status_code}",
+                "detail": e.response.text,
+            })
         except Exception as e:
             return json.dumps({"error": str(e)})
 
-    def get_instance_group(self, instance_group_id: int) -> str:
+    def delete_inventory(self, inventory_id: int) -> str:
         """
-        Retrieves details of a specific instance group.
+        Deletes an inventory from AWX.
 
-        :param instance_group_id: The ID of instance group to retrieve.
-
-        :return: A JSON string containing details of instance group.
-
+        :param inventory_id: The ID of inventory to delete.
+        :return: A JSON string containing deletion confirmation.
         """
-        url = f"{self.mcp_server_url}/awx/instance_groups/{instance_group_id}"
+        url = f"{self.mcp_server_url}/awx/inventories/{inventory_id}"
+        try:
+            response = self.client.delete(url, headers=self._get_headers())
+            response.raise_for_status()
+            return json.dumps({"status": "deleted", "id": inventory_id})
+        except httpx.HTTPStatusError as e:
+            return json.dumps({
+                "error": f"HTTP error occurred: {e.response.status_code}",
+                "detail": e.response.text,
+            })
+        except Exception as e:
+            return json.dumps({"error": str(e)})
 
+    def get_project(self, project_id: int) -> str:
+        """
+        Retrieves details of a specific project.
+
+        :param project_id: The ID of project to retrieve.
+        :return: A JSON string containing project details.
+        """
+        url = f"{self.mcp_server_url}/awx/projects/{project_id}"
         try:
             response = self.client.get(url, headers=self._get_headers())
-
             response.raise_for_status()
-
             return json.dumps(response.json())
-
         except httpx.HTTPStatusError as e:
-            return json.dumps(
-                {
-                    "error": f"HTTP error occurred: {e.response.status_code}",
-                    "detail": e.response.text,
-                }
-            )
-
+            return json.dumps({
+                "error": f"HTTP error occurred: {e.response.status_code}",
+                "detail": e.response.text,
+            })
         except Exception as e:
             return json.dumps({"error": str(e)})
 
-    def create_instance_group(
-        self,
-        name: str,
-        policy_instance_percentage: Optional[int] = None,
-        policy_instance_minimum: Optional[int] = None,
-    ) -> str:
+    def update_project(self, project_id: int, name: Optional[str] = None, scm_type: Optional[str] = None,
+                      scm_url: Optional[str] = None, description: Optional[str] = None) -> str:
         """
-        Creates a new instance group in AWX.
+        Updates an existing project in AWX.
 
-        :param name: The name of instance group.
-
-        :param policy_instance_percentage: The policy instance percentage.
-
-        :param policy_instance_minimum: The policy instance minimum.
-
-        :return: The result of create instance group action.
-
+        :param project_id: The ID of project to update.
+        :param name: Optional new name.
+        :param scm_type: Optional new SCM type.
+        :param scm_url: Optional new SCM URL.
+        :param description: Optional new description.
+        :return: A JSON string containing the updated project details.
         """
-        # Check if instance group with the same name already exists
-        igs_response = self.list_instance_groups()
-        try:
-            igs = json.loads(igs_response)
-            existing_names = [ig["name"] for ig in igs.get("results", [])]
-            if name in existing_names:
-                return json.dumps(
-                    {
-                        "error": f"Instance group with name '{name}' already exists. Use list_instance_groups to see existing groups."
-                    }
-                )
-        except Exception:
-            pass  # If check fails, proceed anyway
-
-        url = f"{self.mcp_server_url}/awx/instance_groups"
-
-        payload: Dict[str, Any] = {"name": name}
-
-        if policy_instance_percentage:
-            payload["policy_instance_percentage"] = policy_instance_percentage
-
-        if policy_instance_minimum:
-            payload["policy_instance_minimum"] = policy_instance_minimum
-
-        try:
-            response = self.client.post(url, headers=self._get_headers(), json=payload)
-
-            response.raise_for_status()
-
-            return json.dumps(response.json())
-
-        except httpx.HTTPStatusError as e:
-            return json.dumps(
-                {
-                    "error": f"HTTP error occurred: {e.response.status_code}",
-                    "detail": e.response.text,
-                }
-            )
-        except Exception as e:
-            return json.dumps({"error": str(e)})
-
-    def update_instance_group(
-        self,
-        instance_group_id: int,
-        name: Optional[str] = None,
-        policy_instance_percentage: Optional[int] = None,
-        policy_instance_minimum: Optional[int] = None,
-    ) -> str:
-        """
-        Updates an instance group in AWX.
-
-        :param instance_group_id: The ID of instance group to update.
-
-        :param name: The new name of instance group.
-
-        :param policy_instance_percentage: The new policy instance percentage.
-
-        :param policy_instance_minimum: The new policy instance minimum.
-
-        :return: The result of update instance group action.
-
-        """
-        url = f"{self.mcp_server_url}/awx/instance_groups/{instance_group_id}"
-
-        payload: Dict[str, Any] = {}
-
+        url = f"{self.mcp_server_url}/awx/projects/{project_id}"
+        payload = {}
         if name:
             payload["name"] = name
-
-        if policy_instance_percentage:
-            payload["policy_instance_percentage"] = policy_instance_percentage
-
-        if policy_instance_minimum:
-            payload["policy_instance_minimum"] = policy_instance_minimum
+        if scm_type:
+            payload["scm_type"] = scm_type
+        if scm_url:
+            payload["scm_url"] = scm_url
+        if description:
+            payload["description"] = description
 
         try:
             response = self.client.patch(url, headers=self._get_headers(), json=payload)
-
             response.raise_for_status()
-
             return json.dumps(response.json())
-
         except httpx.HTTPStatusError as e:
-            return json.dumps(
-                {
-                    "error": f"HTTP error occurred: {e.response.status_code}",
-                    "detail": e.response.text,
-                }
-            )
-
+            return json.dumps({
+                "error": f"HTTP error occurred: {e.response.status_code}",
+                "detail": e.response.text,
+            })
         except Exception as e:
             return json.dumps({"error": str(e)})
 
-    def delete_instance_group(self, instance_group_id: int) -> str:
+    def delete_project(self, project_id: int) -> str:
         """
-        Deletes an instance group in AWX.
+        Deletes a project from AWX.
 
-        :param instance_group_id: The ID of instance group to delete.
-
-        :return: A confirmation message indicating success or failure.
-
+        :param project_id: The ID of project to delete.
+        :return: A JSON string containing deletion confirmation.
         """
-        url = f"{self.mcp_server_url}/awx/instance_groups/{instance_group_id}"
-
+        url = f"{self.mcp_server_url}/awx/projects/{project_id}"
         try:
             response = self.client.delete(url, headers=self._get_headers())
-
             response.raise_for_status()
-
-            return json.dumps(response.json())
-
+            return json.dumps({"status": "deleted", "id": project_id})
         except httpx.HTTPStatusError as e:
-            return json.dumps(
-                {
-                    "error": f"HTTP error occurred: {e.response.status_code}",
-                    "detail": e.response.text,
-                }
-            )
-
+            return json.dumps({
+                "error": f"HTTP error occurred: {e.response.status_code}",
+                "detail": e.response.text,
+            })
         except Exception as e:
             return json.dumps({"error": str(e)})
 
+    def get_organization(self, organization_id: int) -> str:
+        """
+        Retrieves details of a specific organization.
+
+        :param organization_id: The ID of organization to retrieve.
+        :return: A JSON string containing organization details.
+        """
+        url = f"{self.mcp_server_url}/awx/organizations/{organization_id}"
+        try:
+            response = self.client.get(url, headers=self._get_headers())
+            response.raise_for_status()
+            return json.dumps(response.json())
+        except httpx.HTTPStatusError as e:
+            return json.dumps({
+                "error": f"HTTP error occurred: {e.response.status_code}",
+                "detail": e.response.text,
+            })
+        except Exception as e:
+            return json.dumps({"error": str(e)})
+
+    def update_organization(self, organization_id: int, name: Optional[str] = None,
+                           description: Optional[str] = None) -> str:
+        """
+        Updates an existing organization in AWX.
+
+        :param organization_id: The ID of organization to update.
+        :param name: Optional new name.
+        :param description: Optional new description.
+        :return: A JSON string containing the updated organization details.
+        """
+        url = f"{self.mcp_server_url}/awx/organizations/{organization_id}"
+        payload = {}
+        if name:
+            payload["name"] = name
+        if description:
+            payload["description"] = description
+
+        try:
+            response = self.client.patch(url, headers=self._get_headers(), json=payload)
+            response.raise_for_status()
+            return json.dumps(response.json())
+        except httpx.HTTPStatusError as e:
+            return json.dumps({
+                "error": f"HTTP error occurred: {e.response.status_code}",
+                "detail": e.response.text,
+            })
+        except Exception as e:
+            return json.dumps({"error": str(e)})
+
+    def delete_organization(self, organization_id: int) -> str:
+        """
+        Deletes an organization from AWX.
+
+        :param organization_id: The ID of organization to delete.
+        :return: A JSON string containing deletion confirmation.
+        """
+        url = f"{self.mcp_server_url}/awx/organizations/{organization_id}"
+        try:
+            response = self.client.delete(url, headers=self._get_headers())
+            response.raise_for_status()
+            return json.dumps({"status": "deleted", "id": organization_id})
+        except httpx.HTTPStatusError as e:
+            return json.dumps({
+                "error": f"HTTP error occurred: {e.response.status_code}",
+                "detail": e.response.text,
+            })
+        except Exception as e:
+            return json.dumps({"error": str(e)})
+
+    # Activity Stream
     def list_activity_stream(self, page: int = 1, page_size: int = 20) -> str:
         """
-        Lists activity stream in AWX.
+        Lists activity stream events in AWX.
 
         :param page: The page number.
-
         :param page_size: The number of items per page.
-
-        :return: A JSON string containing activity stream.
-
+        :return: A JSON string containing activity stream events.
         """
         url = f"{self.mcp_server_url}/awx/activity_stream?page={page}&page_size={page_size}"
-
         try:
             response = self.client.get(url, headers=self._get_headers())
-
             response.raise_for_status()
-
             return json.dumps(response.json())
-
         except httpx.HTTPStatusError as e:
-            return json.dumps(
-                {
-                    "error": f"HTTP error occurred: {e.response.status_code}",
-                    "detail": e.response.text,
-                }
-            )
-
+            return json.dumps({
+                "error": f"HTTP error occurred: {e.response.status_code}",
+                "detail": e.response.text,
+            })
         except Exception as e:
             return json.dumps({"error": str(e)})

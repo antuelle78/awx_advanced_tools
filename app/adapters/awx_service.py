@@ -77,9 +77,11 @@ class AWXClient:
         await self._request("DELETE", url)
         return {"status": "deleted", "id": schedule_id}
 
-    async def list_templates(self) -> dict:
-        """List all job templates."""
+    async def list_templates(self, name: Optional[str] = None) -> dict:
+        """List all job templates, optionally filtered by name."""
         url = f"{self.base_url}/api/v2/job_templates/"
+        if name:
+            url += f"?name={name}"
         resp = await self._request("GET", url)
         return resp.json()
 
@@ -109,9 +111,11 @@ class AWXClient:
         return resp.json()
 
     # NEW INVENTORY METHODS START
-    async def list_inventories(self) -> dict:
-        """List all inventories."""
+    async def list_inventories(self, name: Optional[str] = None) -> dict:
+        """List all inventories, optionally filtered by name."""
         url = f"{self.base_url}/api/v2/inventories/"
+        if name:
+            url += f"?name={name}"
         resp = await self._request("GET", url)
         return resp.json()
 
@@ -137,11 +141,12 @@ class AWXClient:
 
     # Organizations methods
 
-    async def list_organizations(self):
+    async def list_organizations(self, name: Optional[str] = None):
+        """List all organizations, optionally filtered by name."""
         url = f"{self.base_url}/api/v2/organizations/"
-
+        if name:
+            url += f"?name={name}"
         resp = await self._request("GET", url)
-
         return resp.json()
 
     async def get_organization(self, organization_id: int):
@@ -192,11 +197,12 @@ class AWXClient:
 
     # Projects methods
 
-    async def list_projects(self):
+    async def list_projects(self, name: Optional[str] = None):
+        """List all projects, optionally filtered by name."""
         url = f"{self.base_url}/api/v2/projects/"
-
+        if name:
+            url += f"?name={name}"
         resp = await self._request("GET", url)
-
         return resp.json()
 
     async def get_project(self, project_id: int):
@@ -426,7 +432,16 @@ class AWXClient:
             raise ValueError("Invalid host data")
 
         url = f"{self.base_url}/api/v2/hosts/"
-        return await self._request("POST", url, json=host_data)
+        resp = await self._request("POST", url, json=host_data)
+        return resp.json()
+
+    async def list_hosts(self, inventory: Optional[int] = None) -> dict:
+        """List all hosts, optionally filtered by inventory."""
+        url = f"{self.base_url}/api/v2/hosts/"
+        if inventory:
+            url += f"?inventory={inventory}"
+        resp = await self._request("GET", url)
+        return resp.json()
 
     async def create_job_template(
         self, name: str, inventory: int, project: int, playbook: str, description: Optional[str] = None, extra_vars: Optional[dict] = None

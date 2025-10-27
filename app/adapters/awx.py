@@ -3,9 +3,8 @@ from pydantic import BaseModel
 from typing import Optional, Dict
 from app.adapters.awx_service import awx_client
 import httpx
-import logging
 
-router = APIRouter(prefix="/awx2", tags=["AWX"])
+router = APIRouter(prefix="/awx", tags=["AWX"])
 
 
 class InventoryCreate(BaseModel):
@@ -68,19 +67,30 @@ async def create_job_template(
 ):
     return await awx_client.create_job_template(name, inventory, project, playbook, description, extra_vars)
 
+@router.get("/hosts/")
+async def list_hosts(inventory: Optional[int] = None):
+    try:
+        return await awx_client.list_hosts(inventory)
+    except httpx.HTTPStatusError as exc:  # pragma: no cover
+        raise HTTPException(status_code=exc.response.status_code, detail=str(exc))
+
 @router.post("/hosts/")
 async def create_host(host_data: dict):
     try:
         return await awx_client.create_host(host_data)
     except httpx.HTTPStatusError as exc:  # pragma: no cover
         raise HTTPException(status_code=exc.response.status_code, detail=str(exc))
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
 
 
 # User endpoints
 @router.get("/users")
-async def list_users(username: str):
-    logging.info(f"DEBUG: adapter list_users called with username = {username}")
-    return {"debug": "called", "username": username}
+async def list_users(username: str = None):
+    try:
+        return await awx_client.list_users(username)
+    except httpx.HTTPStatusError as exc:
+        raise HTTPException(status_code=exc.response.status_code, detail=str(exc))
 
 
 @router.get("/test")
@@ -133,9 +143,9 @@ async def delete_user(user_id: int):
 
 
 @router.get("/inventories")
-async def list_inventories():
+async def list_inventories(name: Optional[str] = None):
     try:
-        return await awx_client.list_inventories()
+        return await awx_client.list_inventories(name)
     except httpx.HTTPStatusError as exc:  # pragma: no cover
         raise HTTPException(status_code=exc.response.status_code, detail=str(exc))
 
@@ -215,9 +225,9 @@ async def delete_schedule(schedule_id: int):
 
 
 @router.get("/templates")
-async def list_templates():
+async def list_templates(name: Optional[str] = None):
     try:
-        return await awx_client.list_templates()
+        return await awx_client.list_templates(name)
     except httpx.HTTPStatusError as exc:  # pragma: no cover
         raise HTTPException(status_code=exc.response.status_code, detail=str(exc))
 
@@ -226,6 +236,14 @@ async def list_templates():
 async def list_jobs(page: int = 1):
     try:
         return await awx_client.list_jobs(page)
+    except httpx.HTTPStatusError as exc:  # pragma: no cover
+        raise HTTPException(status_code=exc.response.status_code, detail=str(exc))
+
+
+@router.get("/jobs/{job_id}")
+async def get_job(job_id: int):
+    try:
+        return await awx_client.get_job(job_id)
     except httpx.HTTPStatusError as exc:  # pragma: no cover
         raise HTTPException(status_code=exc.response.status_code, detail=str(exc))
 
@@ -250,9 +268,9 @@ async def create_schedule(template_id: int, schedule: ScheduleCreate):
 
 # Project endpoints
 @router.get("/projects")
-async def list_projects():
+async def list_projects(name: Optional[str] = None):
     try:
-        return await awx_client.list_projects()
+        return await awx_client.list_projects(name)
     except httpx.HTTPStatusError as exc:  # pragma: no cover
         raise HTTPException(status_code=exc.response.status_code, detail=str(exc))
 
@@ -309,9 +327,9 @@ async def sync_project(project_id: int):
 
 # Organization endpoints
 @router.get("/organizations")
-async def list_organizations():
+async def list_organizations(name: Optional[str] = None):
     try:
-        return await awx_client.list_organizations()
+        return await awx_client.list_organizations(name)
     except httpx.HTTPStatusError as exc:  # pragma: no cover
         raise HTTPException(status_code=exc.response.status_code, detail=str(exc))
 
