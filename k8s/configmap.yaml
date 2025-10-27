@@ -4,8 +4,62 @@ kind: ConfigMap
 metadata:
   name: awx-advanced-tools-config
 data:
-  AWX_BASE_URL: "https://awx.example.com/api/v2"
-  AWX_TOKEN: "YOUR_AWX_TOKEN"
-  LLM_ENDPOINT: "http://llm-service:8000"
-  JWT_SECRET: "supersecret"
-  AUDIT_LOG_DIR: "/var/log/audit"
+  AWX_BASE_URL: "http://192.168.122.46:31366"
+  AWX_USERNAME: "openwebui"
+  AWX_PASSWORD: "openwebui"
+  AUDIT_LOG_DIR: "/var/log/mcp"
+  REDIS_HOST: "redis"
+  REDIS_PORT: "6379"
+  REDIS_DB: "0"
+  LLM_MODEL: "gpt-4o"
+  LLM_ENDPOINT: "http://host.docker.internal:11434"
+---
+# Nginx Configuration ConfigMap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-config
+data:
+  nginx.conf: |
+    events {
+        worker_connections 1024;
+    }
+
+    http {
+        upstream mcp-server {
+            server mcp-server:8000;
+        }
+
+        server {
+            listen 80;
+            server_name localhost;
+
+            location /health {
+                proxy_pass http://mcp-server;
+                proxy_set_header Host $host;
+                proxy_set_header X-Real-IP $remote_addr;
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                proxy_set_header X-Forwarded-Proto $scheme;
+            }
+
+            location / {
+                auth_basic "Restricted";
+                auth_basic_user_file /etc/nginx/.htpasswd;
+
+                proxy_pass http://mcp-server;
+                proxy_set_header Host $host;
+                proxy_set_header X-Real-IP $remote_addr;
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                proxy_set_header X-Forwarded-Proto $scheme;
+            }
+        }
+    }
+---
+# Htpasswd Secret
+apiVersion: v1
+kind: Secret
+metadata:
+  name: htpasswd-secret
+type: Opaque
+data:
+  .htpasswd: "b3BlbndlYnVpOiRhcHIxJGFYVFVwa3VsJEZLOHpTM05RRDU5S21mUXhyNlFoeS4="

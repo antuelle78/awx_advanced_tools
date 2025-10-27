@@ -323,30 +323,49 @@ docker run -d -p 8001:8000 \
 ```
 
 ### Kubernetes
-Kubernetes manifests are provided in the `k8s` directory for easy deployment:
+Complete Kubernetes manifests are provided in the `k8s` directory for production deployment with all components:
+
+**Components:**
+- **MCP Server**: Main FastAPI application (2 replicas)
+- **Gateway**: Nginx reverse proxy with basic authentication (NodePort service)
+- **Redis**: Caching and session storage
+- **Persistent Storage**: Audit logs PVC
 
 ```bash
-# Deploy to Kubernetes
+# Deploy all components to Kubernetes
 kubectl apply -f k8s/
 
 # Check deployment status
-kubectl get pods -l app=awx-advanced-tools
-kubectl get svc awx-advanced-tools
+kubectl get pods
+kubectl get svc
+kubectl get pvc
 ```
 
-The deployment automatically uses the latest image from GitHub Container Registry. Update the `k8s/deployment.yaml` if you need to use a specific image tag:
+**Access the service:**
+The gateway service is exposed as NodePort on port 30080. Access via:
+```
+http://<node-ip>:30080
+```
+
+**Authentication:**
+Use the credentials defined in `htpasswd` (default: `openwebui`/`openwebui`)
+
+**Configuration:**
+Update `k8s/configmap.yaml` with your AWX instance details:
+- `AWX_BASE_URL`: Your AWX API endpoint
+- `AWX_USERNAME`/`AWX_PASSWORD`: AWX credentials
+- `LLM_ENDPOINT`: Your LLM service endpoint
+
+**Image Tags:**
+The deployment uses the `testing` tag by default. Update `k8s/deployment.yaml` for different tags:
 
 ```yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: awx-advanced-tools
 spec:
   template:
     spec:
       containers:
-        - name: awx-advanced-tools
-          image: ghcr.io/antuelle78/awx_advanced_tools:latest
+        - name: mcp-server
+          image: ghcr.io/antuelle78/awx_advanced_tools:testing
 ```
 
 ### CI/CD Pipeline

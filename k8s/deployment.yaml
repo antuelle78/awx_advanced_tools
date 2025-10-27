@@ -1,21 +1,21 @@
-# Kubernetes deployment and service
+# MCP Server Deployment
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: awx-advanced-tools
+  name: mcp-server
 spec:
   replicas: 2
   selector:
     matchLabels:
-      app: awx-advanced-tools
+      app: mcp-server
   template:
     metadata:
       labels:
-        app: awx-advanced-tools
+        app: mcp-server
     spec:
-       containers:
-       - name: awx-advanced-tools
-         image: ghcr.io/YOUR_GITHUB_USERNAME/YOUR_REPO_NAME:latest
+      containers:
+      - name: mcp-server
+        image: ghcr.io/antuelle78/awx_advanced_tools:testing
         ports:
         - containerPort: 8000
         envFrom:
@@ -23,21 +23,123 @@ spec:
             name: awx-advanced-tools-config
         volumeMounts:
         - name: audit-logs
-          mountPath: /var/log/audit
+          mountPath: /var/log/mcp
       volumes:
       - name: audit-logs
         persistentVolumeClaim:
           claimName: audit-logs-pvc
 ---
+# MCP Server Service
 apiVersion: v1
 kind: Service
 metadata:
-  name: awx-advanced-tools
+  name: mcp-server
 spec:
   selector:
-    app: awx-advanced-tools
+    app: mcp-server
+  ports:
+    - protocol: TCP
+      port: 8000
+      targetPort: 8000
+  type: ClusterIP
+---
+# Redis Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      containers:
+      - name: redis
+        image: redis:alpine
+        ports:
+        - containerPort: 6379
+        livenessProbe:
+          exec:
+            command:
+            - redis-cli
+            - ping
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+        readinessProbe:
+          exec:
+            command:
+            - redis-cli
+            - ping
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
+---
+# Redis Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis
+spec:
+  selector:
+    app: redis
+  ports:
+    - protocol: TCP
+      port: 6379
+      targetPort: 6379
+  type: ClusterIP
+---
+# Gateway (Nginx) Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gateway
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gateway
+  template:
+    metadata:
+      labels:
+        app: gateway
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:alpine
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - name: nginx-config
+          mountPath: /etc/nginx/nginx.conf
+          subPath: nginx.conf
+        - name: htpasswd
+          mountPath: /etc/nginx/.htpasswd
+          subPath: .htpasswd
+      volumes:
+      - name: nginx-config
+        configMap:
+          name: nginx-config
+      - name: htpasswd
+        secret:
+          secretName: htpasswd-secret
+---
+# Gateway Service (NodePort)
+apiVersion: v1
+kind: Service
+metadata:
+  name: gateway
+spec:
+  selector:
+    app: gateway
   ports:
     - protocol: TCP
       port: 80
-      targetPort: 8000
-  type: ClusterIP
+      targetPort: 80
+      nodePort: 30080
+  type: NodePort
