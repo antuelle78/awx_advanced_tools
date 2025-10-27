@@ -8,21 +8,23 @@ requirements:
 
 import httpx
 from pydantic import BaseModel, Field
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 import json
 import time
+import uuid
 
 
 class PromptOptimizer:
     """Optimizes prompts for better LLM tool usage success rate."""
 
     def __init__(self):
-        self.tool_prompts = self._load_tool_prompts()
+        self.detailed_prompts = self._load_detailed_prompts()
+        self.simple_prompts = self._load_simple_prompts()
         self.confidence_threshold = 0.8
         self.log_file = "tool_usage.log"
 
-    def _load_tool_prompts(self) -> Dict[str, str]:
-        """Load optimized prompts for each tool."""
+    def _load_detailed_prompts(self) -> Dict[str, str]:
+        """Load detailed prompts for larger models."""
         return {
             "list_templates": "Think step by step: 1. Understand the request for job templates. 2. Call list_templates with name parameter to filter. 3. Use the results to inform further actions. Example: list_templates(name='Demo Job Template') to find specific template.",
             "launch_job_template": "Think step by step: 1. Identify the template_id from list_templates. 2. Prepare extra_vars if needed. 3. Call launch_job_template. Example: template_id=123, extra_vars={'branch': 'main'}.",
@@ -39,12 +41,47 @@ class PromptOptimizer:
             "create_user": "Think step by step: 1. Check if username exists. 2. Call create_user. 3. Verify creation. Example: username='newuser', password='pass123'.",
             "update_user": "Think step by step: 1. Get user_id. 2. Call update_user. 3. Confirm changes. Example: user_id=2, first_name='John'.",
             "delete_user": "Think step by step: 1. Confirm deletion. 2. Call delete_user. 3. Verify removal. Example: user_id=2.",
+            "create_job_template": "Think step by step: 1. Resolve inventory and project IDs using list_inventories and list_projects. 2. Call create_job_template with IDs. 3. Verify creation. Example: name='web-deploy', inventory=5, project=10, playbook='deploy.yml'.",
         }
 
-    def get_optimized_prompt(self, tool_name: str, **kwargs) -> str:
-        """Get an optimized prompt for a specific tool."""
-        if tool_name in self.tool_prompts:
-            return self.tool_prompts[tool_name]
+    def _load_simple_prompts(self) -> Dict[str, str]:
+        """Load simplified prompts for smaller models."""
+        return {
+            "list_templates": "List job templates. Use name to filter. Example: list_templates(name='web')",
+            "launch_job_template": "Launch job template with ID and optional variables. Example: launch_job_template(template_id=123, extra_vars={'env': 'prod'})",
+            "list_jobs": "List jobs with optional page number. Example: list_jobs(page=1)",
+            "get_job": "Get job details by ID. Example: get_job(job_id=456)",
+            "list_inventories": "List inventories with optional name filter. Example: list_inventories(name='prod')",
+            "create_inventory": "Create inventory with name, organization ID, and variables. Example: create_inventory(name='web', organization=1, variables={'env': 'prod'})",
+            "get_inventory": "Get inventory details by ID. Example: get_inventory(inventory_id=789)",
+            "delete_inventory": "Delete inventory by ID. Example: delete_inventory(inventory_id=789)",
+            "sync_inventory": "Sync inventory by ID. Example: sync_inventory(inventory_id=789)",
+            "list_users": "List all users. Example: list_users()",
+            "list_hosts": "List hosts with optional inventory filter. Example: list_hosts(inventory=5)",
+            "get_user": "Get user details by ID. Example: get_user(user_id=2)",
+            "create_user": "Create user with username and password. Example: create_user(username='john', password='pass123')",
+            "update_user": "Update user by ID with new values. Example: update_user(user_id=2, first_name='John')",
+            "delete_user": "Delete user by ID. Example: delete_user(user_id=2)",
+            "create_job_template": "Create job template with resolved IDs. Example: create_job_template(name='deploy', inventory=5, project=10, playbook='site.yml')",
+        }
+
+    def get_optimized_prompt(self, tool_name: str, model_name: Optional[str] = None, **kwargs) -> str:
+        """Get an optimized prompt for a specific tool based on model capabilities."""
+        try:
+            # Import here to avoid circular imports
+            from app.model_capabilities import should_use_simplified_prompt
+
+            # Use simplified prompts for smaller models
+            if model_name and should_use_simplified_prompt(model_name, tool_name):
+                prompts = self.simple_prompts
+            else:
+                prompts = self.detailed_prompts
+        except ImportError:
+            # Fallback to detailed prompts if model_capabilities not available
+            prompts = self.detailed_prompts
+
+        if tool_name in prompts:
+            return prompts[tool_name]
         return f"Use the {tool_name} tool appropriately."
 
     def log_tool_usage(self, tool_name: str, success: bool, response_time: float):
@@ -68,6 +105,14 @@ class Tools:
         mcp_password: str = Field(
             default="openwebui", description="Password for MCP server authentication."
         )
+        model_name: str = Field(
+            default="granite3.1-dense:2b",
+            description="Current model name for capability optimization."
+        )
+        enable_model_optimization: bool = Field(
+            default=True,
+            description="Enable model-aware optimizations and simplifications."
+        )
 
     def __init__(self):
         self.valves = self.Valves()
@@ -75,6 +120,10 @@ class Tools:
             timeout=30.0, auth=(self.valves.mcp_username, self.valves.mcp_password)
         )  # Add timeout and auth for requests
         self.prompt_optimizer = PromptOptimizer()
+        self.conversation_id = str(uuid.uuid4())  # Unique conversation ID
+        self._context_manager = None
+        self._fallback_handler = None
+        self._response_simplifier = None
 
     def _get_headers(self) -> Dict[str, str]:
         """Get headers for API requests."""
@@ -84,17 +133,128 @@ class Tools:
     def mcp_server_url(self) -> str:
         return self.valves.mcp_server_url
 
+    @property
+    def context_manager(self):
+        """Lazy initialization of context manager."""
+        if self._context_manager is None:
+            try:
+                from app.context_manager import context_manager
+                self._context_manager = context_manager
+            except ImportError:
+                self._context_manager = None
+        return self._context_manager
+
+    @property
+    def fallback_handler(self):
+        """Lazy initialization of fallback handler."""
+        if self._fallback_handler is None:
+            try:
+                from app.fallback_handler import fallback_handler
+                self._fallback_handler = fallback_handler
+            except ImportError:
+                self._fallback_handler = None
+        return self._fallback_handler
+
+    @property
+    def response_simplifier(self):
+        """Lazy initialization of response simplifier."""
+        if self._response_simplifier is None:
+            try:
+                from app.fallback_handler import response_simplifier
+                self._response_simplifier = response_simplifier
+            except ImportError:
+                self._response_simplifier = None
+        return self._response_simplifier
+
     def get_optimized_prompt(self, tool_name: str, **kwargs) -> str:
         """Get an optimized prompt for a specific tool."""
-        return self.prompt_optimizer.get_optimized_prompt(tool_name, **kwargs)
+        if self.valves.enable_model_optimization:
+            return self.prompt_optimizer.get_optimized_prompt(tool_name, self.valves.model_name, **kwargs)
+        else:
+            return self.prompt_optimizer.get_optimized_prompt(tool_name, None, **kwargs)
+
+    def get_available_tools(self) -> List[str]:
+        """Get available tools based on current model capabilities."""
+        if not self.valves.enable_model_optimization:
+            # Return all tools if optimization is disabled
+            return list(self.prompt_optimizer.detailed_prompts.keys())
+
+        try:
+            from app.model_capabilities import get_available_tools
+            return get_available_tools(self.valves.model_name, 0)
+        except ImportError:
+            return list(self.prompt_optimizer.detailed_prompts.keys())
+
+    def should_simplify_operation(self, operation: str) -> bool:
+        """Determine if an operation should be simplified for the current model."""
+        if not self.valves.enable_model_optimization:
+            return False
+
+        try:
+            from app.model_capabilities import should_use_simplified_prompt
+            return should_use_simplified_prompt(self.valves.model_name, operation)
+        except ImportError:
+            return False
 
     def log_tool_usage(self, tool_name: str, success: bool, response_time: float):
         """Log tool usage for feedback loop."""
         self.prompt_optimizer.log_tool_usage(tool_name, success, response_time)
 
-    def get_all_optimized_prompts(self) -> Dict[str, str]:
-        """Get optimized prompts for all available tools."""
-        return self.prompt_optimizer.tool_prompts
+        # Track in context manager if available
+        if self.context_manager and self.valves.enable_model_optimization:
+            context = self.context_manager.get_context(self.conversation_id, self.valves.model_name)
+            # Note: We don't have parameters/result here, so we'll track basic info
+            context.add_tool_call(
+                tool_name=tool_name,
+                parameters={},  # Could be enhanced to track actual parameters
+                result={"success": success, "response_time": response_time},
+                success=success,
+                response_time=response_time
+            )
+
+    def get_all_optimized_prompts(self, model_name: Optional[str] = None) -> Dict[str, str]:
+        """Get optimized prompts for all available tools based on model."""
+        try:
+            from app.model_capabilities import get_available_tools
+            available_tools = get_available_tools(model_name or "granite3.1-dense:2b", 0)
+
+            # Get prompts for available tools
+            prompts = {}
+            for tool in available_tools:
+                prompts[tool] = self.prompt_optimizer.get_optimized_prompt(tool, model_name)
+            return prompts
+        except ImportError:
+            # Fallback to all detailed prompts
+            return self.prompt_optimizer.detailed_prompts
+
+    def get_conversation_context(self) -> Optional[str]:
+        """Get conversation context summary for the current model."""
+        if not self.valves.enable_model_optimization or not self.context_manager:
+            return None
+
+        context = self.context_manager.get_context(self.conversation_id, self.valves.model_name)
+        return context.get_context_summary()
+
+    def should_use_fallback(self, operation: str) -> bool:
+        """Determine if fallback should be used for an operation."""
+        if not self.valves.enable_model_optimization or not self.fallback_handler:
+            return False
+
+        return self.fallback_handler.should_use_fallback(self.valves.model_name, operation)
+
+    def simplify_response(self, response: str) -> str:
+        """Simplify response for smaller models."""
+        if not self.valves.enable_model_optimization or not self.response_simplifier:
+            return response
+
+        try:
+            # Parse JSON response, simplify, then re-serialize
+            parsed = json.loads(response)
+            simplified = self.response_simplifier.simplify_response(parsed, self.valves.model_name)
+            return json.dumps(simplified)
+        except (json.JSONDecodeError, TypeError):
+            # If not JSON or parsing fails, return original
+            return response
 
     def list_templates(self, name: Optional[str] = None) -> str:
         """
@@ -104,21 +264,37 @@ class Tools:
         :return: A JSON string containing a list of job templates.
 
         """
-        url = f"{self.mcp_server_url}/awx/templates"
-        params = {}
-        if name:
-            params["name"] = name
+        start_time = time.time()
+        success = False
+
         try:
+            url = f"{self.mcp_server_url}/awx/templates"
+            params = {}
+            if name:
+                params["name"] = name
+
             response = self.client.get(url, headers=self._get_headers(), params=params)
             response.raise_for_status()
-            return json.dumps(response.json())
+            result = json.dumps(response.json())
+            success = True
+
+            # Simplify response for smaller models
+            result = self.simplify_response(result)
+
+            return result
         except httpx.HTTPStatusError as e:
-            return json.dumps({
+            error_result = json.dumps({
                 "error": f"HTTP error occurred: {e.response.status_code}",
                 "detail": e.response.text,
             })
+            return error_result
         except Exception as e:
-            return json.dumps({"error": str(e)})
+            error_result = json.dumps({"error": str(e)})
+            return error_result
+        finally:
+            # Log tool usage
+            response_time = time.time() - start_time
+            self.log_tool_usage("list_templates", success, response_time)
 
     def launch_job_template(self, template_id: int, extra_vars: Optional[Dict[str, Any]] = None) -> str:
         """
@@ -128,22 +304,37 @@ class Tools:
         :param extra_vars: A dictionary of extra variables to pass to job.
         :return: A JSON string containing details of newly created job.
         """
-        url = f"{self.mcp_server_url}/awx/job_templates/{template_id}/launch"
-        payload: Dict[str, Any] = {}
-        if extra_vars:
-            payload["extra_vars"] = extra_vars
+        start_time = time.time()
+        success = False
 
         try:
+            url = f"{self.mcp_server_url}/awx/job_templates/{template_id}/launch"
+            payload: Dict[str, Any] = {}
+            if extra_vars:
+                payload["extra_vars"] = extra_vars
+
             response = self.client.post(url, headers=self._get_headers(), json=payload)
             response.raise_for_status()
-            return json.dumps(response.json())
+            result = json.dumps(response.json())
+            success = True
+
+            # Simplify response for smaller models
+            result = self.simplify_response(result)
+
+            return result
         except httpx.HTTPStatusError as e:
-            return json.dumps({
+            error_result = json.dumps({
                 "error": f"HTTP error occurred: {e.response.status_code}",
                 "detail": e.response.text,
             })
+            return error_result
         except Exception as e:
-            return json.dumps({"error": str(e)})
+            error_result = json.dumps({"error": str(e)})
+            return error_result
+        finally:
+            # Log tool usage
+            response_time = time.time() - start_time
+            self.log_tool_usage("launch_job_template", success, response_time)
 
     def get_job(self, job_id: int) -> str:
         """
@@ -152,18 +343,33 @@ class Tools:
         :param job_id: The ID of job to retrieve.
         :return: A JSON string containing status and details of job.
         """
-        url = f"{self.mcp_server_url}/awx/jobs/{job_id}"
+        start_time = time.time()
+        success = False
+
         try:
+            url = f"{self.mcp_server_url}/awx/jobs/{job_id}"
             response = self.client.get(url, headers=self._get_headers())
             response.raise_for_status()
-            return json.dumps(response.json())
+            result = json.dumps(response.json())
+            success = True
+
+            # Simplify response for smaller models
+            result = self.simplify_response(result)
+
+            return result
         except httpx.HTTPStatusError as e:
-            return json.dumps({
+            error_result = json.dumps({
                 "error": f"HTTP error occurred: {e.response.status_code}",
                 "detail": e.response.text,
             })
+            return error_result
         except Exception as e:
-            return json.dumps({"error": str(e)})
+            error_result = json.dumps({"error": str(e)})
+            return error_result
+        finally:
+            # Log tool usage
+            response_time = time.time() - start_time
+            self.log_tool_usage("get_job", success, response_time)
 
     def list_jobs(self, page: int = 1) -> str:
         """
@@ -186,7 +392,7 @@ class Tools:
             return json.dumps({"error": str(e)})
 
     def create_job_template(self, name: str, inventory: int, project: int, playbook: str,
-                           description: Optional[str] = None, extra_vars: Optional[Dict[str, Any]] = None) -> str:
+                            description: Optional[str] = None, extra_vars: Optional[Dict[str, Any]] = None) -> str:
         """
         Creates a new job template in AWX.
 
@@ -198,29 +404,55 @@ class Tools:
         :param extra_vars: Optional extra variables.
         :return: A JSON string containing the created job template details.
         """
-        url = f"{self.mcp_server_url}/awx/job_templates/"
-        payload = {
-            "name": name,
-            "inventory": inventory,
-            "project": project,
-            "playbook": playbook
-        }
-        if description:
-            payload["description"] = description
-        if extra_vars:
-            payload["extra_vars"] = extra_vars
+        start_time = time.time()
+        success = False
+
+        # Check if fallback should be used
+        if self.should_use_fallback("create_job_template") and self.fallback_handler:
+            fallback_result = self.fallback_handler.execute_with_fallback(
+                "create_job_template", self.valves.model_name,
+                lambda: None,  # Original function would be called here
+                name=name, inventory=inventory, project=project, playbook=playbook,
+                description=description, extra_vars=extra_vars
+            )
+            response_time = time.time() - start_time
+            self.log_tool_usage("create_job_template", True, response_time)  # Assume fallback succeeds
+            return json.dumps(fallback_result)
 
         try:
-            response = self.client.post(url, headers=self._get_headers(), json=payload)
+            url = f"{self.mcp_server_url}/awx/job_templates/"
+            params = {"name": name, "inventory": inventory, "project": project, "playbook": playbook}
+            payload = {}
+            if description:
+                payload["description"] = description
+            if extra_vars:
+                payload["extra_vars"] = extra_vars
+
+            if payload:
+                response = self.client.post(url, headers=self._get_headers(), params=params, json=payload)
+            else:
+                response = self.client.post(url, headers=self._get_headers(), params=params)
             response.raise_for_status()
-            return json.dumps(response.json())
+            result = json.dumps(response.json())
+            success = True
+
+            # Simplify response for smaller models
+            result = self.simplify_response(result)
+
+            return result
         except httpx.HTTPStatusError as e:
-            return json.dumps({
+            error_result = json.dumps({
                 "error": f"HTTP error occurred: {e.response.status_code}",
                 "detail": e.response.text,
             })
+            return error_result
         except Exception as e:
-            return json.dumps({"error": str(e)})
+            error_result = json.dumps({"error": str(e)})
+            return error_result
+        finally:
+            # Log tool usage
+            response_time = time.time() - start_time
+            self.log_tool_usage("create_job_template", success, response_time)
 
     # Inventory Management
     def list_inventories(self, name: Optional[str] = None) -> str:
@@ -625,7 +857,11 @@ class Tools:
         try:
             response = self.client.delete(url, headers=self._get_headers())
             response.raise_for_status()
-            return json.dumps(response.json())
+            # Handle empty response body gracefully (common for DELETE operations)
+            try:
+                return json.dumps(response.json())
+            except ValueError:  # JSON parsing error (empty response)
+                return json.dumps({"status": "deleted", "id": user_id})
         except httpx.HTTPStatusError as e:
             return json.dumps({
                 "error": f"HTTP error occurred: {e.response.status_code}",

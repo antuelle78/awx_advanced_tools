@@ -189,11 +189,19 @@ class AWXClient:
         return resp.json()
 
     async def delete_organization(self, organization_id: int):
+        """Delete an organization."""
+        if not isinstance(organization_id, int) or organization_id <= 0:
+            raise ValueError("organization_id must be a positive integer")
+
         url = f"{self.base_url}/api/v2/organizations/{organization_id}/"
 
         resp = await self._request("DELETE", url)
 
-        return resp.json()
+        # Handle empty response body gracefully (common for DELETE operations)
+        try:
+            return resp.json()
+        except ValueError:  # JSON parsing error (empty response)
+            return {"status": "deleted", "id": organization_id}
 
     # Projects methods
 
@@ -255,11 +263,19 @@ class AWXClient:
         return resp.json()
 
     async def delete_project(self, project_id: int):
+        """Delete a project."""
+        if not isinstance(project_id, int) or project_id <= 0:
+            raise ValueError("project_id must be a positive integer")
+
         url = f"{self.base_url}/api/v2/projects/{project_id}/"
 
         try:
             resp = await self._request("DELETE", url)
-            return resp.json()
+            # Handle empty response body gracefully (common for DELETE operations)
+            try:
+                return resp.json()
+            except ValueError:  # JSON parsing error (empty response)
+                return {"status": "deleted", "id": project_id}
         except httpx.HTTPStatusError as exc:
             if exc.response.status_code == 500:
                 # AWX may return 500 even on successful delete
@@ -319,11 +335,19 @@ class AWXClient:
         return resp.json()
 
     async def delete_credential(self, credential_id: int):
+        """Delete a credential."""
+        if not isinstance(credential_id, int) or credential_id <= 0:
+            raise ValueError("credential_id must be a positive integer")
+
         url = f"{self.base_url}/api/v2/credentials/{credential_id}/"
 
         resp = await self._request("DELETE", url)
 
-        return resp.json()
+        # Handle empty response body gracefully (common for DELETE operations)
+        try:
+            return resp.json()
+        except ValueError:  # JSON parsing error (empty response)
+            return {"status": "deleted", "id": credential_id}
 
     # Users methods
 
@@ -407,11 +431,19 @@ class AWXClient:
         return resp.json()
 
     async def delete_user(self, user_id: int):
+        """Delete a user from AWX."""
+        if not isinstance(user_id, int) or user_id <= 0:
+            raise ValueError("user_id must be a positive integer")
+
         url = f"{self.base_url}/api/v2/users/{user_id}/"
 
         resp = await self._request("DELETE", url)
 
-        return resp.json()
+        # Handle empty response body gracefully (common for DELETE operations)
+        try:
+            return resp.json()
+        except ValueError:  # JSON parsing error (empty response)
+            return {"status": "deleted", "id": user_id}
 
     # Workflow Job Templates methods
 
@@ -448,12 +480,16 @@ class AWXClient:
     ):
         """Create a new job template."""
         url = f"{self.base_url}/api/v2/job_templates/"
-        payload = {"name": name, "inventory": inventory, "project": project, "playbook": playbook}
+        params = {"name": name, "inventory": inventory, "project": project, "playbook": playbook}
+        payload = {}
         if description:
             payload["description"] = description
         if extra_vars:
             payload["extra_vars"] = extra_vars
-        resp = await self._request("POST", url, json=payload)
+        if payload:
+            resp = await self._request("POST", url, params=params, json=payload)
+        else:
+            resp = await self._request("POST", url, params=params)
         return resp.json()
 
     async def create_workflow_job_template(
@@ -493,13 +529,21 @@ class AWXClient:
         return resp.json()
 
     async def delete_workflow_job_template(self, workflow_job_template_id: int):
+        """Delete a workflow job template."""
+        if not isinstance(workflow_job_template_id, int) or workflow_job_template_id <= 0:
+            raise ValueError("workflow_job_template_id must be a positive integer")
+
         url = (
             f"{self.base_url}/api/v2/workflow_job_templates/{workflow_job_template_id}/"
         )
 
         resp = await self._request("DELETE", url)
 
-        return resp.json()
+        # Handle empty response body gracefully (common for DELETE operations)
+        try:
+            return resp.json()
+        except ValueError:  # JSON parsing error (empty response)
+            return {"status": "deleted", "id": workflow_job_template_id}
 
     async def launch_workflow_job_template(
         self, workflow_job_template_id: int, extra_vars: Optional[dict] = None
@@ -567,11 +611,19 @@ class AWXClient:
         return resp.json()
 
     async def delete_notification(self, notification_id: int):
+        """Delete a notification template."""
+        if not isinstance(notification_id, int) or notification_id <= 0:
+            raise ValueError("notification_id must be a positive integer")
+
         url = f"{self.base_url}/api/v2/notification_templates/{notification_id}/"
 
         resp = await self._request("DELETE", url)
 
-        return resp.json()
+        # Handle empty response body gracefully (common for DELETE operations)
+        try:
+            return resp.json()
+        except ValueError:  # JSON parsing error (empty response)
+            return {"status": "deleted", "id": notification_id}
 
     # Instance Groups methods
 
@@ -634,11 +686,19 @@ class AWXClient:
         return resp.json()
 
     async def delete_instance_group(self, instance_group_id: int):
+        """Delete an instance group."""
+        if not isinstance(instance_group_id, int) or instance_group_id <= 0:
+            raise ValueError("instance_group_id must be a positive integer")
+
         url = f"{self.base_url}/api/v2/instance_groups/{instance_group_id}/"
 
         resp = await self._request("DELETE", url)
 
-        return resp.json()
+        # Handle empty response body gracefully (common for DELETE operations)
+        try:
+            return resp.json()
+        except ValueError:  # JSON parsing error (empty response)
+            return {"status": "deleted", "id": instance_group_id}
 
     # Activity Stream methods
 

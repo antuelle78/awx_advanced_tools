@@ -14,7 +14,7 @@ class DummyChatCompletion:
         # Return a dummy response that mimics OpenAI's API
         class DummyMessage:
             def __init__(self):
-                self.content = '{"result": "ok"}'
+                self.content = '{"test": "data"}'
 
         class DummyChoice:
             def __init__(self):
@@ -29,3 +29,14 @@ class DummyChatCompletion:
 # Add dummy openai to sys.modules
 sys.modules["openai"] = type(sys)('openai')
 sys.modules["openai"].ChatCompletion = DummyChatCompletion
+
+# Create a dummy ollama module
+class DummyAsyncClient:
+    def __init__(self, host=None):
+        self.host = host
+
+    async def generate(self, **kwargs):
+        return {"response": '{"test": "data"}'}
+
+sys.modules["ollama"] = type(sys)('ollama')
+sys.modules["ollama"].AsyncClient = DummyAsyncClient

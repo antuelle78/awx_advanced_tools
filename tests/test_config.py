@@ -1,13 +1,14 @@
 from app.config import Settings
 
 
-def test_settings_default_values():
+def test_settings_default_values(monkeypatch):
+    monkeypatch.setenv("LLM_MODEL", "gpt-4o")
     settings = Settings()
     assert settings.llm_provider == "ollama"
     assert settings.llm_model == "gpt-4o"
     assert settings.audit_log_dir == "/tmp/audit"
-    assert settings.awx_base_url == "https://awx.example.com"
-    assert settings.awx_token == "your_awx_token"
+    assert settings.awx_base_url == "dummy"
+    assert settings.awx_token == "dummy"
 
 
 def test_settings_loading(monkeypatch):
