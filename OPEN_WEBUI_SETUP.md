@@ -46,13 +46,26 @@ After importing, configure the tool's valves:
 
 ## Available Functions
 
-The tool exposes 58 functions for managing AWX:
+The tool exposes core functions for managing AWX (simplified for better LLM tool usage):
 
 ### Job Templates & Jobs
-- `list_templates()` - List all job templates
-- `launch_job_template(template_id, extra_vars)` - Launch a job
-- `list_jobs(page)` - List all jobs
-- `get_job(job_id)` - Get job status
+- `list_templates(name)` - List all job templates, optionally filtered by name
+- `launch_job_template(template_id, extra_vars)` - Launch a job template
+- `list_jobs(page)` - List all jobs with pagination
+- `get_job(job_id)` - Get job status and details
+
+### Users & Authentication
+- `list_users()` - List all AWX users
+- `test_connection()` - Test connection to AWX server
+
+### Inventories & Hosts
+- `list_inventories(name)` - List inventories, optionally filtered by name
+- `create_inventory(name, organization, variables)` - Create a new inventory
+- `get_inventory(inventory_id)` - Get inventory details
+- `list_hosts(inventory)` - List hosts, optionally filtered by inventory
+
+### Tool Management
+- `get_available_tools()` - Get list of all available tool functions
 
 ### Inventories
 - `list_inventories()` - List inventories
@@ -127,10 +140,13 @@ The tool exposes 58 functions for managing AWX:
 Once configured, you can ask your LLM:
 
 - "List all job templates in AWX"
-- "Launch job template 5 with extra_vars {'host': 'webserver'}"
+- "Launch the demo job template"
 - "Show me the status of job 123"
 - "Create a new inventory called 'production' in organization 1"
 - "List all running jobs"
+- "What tools are available for AWX operations?"
+
+**Important:** The LLM should use the tool functions directly, not construct API URLs manually. If you see the LLM trying to call endpoints like `/awx/templates`, remind it to use the tool functions instead.
 
 The LLM will automatically use the appropriate tools to interact with your AWX instance.
 
