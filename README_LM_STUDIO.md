@@ -77,7 +77,7 @@ Your LLM can now perform these AWX operations:
 
 ### **Method 1: Open-WebUI (Already Working)**
 - Import `open-webui-tool.py` into Open-WebUI
-- 53 comprehensive AWX tools available
+- 58 comprehensive AWX tools available
 - More mature integration
 
 ### **Method 2: Direct LM Studio MCP (This Guide)**

@@ -44,7 +44,7 @@ The tool now has **correct defaults**:
 ✅ **API Access**: All endpoints responding properly
 ✅ **Job Templates**: Successfully retrieving data (1 template found)
 
-## 📋 **Available Tools (53 functions)**
+## 📋 **Available Tools (58 functions)**
 
 Your LLM can now perform these AWX operations:
 

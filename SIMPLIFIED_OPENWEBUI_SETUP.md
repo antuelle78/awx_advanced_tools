@@ -36,4 +36,4 @@ Once configured, you can ask your LLM:
 - Verify the `mcp_server_url` is accessible from Open-WebUI
 
 ## Available Functions
-The tool provides 53 functions for AWX management, including job templates, inventories, organizations, projects, credentials, users, workflows, notifications, instance groups, and activity streams.
+The tool provides 58 functions for AWX management, including job templates, inventories, organizations, projects, credentials, users, workflows, notifications, instance groups, and activity streams.

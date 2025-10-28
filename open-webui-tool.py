@@ -1279,3 +1279,501 @@ class Tools:
             })
         except Exception as e:
             return json.dumps({"error": str(e)})
+
+    # Additional methods for complete tool coverage
+
+    def health_check(self) -> str:
+        """
+        Performs a health check on the AWX connection.
+
+        :return: A JSON string containing health check results.
+        """
+        url = f"{self.mcp_server_url}/health"
+        try:
+            response = self.client.get(url, headers=self._get_headers())
+            response.raise_for_status()
+            return json.dumps(response.json())
+        except httpx.HTTPStatusError as e:
+            return json.dumps({
+                "error": f"HTTP error occurred: {e.response.status_code}",
+                "detail": e.response.text,
+            })
+        except Exception as e:
+            return json.dumps({"error": str(e)})
+
+
+
+    # Credential Management
+    def list_credentials(self) -> str:
+        """
+        Lists credentials in AWX.
+
+        :return: A JSON string containing a list of credentials.
+        """
+        url = f"{self.mcp_server_url}/awx/credentials"
+        try:
+            response = self.client.get(url, headers=self._get_headers())
+            response.raise_for_status()
+            return json.dumps(response.json())
+        except httpx.HTTPStatusError as e:
+            return json.dumps({
+                "error": f"HTTP error occurred: {e.response.status_code}",
+                "detail": e.response.text,
+            })
+        except Exception as e:
+            return json.dumps({"error": str(e)})
+
+    def get_credential(self, credential_id: int) -> str:
+        """
+        Retrieves details of a specific credential.
+
+        :param credential_id: The ID of credential to retrieve.
+        :return: A JSON string containing credential details.
+        """
+        url = f"{self.mcp_server_url}/awx/credentials/{credential_id}"
+        try:
+            response = self.client.get(url, headers=self._get_headers())
+            response.raise_for_status()
+            return json.dumps(response.json())
+        except httpx.HTTPStatusError as e:
+            return json.dumps({
+                "error": f"HTTP error occurred: {e.response.status_code}",
+                "detail": e.response.text,
+            })
+        except Exception as e:
+            return json.dumps({"error": str(e)})
+
+    def create_credential(self, name: str, credential_type: int, inputs: Dict[str, Any]) -> str:
+        """
+        Creates a new credential in AWX.
+
+        :param name: Name of the credential.
+        :param credential_type: Type ID of the credential.
+        :param inputs: Credential inputs.
+        :return: A JSON string containing the created credential details.
+        """
+        url = f"{self.mcp_server_url}/awx/credentials"
+        payload = {
+            "name": name,
+            "credential_type": credential_type,
+            "inputs": inputs
+        }
+
+        try:
+            response = self.client.post(url, headers=self._get_headers(), json=payload)
+            response.raise_for_status()
+            return json.dumps(response.json())
+        except httpx.HTTPStatusError as e:
+            return json.dumps({
+                "error": f"HTTP error occurred: {e.response.status_code}",
+                "detail": e.response.text,
+            })
+        except Exception as e:
+            return json.dumps({"error": str(e)})
+
+    def update_credential(self, credential_id: int, name: Optional[str] = None,
+                         inputs: Optional[Dict[str, Any]] = None) -> str:
+        """
+        Updates an existing credential in AWX.
+
+        :param credential_id: The ID of credential to update.
+        :param name: Optional new name.
+        :param inputs: Optional new inputs.
+        :return: A JSON string containing the updated credential details.
+        """
+        url = f"{self.mcp_server_url}/awx/credentials/{credential_id}"
+        payload = {}
+        if name:
+            payload["name"] = name
+        if inputs:
+            payload["inputs"] = inputs
+
+        try:
+            response = self.client.patch(url, headers=self._get_headers(), json=payload)
+            response.raise_for_status()
+            return json.dumps(response.json())
+        except httpx.HTTPStatusError as e:
+            return json.dumps({
+                "error": f"HTTP error occurred: {e.response.status_code}",
+                "detail": e.response.text,
+            })
+        except Exception as e:
+            return json.dumps({"error": str(e)})
+
+    def delete_credential(self, credential_id: int) -> str:
+        """
+        Deletes a credential from AWX.
+
+        :param credential_id: The ID of credential to delete.
+        :return: A JSON string containing deletion confirmation.
+        """
+        url = f"{self.mcp_server_url}/awx/credentials/{credential_id}"
+        try:
+            response = self.client.delete(url, headers=self._get_headers())
+            response.raise_for_status()
+            return json.dumps({"status": "deleted", "id": credential_id})
+        except httpx.HTTPStatusError as e:
+            return json.dumps({
+                "error": f"HTTP error occurred: {e.response.status_code}",
+                "detail": e.response.text,
+            })
+        except Exception as e:
+            return json.dumps({"error": str(e)})
+
+    # Workflow Job Template Management
+    def list_workflow_job_templates(self) -> str:
+        """
+        Lists workflow job templates in AWX.
+
+        :return: A JSON string containing a list of workflow job templates.
+        """
+        url = f"{self.mcp_server_url}/awx/workflow_job_templates"
+        try:
+            response = self.client.get(url, headers=self._get_headers())
+            response.raise_for_status()
+            return json.dumps(response.json())
+        except httpx.HTTPStatusError as e:
+            return json.dumps({
+                "error": f"HTTP error occurred: {e.response.status_code}",
+                "detail": e.response.text,
+            })
+        except Exception as e:
+            return json.dumps({"error": str(e)})
+
+    def create_workflow_job_template(self, name: str, description: Optional[str] = None) -> str:
+        """
+        Creates a new workflow job template in AWX.
+
+        :param name: Name of the workflow job template.
+        :param description: Optional description.
+        :return: A JSON string containing the created workflow job template details.
+        """
+        url = f"{self.mcp_server_url}/awx/workflow_job_templates"
+        payload = {"name": name}
+        if description:
+            payload["description"] = description
+
+        try:
+            response = self.client.post(url, headers=self._get_headers(), json=payload)
+            response.raise_for_status()
+            return json.dumps(response.json())
+        except httpx.HTTPStatusError as e:
+            return json.dumps({
+                "error": f"HTTP error occurred: {e.response.status_code}",
+                "detail": e.response.text,
+            })
+        except Exception as e:
+            return json.dumps({"error": str(e)})
+
+    def launch_workflow_job_template(self, workflow_job_template_id: int, extra_vars: Optional[Dict[str, Any]] = None) -> str:
+        """
+        Launches a workflow job template in AWX.
+
+        :param workflow_job_template_id: The ID of workflow job template to launch.
+        :param extra_vars: Optional extra variables.
+        :return: A JSON string containing the launched workflow job details.
+        """
+        url = f"{self.mcp_server_url}/awx/workflow_job_templates/{workflow_job_template_id}/launch"
+        payload = {}
+        if extra_vars:
+            payload["extra_vars"] = extra_vars
+
+        try:
+            response = self.client.post(url, headers=self._get_headers(), json=payload)
+            response.raise_for_status()
+            return json.dumps(response.json())
+        except httpx.HTTPStatusError as e:
+            return json.dumps({
+                "error": f"HTTP error occurred: {e.response.status_code}",
+                "detail": e.response.text,
+            })
+        except Exception as e:
+            return json.dumps({"error": str(e)})
+
+    def update_workflow_job_template(self, workflow_job_template_id: int, name: Optional[str] = None,
+                                   description: Optional[str] = None) -> str:
+        """
+        Updates a workflow job template in AWX.
+
+        :param workflow_job_template_id: The ID of workflow job template to update.
+        :param name: Optional new name.
+        :param description: Optional new description.
+        :return: A JSON string containing the updated workflow job template details.
+        """
+        url = f"{self.mcp_server_url}/awx/workflow_job_templates/{workflow_job_template_id}"
+        payload = {}
+        if name:
+            payload["name"] = name
+        if description:
+            payload["description"] = description
+
+        try:
+            response = self.client.patch(url, headers=self._get_headers(), json=payload)
+            response.raise_for_status()
+            return json.dumps(response.json())
+        except httpx.HTTPStatusError as e:
+            return json.dumps({
+                "error": f"HTTP error occurred: {e.response.status_code}",
+                "detail": e.response.text,
+            })
+        except Exception as e:
+            return json.dumps({"error": str(e)})
+
+    def delete_workflow_job_template(self, workflow_job_template_id: int) -> str:
+        """
+        Deletes a workflow job template in AWX.
+
+        :param workflow_job_template_id: The ID of workflow job template to delete.
+        :return: A JSON string containing deletion confirmation.
+        """
+        url = f"{self.mcp_server_url}/awx/workflow_job_templates/{workflow_job_template_id}"
+        try:
+            response = self.client.delete(url, headers=self._get_headers())
+            response.raise_for_status()
+            return json.dumps({"status": "deleted", "id": workflow_job_template_id})
+        except httpx.HTTPStatusError as e:
+            return json.dumps({
+                "error": f"HTTP error occurred: {e.response.status_code}",
+                "detail": e.response.text,
+            })
+        except Exception as e:
+            return json.dumps({"error": str(e)})
+
+    # Notification Management
+    def list_notifications(self) -> str:
+        """
+        Lists notification templates in AWX.
+
+        :return: A JSON string containing a list of notification templates.
+        """
+        url = f"{self.mcp_server_url}/awx/notifications"
+        try:
+            response = self.client.get(url, headers=self._get_headers())
+            response.raise_for_status()
+            return json.dumps(response.json())
+        except httpx.HTTPStatusError as e:
+            return json.dumps({
+                "error": f"HTTP error occurred: {e.response.status_code}",
+                "detail": e.response.text,
+            })
+        except Exception as e:
+            return json.dumps({"error": str(e)})
+
+    def get_notification(self, notification_id: int) -> str:
+        """
+        Retrieves details of a specific notification template.
+
+        :param notification_id: The ID of notification template to retrieve.
+        :return: A JSON string containing notification template details.
+        """
+        url = f"{self.mcp_server_url}/awx/notifications/{notification_id}"
+        try:
+            response = self.client.get(url, headers=self._get_headers())
+            response.raise_for_status()
+            return json.dumps(response.json())
+        except httpx.HTTPStatusError as e:
+            return json.dumps({
+                "error": f"HTTP error occurred: {e.response.status_code}",
+                "detail": e.response.text,
+            })
+        except Exception as e:
+            return json.dumps({"error": str(e)})
+
+    def create_notification(self, name: str, notification_type: str, notification_configuration: Dict[str, Any]) -> str:
+        """
+        Creates a new notification template in AWX.
+
+        :param name: Name of the notification template.
+        :param notification_type: Type of notification.
+        :param notification_configuration: Notification configuration.
+        :return: A JSON string containing the created notification template details.
+        """
+        url = f"{self.mcp_server_url}/awx/notifications"
+        payload = {
+            "name": name,
+            "notification_type": notification_type,
+            "notification_configuration": notification_configuration
+        }
+
+        try:
+            response = self.client.post(url, headers=self._get_headers(), json=payload)
+            response.raise_for_status()
+            return json.dumps(response.json())
+        except httpx.HTTPStatusError as e:
+            return json.dumps({
+                "error": f"HTTP error occurred: {e.response.status_code}",
+                "detail": e.response.text,
+            })
+        except Exception as e:
+            return json.dumps({"error": str(e)})
+
+    def update_notification(self, notification_id: int, name: Optional[str] = None,
+                           notification_configuration: Optional[Dict[str, Any]] = None) -> str:
+        """
+        Updates a notification template in AWX.
+
+        :param notification_id: The ID of notification template to update.
+        :param name: Optional new name.
+        :param notification_configuration: Optional new configuration.
+        :return: A JSON string containing the updated notification template details.
+        """
+        url = f"{self.mcp_server_url}/awx/notifications/{notification_id}"
+        payload = {}
+        if name:
+            payload["name"] = name
+        if notification_configuration:
+            payload["notification_configuration"] = notification_configuration
+
+        try:
+            response = self.client.patch(url, headers=self._get_headers(), json=payload)
+            response.raise_for_status()
+            return json.dumps(response.json())
+        except httpx.HTTPStatusError as e:
+            return json.dumps({
+                "error": f"HTTP error occurred: {e.response.status_code}",
+                "detail": e.response.text,
+            })
+        except Exception as e:
+            return json.dumps({"error": str(e)})
+
+    def delete_notification(self, notification_id: int) -> str:
+        """
+        Deletes a notification template from AWX.
+
+        :param notification_id: The ID of notification template to delete.
+        :return: A JSON string containing deletion confirmation.
+        """
+        url = f"{self.mcp_server_url}/awx/notifications/{notification_id}"
+        try:
+            response = self.client.delete(url, headers=self._get_headers())
+            response.raise_for_status()
+            return json.dumps({"status": "deleted", "id": notification_id})
+        except httpx.HTTPStatusError as e:
+            return json.dumps({
+                "error": f"HTTP error occurred: {e.response.status_code}",
+                "detail": e.response.text,
+            })
+        except Exception as e:
+            return json.dumps({"error": str(e)})
+
+    # Instance Group Management
+    def list_instance_groups(self) -> str:
+        """
+        Lists instance groups in AWX.
+
+        :return: A JSON string containing a list of instance groups.
+        """
+        url = f"{self.mcp_server_url}/awx/instance_groups"
+        try:
+            response = self.client.get(url, headers=self._get_headers())
+            response.raise_for_status()
+            return json.dumps(response.json())
+        except httpx.HTTPStatusError as e:
+            return json.dumps({
+                "error": f"HTTP error occurred: {e.response.status_code}",
+                "detail": e.response.text,
+            })
+        except Exception as e:
+            return json.dumps({"error": str(e)})
+
+    def get_instance_group(self, instance_group_id: int) -> str:
+        """
+        Retrieves details of a specific instance group.
+
+        :param instance_group_id: The ID of instance group to retrieve.
+        :return: A JSON string containing instance group details.
+        """
+        url = f"{self.mcp_server_url}/awx/instance_groups/{instance_group_id}"
+        try:
+            response = self.client.get(url, headers=self._get_headers())
+            response.raise_for_status()
+            return json.dumps(response.json())
+        except httpx.HTTPStatusError as e:
+            return json.dumps({
+                "error": f"HTTP error occurred: {e.response.status_code}",
+                "detail": e.response.text,
+            })
+        except Exception as e:
+            return json.dumps({"error": str(e)})
+
+    def create_instance_group(self, name: str, policy_instance_percentage: Optional[int] = None,
+                             policy_instance_minimum: Optional[int] = None) -> str:
+        """
+        Creates a new instance group in AWX.
+
+        :param name: Name of the instance group.
+        :param policy_instance_percentage: Optional policy instance percentage.
+        :param policy_instance_minimum: Optional policy instance minimum.
+        :return: A JSON string containing the created instance group details.
+        """
+        url = f"{self.mcp_server_url}/awx/instance_groups"
+        payload: Dict[str, Any] = {"name": name}
+        if policy_instance_percentage is not None:
+            payload["policy_instance_percentage"] = policy_instance_percentage
+        if policy_instance_minimum is not None:
+            payload["policy_instance_minimum"] = policy_instance_minimum
+
+        try:
+            response = self.client.post(url, headers=self._get_headers(), json=payload)
+            response.raise_for_status()
+            return json.dumps(response.json())
+        except httpx.HTTPStatusError as e:
+            return json.dumps({
+                "error": f"HTTP error occurred: {e.response.status_code}",
+                "detail": e.response.text,
+            })
+        except Exception as e:
+            return json.dumps({"error": str(e)})
+
+    def update_instance_group(self, instance_group_id: int, name: Optional[str] = None,
+                             policy_instance_percentage: Optional[int] = None,
+                             policy_instance_minimum: Optional[int] = None) -> str:
+        """
+        Updates an instance group in AWX.
+
+        :param instance_group_id: The ID of instance group to update.
+        :param name: Optional new name.
+        :param policy_instance_percentage: Optional new policy percentage.
+        :param policy_instance_minimum: Optional new policy minimum.
+        :return: A JSON string containing the updated instance group details.
+        """
+        url = f"{self.mcp_server_url}/awx/instance_groups/{instance_group_id}"
+        payload: Dict[str, Any] = {}
+        if name:
+            payload["name"] = name
+        if policy_instance_percentage is not None:
+            payload["policy_instance_percentage"] = policy_instance_percentage
+        if policy_instance_minimum is not None:
+            payload["policy_instance_minimum"] = policy_instance_minimum
+
+        try:
+            response = self.client.patch(url, headers=self._get_headers(), json=payload)
+            response.raise_for_status()
+            return json.dumps(response.json())
+        except httpx.HTTPStatusError as e:
+            return json.dumps({
+                "error": f"HTTP error occurred: {e.response.status_code}",
+                "detail": e.response.text,
+            })
+        except Exception as e:
+            return json.dumps({"error": str(e)})
+
+    def delete_instance_group(self, instance_group_id: int) -> str:
+        """
+        Deletes an instance group from AWX.
+
+        :param instance_group_id: The ID of instance group to delete.
+        :return: A JSON string containing deletion confirmation.
+        """
+        url = f"{self.mcp_server_url}/awx/instance_groups/{instance_group_id}"
+        try:
+            response = self.client.delete(url, headers=self._get_headers())
+            response.raise_for_status()
+            return json.dumps({"status": "deleted", "id": instance_group_id})
+        except httpx.HTTPStatusError as e:
+            return json.dumps({
+                "error": f"HTTP error occurred: {e.response.status_code}",
+                "detail": e.response.text,
+            })
+        except Exception as e:
+            return json.dumps({"error": str(e)})

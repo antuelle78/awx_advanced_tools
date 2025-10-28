@@ -46,7 +46,7 @@ After importing, configure the tool's valves:
 
 ## Available Functions
 
-The tool exposes 53 functions for managing AWX:
+The tool exposes 58 functions for managing AWX:
 
 ### Job Templates & Jobs
 - `list_templates()` - List all job templates
