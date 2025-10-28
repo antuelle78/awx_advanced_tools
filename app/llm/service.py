@@ -57,15 +57,10 @@ class PromptService:
         # 5. Validate result against schema
         schema = get_schema("AWX", action)
         if schema:
-            # FastAPI uses pydantic for validation – we can reuse that
-            from pydantic import BaseModel, ValidationError
-
-            class PayloadModel(BaseModel):
-                __root__: schema  # type: ignore
-
+            import jsonschema
             try:
-                PayloadModel(**result)
-            except ValidationError as exc:  # pragma: no cover
+                jsonschema.validate(result, schema)
+            except jsonschema.ValidationError as exc:  # pragma: no cover
                 raise ValueError(f"LLM payload does not match schema: {exc}") from exc
         else:
             import logging

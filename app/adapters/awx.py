@@ -86,7 +86,7 @@ async def create_host(host_data: dict):
 
 # User endpoints
 @router.get("/users")
-async def list_users(username: str = None):
+async def list_users(username: Optional[str] = None):
     try:
         return await awx_client.list_users(username)
     except httpx.HTTPStatusError as exc:
@@ -372,13 +372,20 @@ async def delete_organization(organization_id: int):
 
 # Tools endpoint for LLM discovery
 @router.get("/tools")
-async def list_tools(model_name: str = "granite3.1-dense:2b"):
+async def list_tools(model_name: str = "granite3.1-dense:2b", conversation_id: Optional[str] = None):
     """List available tools for LLM function calling."""
     try:
         from app.model_capabilities import get_available_tools
+        from app.context_manager import context_manager
 
-        # Get available tools based on model capabilities
-        available_tools = get_available_tools(model_name, 0)
+        # Get conversation length for progressive tool exposure
+        conversation_length = 0
+        if conversation_id:
+            context = context_manager.get_context(conversation_id, model_name)
+            conversation_length = len(context.tool_calls)
+
+        # Get available tools based on model capabilities and conversation context
+        available_tools = get_available_tools(model_name, conversation_length)
 
         # Define tool schemas
         tool_definitions = {
@@ -817,6 +824,27 @@ async def list_tools(model_name: str = "granite3.1-dense:2b"):
                     }
                 }
             },
+            "toggle_schedule": {
+                "type": "function",
+                "function": {
+                    "name": "toggle_schedule",
+                    "description": "Enables or disables a schedule",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "schedule_id": {
+                                "type": "integer",
+                                "description": "The ID of schedule to toggle"
+                            },
+                            "enabled": {
+                                "type": "boolean",
+                                "description": "Whether to enable or disable the schedule"
+                            }
+                        },
+                        "required": ["schedule_id", "enabled"]
+                    }
+                }
+            },
             "list_activity_stream": {
                 "type": "function",
                 "function": {
@@ -836,6 +864,688 @@ async def list_tools(model_name: str = "granite3.1-dense:2b"):
                                 "default": 20
                             }
                         }
+                    }
+                }
+            },
+            "health_check": {
+                "type": "function",
+                "function": {
+                    "name": "health_check",
+                    "description": "Performs a health check on the AWX connection",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {}
+                    }
+                }
+            },
+            "test_connection": {
+                "type": "function",
+                "function": {
+                    "name": "test_connection",
+                    "description": "Tests the connection to the AWX server",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {}
+                    }
+                }
+            },
+            "get_user_by_name": {
+                "type": "function",
+                "function": {
+                    "name": "get_user_by_name",
+                    "description": "Retrieves user details by username",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "username": {
+                                "type": "string",
+                                "description": "The username to search for"
+                            }
+                        },
+                        "required": ["username"]
+                    }
+                }
+            },
+            "update_user": {
+                "type": "function",
+                "function": {
+                    "name": "update_user",
+                    "description": "Updates an existing user in AWX",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "user_id": {
+                                "type": "integer",
+                                "description": "The ID of user to update"
+                            },
+                            "username": {
+                                "type": "string",
+                                "description": "Optional new username"
+                            },
+                            "first_name": {
+                                "type": "string",
+                                "description": "Optional new first name"
+                            },
+                            "last_name": {
+                                "type": "string",
+                                "description": "Optional new last name"
+                            },
+                            "email": {
+                                "type": "string",
+                                "description": "Optional new email"
+                            }
+                        },
+                        "required": ["user_id"]
+                    }
+                }
+            },
+            "delete_user": {
+                "type": "function",
+                "function": {
+                    "name": "delete_user",
+                    "description": "Deletes a user from AWX",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "user_id": {
+                                "type": "integer",
+                                "description": "The ID of user to delete"
+                            }
+                        },
+                        "required": ["user_id"]
+                    }
+                }
+            },
+            "delete_inventory": {
+                "type": "function",
+                "function": {
+                    "name": "delete_inventory",
+                    "description": "Deletes an inventory from AWX",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "inventory_id": {
+                                "type": "integer",
+                                "description": "The ID of inventory to delete"
+                            },
+                            "confirm": {
+                                "type": "boolean",
+                                "description": "Confirmation flag for deletion",
+                                "default": False
+                            },
+                            "dry_run": {
+                                "type": "boolean",
+                                "description": "Perform dry run without actual deletion",
+                                "default": False
+                            }
+                        },
+                        "required": ["inventory_id"]
+                    }
+                }
+            },
+            "get_project": {
+                "type": "function",
+                "function": {
+                    "name": "get_project",
+                    "description": "Retrieves details of a specific project",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "project_id": {
+                                "type": "integer",
+                                "description": "The ID of project to retrieve"
+                            }
+                        },
+                        "required": ["project_id"]
+                    }
+                }
+            },
+            "update_project": {
+                "type": "function",
+                "function": {
+                    "name": "update_project",
+                    "description": "Updates an existing project in AWX",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "project_id": {
+                                "type": "integer",
+                                "description": "The ID of project to update"
+                            },
+                            "name": {
+                                "type": "string",
+                                "description": "Optional new name"
+                            },
+                            "scm_type": {
+                                "type": "string",
+                                "description": "Optional new SCM type"
+                            },
+                            "scm_url": {
+                                "type": "string",
+                                "description": "Optional new SCM URL"
+                            },
+                            "description": {
+                                "type": "string",
+                                "description": "Optional new description"
+                            }
+                        },
+                        "required": ["project_id"]
+                    }
+                }
+            },
+            "delete_project": {
+                "type": "function",
+                "function": {
+                    "name": "delete_project",
+                    "description": "Deletes a project from AWX",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "project_id": {
+                                "type": "integer",
+                                "description": "The ID of project to delete"
+                            },
+                            "confirm": {
+                                "type": "boolean",
+                                "description": "Confirmation flag for deletion",
+                                "default": False
+                            },
+                            "dry_run": {
+                                "type": "boolean",
+                                "description": "Perform dry run without actual deletion",
+                                "default": False
+                            }
+                        },
+                        "required": ["project_id"]
+                    }
+                }
+            },
+            "get_organization": {
+                "type": "function",
+                "function": {
+                    "name": "get_organization",
+                    "description": "Retrieves details of a specific organization",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "organization_id": {
+                                "type": "integer",
+                                "description": "The ID of organization to retrieve"
+                            }
+                        },
+                        "required": ["organization_id"]
+                    }
+                }
+            },
+            "update_organization": {
+                "type": "function",
+                "function": {
+                    "name": "update_organization",
+                    "description": "Updates an existing organization in AWX",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "organization_id": {
+                                "type": "integer",
+                                "description": "The ID of organization to update"
+                            },
+                            "name": {
+                                "type": "string",
+                                "description": "Optional new name"
+                            },
+                            "description": {
+                                "type": "string",
+                                "description": "Optional new description"
+                            }
+                        },
+                        "required": ["organization_id"]
+                    }
+                }
+            },
+            "delete_organization": {
+                "type": "function",
+                "function": {
+                    "name": "delete_organization",
+                    "description": "Deletes an organization from AWX",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "organization_id": {
+                                "type": "integer",
+                                "description": "The ID of organization to delete"
+                            }
+                        },
+                        "required": ["organization_id"]
+                    }
+                }
+            },
+            "update_schedule": {
+                "type": "function",
+                "function": {
+                    "name": "update_schedule",
+                    "description": "Updates an existing schedule",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "schedule_id": {
+                                "type": "integer",
+                                "description": "The ID of schedule to update"
+                            },
+                            "name": {
+                                "type": "string",
+                                "description": "Optional new name"
+                            },
+                            "rrule": {
+                                "type": "string",
+                                "description": "Optional new RRULE string"
+                            },
+                            "enabled": {
+                                "type": "boolean",
+                                "description": "Optional enabled/disabled status"
+                            }
+                        },
+                        "required": ["schedule_id"]
+                    }
+                }
+            },
+            "delete_schedule": {
+                "type": "function",
+                "function": {
+                    "name": "delete_schedule",
+                    "description": "Deletes a schedule from AWX",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "schedule_id": {
+                                "type": "integer",
+                                "description": "The ID of schedule to delete"
+                            }
+                        },
+                        "required": ["schedule_id"]
+                    }
+                }
+            },
+            "list_credentials": {
+                "type": "function",
+                "function": {
+                    "name": "list_credentials",
+                    "description": "Lists credentials in AWX",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {}
+                    }
+                }
+            },
+            "get_credential": {
+                "type": "function",
+                "function": {
+                    "name": "get_credential",
+                    "description": "Retrieves details of a specific credential",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "credential_id": {
+                                "type": "integer",
+                                "description": "The ID of credential to retrieve"
+                            }
+                        },
+                        "required": ["credential_id"]
+                    }
+                }
+            },
+            "create_credential": {
+                "type": "function",
+                "function": {
+                    "name": "create_credential",
+                    "description": "Creates a new credential in AWX",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "name": {
+                                "type": "string",
+                                "description": "Name of the credential"
+                            },
+                            "credential_type": {
+                                "type": "integer",
+                                "description": "Type ID of the credential"
+                            },
+                            "inputs": {
+                                "type": "object",
+                                "description": "Credential inputs"
+                            }
+                        },
+                        "required": ["name", "credential_type", "inputs"]
+                    }
+                }
+            },
+            "update_credential": {
+                "type": "function",
+                "function": {
+                    "name": "update_credential",
+                    "description": "Updates an existing credential in AWX",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "credential_id": {
+                                "type": "integer",
+                                "description": "The ID of credential to update"
+                            },
+                            "name": {
+                                "type": "string",
+                                "description": "Optional new name"
+                            },
+                            "inputs": {
+                                "type": "object",
+                                "description": "Optional new inputs"
+                            }
+                        },
+                        "required": ["credential_id"]
+                    }
+                }
+            },
+            "delete_credential": {
+                "type": "function",
+                "function": {
+                    "name": "delete_credential",
+                    "description": "Deletes a credential from AWX",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "credential_id": {
+                                "type": "integer",
+                                "description": "The ID of credential to delete"
+                            }
+                        },
+                        "required": ["credential_id"]
+                    }
+                }
+            },
+            "list_workflow_job_templates": {
+                "type": "function",
+                "function": {
+                    "name": "list_workflow_job_templates",
+                    "description": "Lists workflow job templates in AWX",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {}
+                    }
+                }
+            },
+            "create_workflow_job_template": {
+                "type": "function",
+                "function": {
+                    "name": "create_workflow_job_template",
+                    "description": "Creates a new workflow job template in AWX",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "name": {
+                                "type": "string",
+                                "description": "Name of the workflow job template"
+                            },
+                            "description": {
+                                "type": "string",
+                                "description": "Optional description"
+                            }
+                        },
+                        "required": ["name"]
+                    }
+                }
+            },
+            "launch_workflow_job_template": {
+                "type": "function",
+                "function": {
+                    "name": "launch_workflow_job_template",
+                    "description": "Launches a workflow job template in AWX",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "workflow_job_template_id": {
+                                "type": "integer",
+                                "description": "The ID of workflow job template to launch"
+                            },
+                            "extra_vars": {
+                                "type": "object",
+                                "description": "Optional extra variables"
+                            }
+                        },
+                        "required": ["workflow_job_template_id"]
+                    }
+                }
+            },
+            "update_workflow_job_template": {
+                "type": "function",
+                "function": {
+                    "name": "update_workflow_job_template",
+                    "description": "Updates a workflow job template in AWX",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "workflow_job_template_id": {
+                                "type": "integer",
+                                "description": "The ID of workflow job template to update"
+                            },
+                            "name": {
+                                "type": "string",
+                                "description": "Optional new name"
+                            },
+                            "description": {
+                                "type": "string",
+                                "description": "Optional new description"
+                            }
+                        },
+                        "required": ["workflow_job_template_id"]
+                    }
+                }
+            },
+            "delete_workflow_job_template": {
+                "type": "function",
+                "function": {
+                    "name": "delete_workflow_job_template",
+                    "description": "Deletes a workflow job template in AWX",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "workflow_job_template_id": {
+                                "type": "integer",
+                                "description": "The ID of workflow job template to delete"
+                            }
+                        },
+                        "required": ["workflow_job_template_id"]
+                    }
+                }
+            },
+            "list_notifications": {
+                "type": "function",
+                "function": {
+                    "name": "list_notifications",
+                    "description": "Lists notification templates in AWX",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {}
+                    }
+                }
+            },
+            "get_notification": {
+                "type": "function",
+                "function": {
+                    "name": "get_notification",
+                    "description": "Retrieves details of a specific notification template",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "notification_id": {
+                                "type": "integer",
+                                "description": "The ID of notification template to retrieve"
+                            }
+                        },
+                        "required": ["notification_id"]
+                    }
+                }
+            },
+            "create_notification": {
+                "type": "function",
+                "function": {
+                    "name": "create_notification",
+                    "description": "Creates a new notification template in AWX",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "name": {
+                                "type": "string",
+                                "description": "Name of the notification template"
+                            },
+                            "notification_type": {
+                                "type": "string",
+                                "description": "Type of notification"
+                            },
+                            "notification_configuration": {
+                                "type": "object",
+                                "description": "Notification configuration"
+                            }
+                        },
+                        "required": ["name", "notification_type", "notification_configuration"]
+                    }
+                }
+            },
+            "update_notification": {
+                "type": "function",
+                "function": {
+                    "name": "update_notification",
+                    "description": "Updates a notification template in AWX",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "notification_id": {
+                                "type": "integer",
+                                "description": "The ID of notification template to update"
+                            },
+                            "name": {
+                                "type": "string",
+                                "description": "Optional new name"
+                            },
+                            "notification_configuration": {
+                                "type": "object",
+                                "description": "Optional new configuration"
+                            }
+                        },
+                        "required": ["notification_id"]
+                    }
+                }
+            },
+            "delete_notification": {
+                "type": "function",
+                "function": {
+                    "name": "delete_notification",
+                    "description": "Deletes a notification template from AWX",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "notification_id": {
+                                "type": "integer",
+                                "description": "The ID of notification template to delete"
+                            }
+                        },
+                        "required": ["notification_id"]
+                    }
+                }
+            },
+            "list_instance_groups": {
+                "type": "function",
+                "function": {
+                    "name": "list_instance_groups",
+                    "description": "Lists instance groups in AWX",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {}
+                    }
+                }
+            },
+            "get_instance_group": {
+                "type": "function",
+                "function": {
+                    "name": "get_instance_group",
+                    "description": "Retrieves details of a specific instance group",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "instance_group_id": {
+                                "type": "integer",
+                                "description": "The ID of instance group to retrieve"
+                            }
+                        },
+                        "required": ["instance_group_id"]
+                    }
+                }
+            },
+            "create_instance_group": {
+                "type": "function",
+                "function": {
+                    "name": "create_instance_group",
+                    "description": "Creates a new instance group in AWX",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "name": {
+                                "type": "string",
+                                "description": "Name of the instance group"
+                            },
+                            "policy_instance_percentage": {
+                                "type": "integer",
+                                "description": "Optional policy instance percentage"
+                            },
+                            "policy_instance_minimum": {
+                                "type": "integer",
+                                "description": "Optional policy instance minimum"
+                            }
+                        },
+                        "required": ["name"]
+                    }
+                }
+            },
+            "update_instance_group": {
+                "type": "function",
+                "function": {
+                    "name": "update_instance_group",
+                    "description": "Updates an instance group in AWX",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "instance_group_id": {
+                                "type": "integer",
+                                "description": "The ID of instance group to update"
+                            },
+                            "name": {
+                                "type": "string",
+                                "description": "Optional new name"
+                            },
+                            "policy_instance_percentage": {
+                                "type": "integer",
+                                "description": "Optional new policy percentage"
+                            },
+                            "policy_instance_minimum": {
+                                "type": "integer",
+                                "description": "Optional new policy minimum"
+                            }
+                        },
+                        "required": ["instance_group_id"]
+                    }
+                }
+            },
+            "delete_instance_group": {
+                "type": "function",
+                "function": {
+                    "name": "delete_instance_group",
+                    "description": "Deletes an instance group from AWX",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "instance_group_id": {
+                                "type": "integer",
+                                "description": "The ID of instance group to delete"
+                            }
+                        },
+                        "required": ["instance_group_id"]
                     }
                 }
             }

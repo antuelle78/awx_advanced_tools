@@ -28,7 +28,7 @@ class DummyChatCompletion:
 
 # Add dummy openai to sys.modules
 sys.modules["openai"] = type(sys)('openai')
-sys.modules["openai"].ChatCompletion = DummyChatCompletion
+sys.modules["openai"].ChatCompletion = DummyChatCompletion()
 
 # Create a dummy ollama module
 class DummyAsyncClient:

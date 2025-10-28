@@ -1,6 +1,6 @@
 import httpx
 import logging
-from typing import Optional
+from typing import Optional, Dict, Any
 from app.config import settings
 from fastapi import HTTPException
 
@@ -68,6 +68,25 @@ class AWXClient:
         """Enable or disable a schedule."""
         url = f"{self.base_url}/api/v2/schedules/{schedule_id}/"
         payload = {"enabled": enabled}
+        resp = await self._request("PATCH", url, json=payload)
+        return resp.json()
+
+    async def update_schedule(
+        self,
+        schedule_id: int,
+        name: Optional[str] = None,
+        rrule: Optional[str] = None,
+        enabled: Optional[bool] = None,
+    ) -> dict:
+        """Update a schedule."""
+        url = f"{self.base_url}/api/v2/schedules/{schedule_id}/"
+        payload: Dict[str, Any] = {}
+        if name:
+            payload["name"] = name
+        if rrule:
+            payload["rrule"] = rrule
+        if enabled is not None:
+            payload["enabled"] = enabled
         resp = await self._request("PATCH", url, json=payload)
         return resp.json()
 
@@ -492,6 +511,13 @@ class AWXClient:
             resp = await self._request("POST", url, params=params)
         return resp.json()
 
+    async def list_workflow_job_templates(self):
+        url = f"{self.base_url}/api/v2/workflow_job_templates/"
+
+        resp = await self._request("GET", url)
+
+        return resp.json()
+
     async def create_workflow_job_template(
         self, name: str, description: Optional[str] = None
     ):
@@ -546,11 +572,11 @@ class AWXClient:
             return {"status": "deleted", "id": workflow_job_template_id}
 
     async def launch_workflow_job_template(
-        self, workflow_job_template_id: int, extra_vars: Optional[dict] = None
+        self, workflow_job_template_id: int, extra_vars: Optional[Dict[str, Any]] = None
     ):
         url = f"{self.base_url}/api/v2/workflow_job_templates/{workflow_job_template_id}/launch/"
 
-        payload = {}
+        payload: Dict[str, Any] = {}
 
         if extra_vars:
             payload["extra_vars"] = extra_vars

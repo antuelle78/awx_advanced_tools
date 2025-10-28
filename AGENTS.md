@@ -6,9 +6,10 @@
 - **Lint**: `ruff check . --fix`
 - **Format**: `ruff format .`
 - **Type-check**: `mypy --explicit-package-bases --ignore-missing-imports app`
+- **Security scan**: `safety scan && bandit -r app/`
 - **Run all tests**: `pytest`
-- **Run a single test**: `pytest tests/test_<module>.py -v`
-- **Run tests matching pattern**: `pytest -k <pattern>`
+- **Run single test**: `pytest tests/test_<module>.py -v`
+- **Run tests by pattern**: `pytest -k <pattern>`
 - **Coverage**: `pytest --cov=app --cov-report term-missing`
 
 ## Style Guidelines
