@@ -182,8 +182,8 @@ class PromptOptimizer:
 class Tools:
     class Valves(BaseModel):
         mcp_server_url: str = Field(
-            default="http://localhost:31005",
-            description="The base URL of MCP server. For K3s deployment, use the NodePort (default: http://localhost:31005). For internal cluster access, use http://gateway.default.svc.cluster.local.",
+            default="http://10.2.0.150:31005",
+            description="The base URL of MCP server. For K3s deployment, use the NodePort (default: http://10.2.0.150:31005). For internal cluster access, use http://gateway.default.svc.cluster.local.",
         )
         mcp_username: str = Field(
             default="openwebui", description="Username for MCP server authentication."
