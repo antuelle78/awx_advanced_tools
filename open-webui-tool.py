@@ -1,6 +1,6 @@
 """
 title: 'Ansible AWX Controller'
-author: 'Your Name'
+author: 'Michael Nelson'
 description: 'A tool to interact with Ansible AWX through the MCP Server.'
 requirements:
   - 'httpx'
