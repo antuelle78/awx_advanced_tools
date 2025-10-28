@@ -378,7 +378,9 @@ class AWXClient:
 
         users = resp.json()
         if username:
-            users["results"] = [u for u in users.get("results", []) if u["username"] == username]
+            users["results"] = [
+                u for u in users.get("results", []) if u["username"] == username
+            ]
             users["count"] = len(users["results"])
         return users
 
@@ -495,12 +497,23 @@ class AWXClient:
         return resp.json()
 
     async def create_job_template(
-        self, name: str, inventory: int, project: int, playbook: str, description: Optional[str] = None, extra_vars: Optional[dict] = None
+        self,
+        name: str,
+        inventory: int,
+        project: int,
+        playbook: str,
+        description: Optional[str] = None,
+        extra_vars: Optional[dict] = None,
     ):
         """Create a new job template."""
         url = f"{self.base_url}/api/v2/job_templates/"
-        params = {"name": name, "inventory": inventory, "project": project, "playbook": playbook}
-        payload = {}
+        params = {
+            "name": name,
+            "inventory": inventory,
+            "project": project,
+            "playbook": playbook,
+        }
+        payload: Dict[str, Any] = {}
         if description:
             payload["description"] = description
         if extra_vars:
@@ -556,7 +569,10 @@ class AWXClient:
 
     async def delete_workflow_job_template(self, workflow_job_template_id: int):
         """Delete a workflow job template."""
-        if not isinstance(workflow_job_template_id, int) or workflow_job_template_id <= 0:
+        if (
+            not isinstance(workflow_job_template_id, int)
+            or workflow_job_template_id <= 0
+        ):
             raise ValueError("workflow_job_template_id must be a positive integer")
 
         url = (

@@ -58,13 +58,17 @@ class PromptService:
         schema = get_schema("AWX", action)
         if schema:
             import jsonschema
+
             try:
                 jsonschema.validate(result, schema)
             except jsonschema.ValidationError as exc:  # pragma: no cover
                 raise ValueError(f"LLM payload does not match schema: {exc}") from exc
         else:
             import logging
-            logging.warning(f"No schema found for action '{action}', skipping validation")
+
+            logging.warning(
+                f"No schema found for action '{action}', skipping validation"
+            )
 
         # 6. Cache & return
         _CACHE[key] = result

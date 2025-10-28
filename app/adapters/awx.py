@@ -56,6 +56,7 @@ class OrganizationUpdate(BaseModel):
 async def launch_job_template(template_id: int, extra_vars: dict | None = None):
     return await awx_client.launch_job_template(template_id, extra_vars)
 
+
 @router.post("/job_templates/")
 async def create_job_template(
     name: str,
@@ -65,7 +66,10 @@ async def create_job_template(
     description: str | None = None,
     extra_vars: dict | None = None,
 ):
-    return await awx_client.create_job_template(name, inventory, project, playbook, description, extra_vars)
+    return await awx_client.create_job_template(
+        name, inventory, project, playbook, description, extra_vars
+    )
+
 
 @router.get("/hosts/")
 async def list_hosts(inventory: Optional[int] = None):
@@ -73,6 +77,7 @@ async def list_hosts(inventory: Optional[int] = None):
         return await awx_client.list_hosts(inventory)
     except httpx.HTTPStatusError as exc:  # pragma: no cover
         raise HTTPException(status_code=exc.response.status_code, detail=str(exc))
+
 
 @router.post("/hosts/")
 async def create_host(host_data: dict):
@@ -372,7 +377,9 @@ async def delete_organization(organization_id: int):
 
 # Tools endpoint for LLM discovery
 @router.get("/tools")
-async def list_tools(model_name: str = "granite3.1-dense:2b", conversation_id: Optional[str] = None):
+async def list_tools(
+    model_name: str = "granite3.1-dense:2b", conversation_id: Optional[str] = None
+):
     """List available tools for LLM function calling."""
     try:
         from app.model_capabilities import get_available_tools
@@ -399,11 +406,11 @@ async def list_tools(model_name: str = "granite3.1-dense:2b", conversation_id: O
                         "properties": {
                             "name": {
                                 "type": "string",
-                                "description": "Optional name to filter job templates"
+                                "description": "Optional name to filter job templates",
                             }
-                        }
-                    }
-                }
+                        },
+                    },
+                },
             },
             "launch_job_template": {
                 "type": "function",
@@ -415,16 +422,16 @@ async def list_tools(model_name: str = "granite3.1-dense:2b", conversation_id: O
                         "properties": {
                             "template_id": {
                                 "type": "integer",
-                                "description": "The ID of job template to launch"
+                                "description": "The ID of job template to launch",
                             },
                             "extra_vars": {
                                 "type": "object",
-                                "description": "Optional extra variables to pass to the job"
-                            }
+                                "description": "Optional extra variables to pass to the job",
+                            },
                         },
-                        "required": ["template_id"]
-                    }
-                }
+                        "required": ["template_id"],
+                    },
+                },
             },
             "create_job_template": {
                 "type": "function",
@@ -436,32 +443,32 @@ async def list_tools(model_name: str = "granite3.1-dense:2b", conversation_id: O
                         "properties": {
                             "name": {
                                 "type": "string",
-                                "description": "Name of the job template"
+                                "description": "Name of the job template",
                             },
                             "inventory": {
                                 "type": "integer",
-                                "description": "Numeric ID of the inventory (resolve from list_inventories)"
+                                "description": "Numeric ID of the inventory (resolve from list_inventories)",
                             },
                             "project": {
                                 "type": "integer",
-                                "description": "Numeric ID of the project (resolve from list_projects)"
+                                "description": "Numeric ID of the project (resolve from list_projects)",
                             },
                             "playbook": {
                                 "type": "string",
-                                "description": "Path to the playbook file in the project"
+                                "description": "Path to the playbook file in the project",
                             },
                             "description": {
                                 "type": "string",
-                                "description": "Optional description for the job template"
+                                "description": "Optional description for the job template",
                             },
                             "extra_vars": {
                                 "type": "object",
-                                "description": "Optional extra variables for the job template"
-                            }
+                                "description": "Optional extra variables for the job template",
+                            },
                         },
-                        "required": ["name", "inventory", "project", "playbook"]
-                    }
-                }
+                        "required": ["name", "inventory", "project", "playbook"],
+                    },
+                },
             },
             "get_job": {
                 "type": "function",
@@ -473,12 +480,12 @@ async def list_tools(model_name: str = "granite3.1-dense:2b", conversation_id: O
                         "properties": {
                             "job_id": {
                                 "type": "integer",
-                                "description": "The ID of job to retrieve"
+                                "description": "The ID of job to retrieve",
                             }
                         },
-                        "required": ["job_id"]
-                    }
-                }
+                        "required": ["job_id"],
+                    },
+                },
             },
             "list_jobs": {
                 "type": "function",
@@ -491,11 +498,11 @@ async def list_tools(model_name: str = "granite3.1-dense:2b", conversation_id: O
                             "page": {
                                 "type": "integer",
                                 "description": "The page number for pagination",
-                                "default": 1
+                                "default": 1,
                             }
-                        }
-                    }
-                }
+                        },
+                    },
+                },
             },
             "list_inventories": {
                 "type": "function",
@@ -507,11 +514,11 @@ async def list_tools(model_name: str = "granite3.1-dense:2b", conversation_id: O
                         "properties": {
                             "name": {
                                 "type": "string",
-                                "description": "Optional name to filter inventories"
+                                "description": "Optional name to filter inventories",
                             }
-                        }
-                    }
-                }
+                        },
+                    },
+                },
             },
             "create_inventory": {
                 "type": "function",
@@ -523,20 +530,20 @@ async def list_tools(model_name: str = "granite3.1-dense:2b", conversation_id: O
                         "properties": {
                             "name": {
                                 "type": "string",
-                                "description": "Name of the inventory"
+                                "description": "Name of the inventory",
                             },
                             "organization": {
                                 "type": "integer",
-                                "description": "ID of the organization"
+                                "description": "ID of the organization",
                             },
                             "variables": {
                                 "type": "object",
-                                "description": "Optional variables for the inventory"
-                            }
+                                "description": "Optional variables for the inventory",
+                            },
                         },
-                        "required": ["name", "organization"]
-                    }
-                }
+                        "required": ["name", "organization"],
+                    },
+                },
             },
             "get_inventory": {
                 "type": "function",
@@ -548,12 +555,12 @@ async def list_tools(model_name: str = "granite3.1-dense:2b", conversation_id: O
                         "properties": {
                             "inventory_id": {
                                 "type": "integer",
-                                "description": "The ID of inventory to retrieve"
+                                "description": "The ID of inventory to retrieve",
                             }
                         },
-                        "required": ["inventory_id"]
-                    }
-                }
+                        "required": ["inventory_id"],
+                    },
+                },
             },
             "sync_inventory": {
                 "type": "function",
@@ -565,23 +572,20 @@ async def list_tools(model_name: str = "granite3.1-dense:2b", conversation_id: O
                         "properties": {
                             "inventory_id": {
                                 "type": "integer",
-                                "description": "The ID of inventory to sync"
+                                "description": "The ID of inventory to sync",
                             }
                         },
-                        "required": ["inventory_id"]
-                    }
-                }
+                        "required": ["inventory_id"],
+                    },
+                },
             },
             "list_users": {
                 "type": "function",
                 "function": {
                     "name": "list_users",
                     "description": "Lists all users in AWX",
-                    "parameters": {
-                        "type": "object",
-                        "properties": {}
-                    }
-                }
+                    "parameters": {"type": "object", "properties": {}},
+                },
             },
             "create_user": {
                 "type": "function",
@@ -593,28 +597,28 @@ async def list_tools(model_name: str = "granite3.1-dense:2b", conversation_id: O
                         "properties": {
                             "username": {
                                 "type": "string",
-                                "description": "Username for the new user"
+                                "description": "Username for the new user",
                             },
                             "password": {
                                 "type": "string",
-                                "description": "Password for the new user"
+                                "description": "Password for the new user",
                             },
                             "first_name": {
                                 "type": "string",
-                                "description": "Optional first name"
+                                "description": "Optional first name",
                             },
                             "last_name": {
                                 "type": "string",
-                                "description": "Optional last name"
+                                "description": "Optional last name",
                             },
                             "email": {
                                 "type": "string",
-                                "description": "Optional email address"
-                            }
+                                "description": "Optional email address",
+                            },
                         },
-                        "required": ["username", "password"]
-                    }
-                }
+                        "required": ["username", "password"],
+                    },
+                },
             },
             "get_user": {
                 "type": "function",
@@ -626,12 +630,12 @@ async def list_tools(model_name: str = "granite3.1-dense:2b", conversation_id: O
                         "properties": {
                             "user_id": {
                                 "type": "integer",
-                                "description": "The ID of user to retrieve"
+                                "description": "The ID of user to retrieve",
                             }
                         },
-                        "required": ["user_id"]
-                    }
-                }
+                        "required": ["user_id"],
+                    },
+                },
             },
             "list_projects": {
                 "type": "function",
@@ -643,11 +647,11 @@ async def list_tools(model_name: str = "granite3.1-dense:2b", conversation_id: O
                         "properties": {
                             "name": {
                                 "type": "string",
-                                "description": "Optional name to filter projects"
+                                "description": "Optional name to filter projects",
                             }
-                        }
-                    }
-                }
+                        },
+                    },
+                },
             },
             "create_project": {
                 "type": "function",
@@ -659,24 +663,24 @@ async def list_tools(model_name: str = "granite3.1-dense:2b", conversation_id: O
                         "properties": {
                             "name": {
                                 "type": "string",
-                                "description": "Name of the project"
+                                "description": "Name of the project",
                             },
                             "scm_type": {
                                 "type": "string",
-                                "description": "Type of source control (git, svn, etc.)"
+                                "description": "Type of source control (git, svn, etc.)",
                             },
                             "scm_url": {
                                 "type": "string",
-                                "description": "URL of the source repository"
+                                "description": "URL of the source repository",
                             },
                             "description": {
                                 "type": "string",
-                                "description": "Optional description"
-                            }
+                                "description": "Optional description",
+                            },
                         },
-                        "required": ["name", "scm_type", "scm_url"]
-                    }
-                }
+                        "required": ["name", "scm_type", "scm_url"],
+                    },
+                },
             },
             "sync_project": {
                 "type": "function",
@@ -688,12 +692,12 @@ async def list_tools(model_name: str = "granite3.1-dense:2b", conversation_id: O
                         "properties": {
                             "project_id": {
                                 "type": "integer",
-                                "description": "The ID of project to sync"
+                                "description": "The ID of project to sync",
                             }
                         },
-                        "required": ["project_id"]
-                    }
-                }
+                        "required": ["project_id"],
+                    },
+                },
             },
             "list_organizations": {
                 "type": "function",
@@ -705,11 +709,11 @@ async def list_tools(model_name: str = "granite3.1-dense:2b", conversation_id: O
                         "properties": {
                             "name": {
                                 "type": "string",
-                                "description": "Optional name to filter organizations"
+                                "description": "Optional name to filter organizations",
                             }
-                        }
-                    }
-                }
+                        },
+                    },
+                },
             },
             "create_organization": {
                 "type": "function",
@@ -721,16 +725,16 @@ async def list_tools(model_name: str = "granite3.1-dense:2b", conversation_id: O
                         "properties": {
                             "name": {
                                 "type": "string",
-                                "description": "Name of the organization"
+                                "description": "Name of the organization",
                             },
                             "description": {
                                 "type": "string",
-                                "description": "Optional description"
-                            }
+                                "description": "Optional description",
+                            },
                         },
-                        "required": ["name"]
-                    }
-                }
+                        "required": ["name"],
+                    },
+                },
             },
             "list_hosts": {
                 "type": "function",
@@ -742,11 +746,11 @@ async def list_tools(model_name: str = "granite3.1-dense:2b", conversation_id: O
                         "properties": {
                             "inventory": {
                                 "type": "integer",
-                                "description": "Optional inventory ID to filter hosts"
+                                "description": "Optional inventory ID to filter hosts",
                             }
-                        }
-                    }
-                }
+                        },
+                    },
+                },
             },
             "create_host": {
                 "type": "function",
@@ -758,12 +762,12 @@ async def list_tools(model_name: str = "granite3.1-dense:2b", conversation_id: O
                         "properties": {
                             "host_data": {
                                 "type": "object",
-                                "description": "Host details including name, inventory, etc."
+                                "description": "Host details including name, inventory, etc.",
                             }
                         },
-                        "required": ["host_data"]
-                    }
-                }
+                        "required": ["host_data"],
+                    },
+                },
             },
             "list_schedules": {
                 "type": "function",
@@ -775,12 +779,12 @@ async def list_tools(model_name: str = "granite3.1-dense:2b", conversation_id: O
                         "properties": {
                             "template_id": {
                                 "type": "integer",
-                                "description": "The ID of job template to list schedules for"
+                                "description": "The ID of job template to list schedules for",
                             }
                         },
-                        "required": ["template_id"]
-                    }
-                }
+                        "required": ["template_id"],
+                    },
+                },
             },
             "create_schedule": {
                 "type": "function",
@@ -792,20 +796,20 @@ async def list_tools(model_name: str = "granite3.1-dense:2b", conversation_id: O
                         "properties": {
                             "template_id": {
                                 "type": "integer",
-                                "description": "The ID of job template to create schedule for"
+                                "description": "The ID of job template to create schedule for",
                             },
                             "name": {
                                 "type": "string",
-                                "description": "Name of the schedule"
+                                "description": "Name of the schedule",
                             },
                             "rrule": {
                                 "type": "string",
-                                "description": "RRULE string defining the schedule recurrence"
-                            }
+                                "description": "RRULE string defining the schedule recurrence",
+                            },
                         },
-                        "required": ["template_id", "name", "rrule"]
-                    }
-                }
+                        "required": ["template_id", "name", "rrule"],
+                    },
+                },
             },
             "get_schedule": {
                 "type": "function",
@@ -817,12 +821,12 @@ async def list_tools(model_name: str = "granite3.1-dense:2b", conversation_id: O
                         "properties": {
                             "schedule_id": {
                                 "type": "integer",
-                                "description": "The ID of schedule to retrieve"
+                                "description": "The ID of schedule to retrieve",
                             }
                         },
-                        "required": ["schedule_id"]
-                    }
-                }
+                        "required": ["schedule_id"],
+                    },
+                },
             },
             "toggle_schedule": {
                 "type": "function",
@@ -834,16 +838,16 @@ async def list_tools(model_name: str = "granite3.1-dense:2b", conversation_id: O
                         "properties": {
                             "schedule_id": {
                                 "type": "integer",
-                                "description": "The ID of schedule to toggle"
+                                "description": "The ID of schedule to toggle",
                             },
                             "enabled": {
                                 "type": "boolean",
-                                "description": "Whether to enable or disable the schedule"
-                            }
+                                "description": "Whether to enable or disable the schedule",
+                            },
                         },
-                        "required": ["schedule_id", "enabled"]
-                    }
-                }
+                        "required": ["schedule_id", "enabled"],
+                    },
+                },
             },
             "list_activity_stream": {
                 "type": "function",
@@ -856,38 +860,32 @@ async def list_tools(model_name: str = "granite3.1-dense:2b", conversation_id: O
                             "page": {
                                 "type": "integer",
                                 "description": "The page number",
-                                "default": 1
+                                "default": 1,
                             },
                             "page_size": {
                                 "type": "integer",
                                 "description": "The number of items per page",
-                                "default": 20
-                            }
-                        }
-                    }
-                }
+                                "default": 20,
+                            },
+                        },
+                    },
+                },
             },
             "health_check": {
                 "type": "function",
                 "function": {
                     "name": "health_check",
                     "description": "Performs a health check on the AWX connection",
-                    "parameters": {
-                        "type": "object",
-                        "properties": {}
-                    }
-                }
+                    "parameters": {"type": "object", "properties": {}},
+                },
             },
             "test_connection": {
                 "type": "function",
                 "function": {
                     "name": "test_connection",
                     "description": "Tests the connection to the AWX server",
-                    "parameters": {
-                        "type": "object",
-                        "properties": {}
-                    }
-                }
+                    "parameters": {"type": "object", "properties": {}},
+                },
             },
             "get_user_by_name": {
                 "type": "function",
@@ -899,12 +897,12 @@ async def list_tools(model_name: str = "granite3.1-dense:2b", conversation_id: O
                         "properties": {
                             "username": {
                                 "type": "string",
-                                "description": "The username to search for"
+                                "description": "The username to search for",
                             }
                         },
-                        "required": ["username"]
-                    }
-                }
+                        "required": ["username"],
+                    },
+                },
             },
             "update_user": {
                 "type": "function",
@@ -916,28 +914,28 @@ async def list_tools(model_name: str = "granite3.1-dense:2b", conversation_id: O
                         "properties": {
                             "user_id": {
                                 "type": "integer",
-                                "description": "The ID of user to update"
+                                "description": "The ID of user to update",
                             },
                             "username": {
                                 "type": "string",
-                                "description": "Optional new username"
+                                "description": "Optional new username",
                             },
                             "first_name": {
                                 "type": "string",
-                                "description": "Optional new first name"
+                                "description": "Optional new first name",
                             },
                             "last_name": {
                                 "type": "string",
-                                "description": "Optional new last name"
+                                "description": "Optional new last name",
                             },
                             "email": {
                                 "type": "string",
-                                "description": "Optional new email"
-                            }
+                                "description": "Optional new email",
+                            },
                         },
-                        "required": ["user_id"]
-                    }
-                }
+                        "required": ["user_id"],
+                    },
+                },
             },
             "delete_user": {
                 "type": "function",
@@ -949,12 +947,12 @@ async def list_tools(model_name: str = "granite3.1-dense:2b", conversation_id: O
                         "properties": {
                             "user_id": {
                                 "type": "integer",
-                                "description": "The ID of user to delete"
+                                "description": "The ID of user to delete",
                             }
                         },
-                        "required": ["user_id"]
-                    }
-                }
+                        "required": ["user_id"],
+                    },
+                },
             },
             "delete_inventory": {
                 "type": "function",
@@ -966,22 +964,22 @@ async def list_tools(model_name: str = "granite3.1-dense:2b", conversation_id: O
                         "properties": {
                             "inventory_id": {
                                 "type": "integer",
-                                "description": "The ID of inventory to delete"
+                                "description": "The ID of inventory to delete",
                             },
                             "confirm": {
                                 "type": "boolean",
                                 "description": "Confirmation flag for deletion",
-                                "default": False
+                                "default": False,
                             },
                             "dry_run": {
                                 "type": "boolean",
                                 "description": "Perform dry run without actual deletion",
-                                "default": False
-                            }
+                                "default": False,
+                            },
                         },
-                        "required": ["inventory_id"]
-                    }
-                }
+                        "required": ["inventory_id"],
+                    },
+                },
             },
             "get_project": {
                 "type": "function",
@@ -993,12 +991,12 @@ async def list_tools(model_name: str = "granite3.1-dense:2b", conversation_id: O
                         "properties": {
                             "project_id": {
                                 "type": "integer",
-                                "description": "The ID of project to retrieve"
+                                "description": "The ID of project to retrieve",
                             }
                         },
-                        "required": ["project_id"]
-                    }
-                }
+                        "required": ["project_id"],
+                    },
+                },
             },
             "update_project": {
                 "type": "function",
@@ -1010,28 +1008,28 @@ async def list_tools(model_name: str = "granite3.1-dense:2b", conversation_id: O
                         "properties": {
                             "project_id": {
                                 "type": "integer",
-                                "description": "The ID of project to update"
+                                "description": "The ID of project to update",
                             },
                             "name": {
                                 "type": "string",
-                                "description": "Optional new name"
+                                "description": "Optional new name",
                             },
                             "scm_type": {
                                 "type": "string",
-                                "description": "Optional new SCM type"
+                                "description": "Optional new SCM type",
                             },
                             "scm_url": {
                                 "type": "string",
-                                "description": "Optional new SCM URL"
+                                "description": "Optional new SCM URL",
                             },
                             "description": {
                                 "type": "string",
-                                "description": "Optional new description"
-                            }
+                                "description": "Optional new description",
+                            },
                         },
-                        "required": ["project_id"]
-                    }
-                }
+                        "required": ["project_id"],
+                    },
+                },
             },
             "delete_project": {
                 "type": "function",
@@ -1043,22 +1041,22 @@ async def list_tools(model_name: str = "granite3.1-dense:2b", conversation_id: O
                         "properties": {
                             "project_id": {
                                 "type": "integer",
-                                "description": "The ID of project to delete"
+                                "description": "The ID of project to delete",
                             },
                             "confirm": {
                                 "type": "boolean",
                                 "description": "Confirmation flag for deletion",
-                                "default": False
+                                "default": False,
                             },
                             "dry_run": {
                                 "type": "boolean",
                                 "description": "Perform dry run without actual deletion",
-                                "default": False
-                            }
+                                "default": False,
+                            },
                         },
-                        "required": ["project_id"]
-                    }
-                }
+                        "required": ["project_id"],
+                    },
+                },
             },
             "get_organization": {
                 "type": "function",
@@ -1070,12 +1068,12 @@ async def list_tools(model_name: str = "granite3.1-dense:2b", conversation_id: O
                         "properties": {
                             "organization_id": {
                                 "type": "integer",
-                                "description": "The ID of organization to retrieve"
+                                "description": "The ID of organization to retrieve",
                             }
                         },
-                        "required": ["organization_id"]
-                    }
-                }
+                        "required": ["organization_id"],
+                    },
+                },
             },
             "update_organization": {
                 "type": "function",
@@ -1087,20 +1085,20 @@ async def list_tools(model_name: str = "granite3.1-dense:2b", conversation_id: O
                         "properties": {
                             "organization_id": {
                                 "type": "integer",
-                                "description": "The ID of organization to update"
+                                "description": "The ID of organization to update",
                             },
                             "name": {
                                 "type": "string",
-                                "description": "Optional new name"
+                                "description": "Optional new name",
                             },
                             "description": {
                                 "type": "string",
-                                "description": "Optional new description"
-                            }
+                                "description": "Optional new description",
+                            },
                         },
-                        "required": ["organization_id"]
-                    }
-                }
+                        "required": ["organization_id"],
+                    },
+                },
             },
             "delete_organization": {
                 "type": "function",
@@ -1112,12 +1110,12 @@ async def list_tools(model_name: str = "granite3.1-dense:2b", conversation_id: O
                         "properties": {
                             "organization_id": {
                                 "type": "integer",
-                                "description": "The ID of organization to delete"
+                                "description": "The ID of organization to delete",
                             }
                         },
-                        "required": ["organization_id"]
-                    }
-                }
+                        "required": ["organization_id"],
+                    },
+                },
             },
             "update_schedule": {
                 "type": "function",
@@ -1129,24 +1127,24 @@ async def list_tools(model_name: str = "granite3.1-dense:2b", conversation_id: O
                         "properties": {
                             "schedule_id": {
                                 "type": "integer",
-                                "description": "The ID of schedule to update"
+                                "description": "The ID of schedule to update",
                             },
                             "name": {
                                 "type": "string",
-                                "description": "Optional new name"
+                                "description": "Optional new name",
                             },
                             "rrule": {
                                 "type": "string",
-                                "description": "Optional new RRULE string"
+                                "description": "Optional new RRULE string",
                             },
                             "enabled": {
                                 "type": "boolean",
-                                "description": "Optional enabled/disabled status"
-                            }
+                                "description": "Optional enabled/disabled status",
+                            },
                         },
-                        "required": ["schedule_id"]
-                    }
-                }
+                        "required": ["schedule_id"],
+                    },
+                },
             },
             "delete_schedule": {
                 "type": "function",
@@ -1158,23 +1156,20 @@ async def list_tools(model_name: str = "granite3.1-dense:2b", conversation_id: O
                         "properties": {
                             "schedule_id": {
                                 "type": "integer",
-                                "description": "The ID of schedule to delete"
+                                "description": "The ID of schedule to delete",
                             }
                         },
-                        "required": ["schedule_id"]
-                    }
-                }
+                        "required": ["schedule_id"],
+                    },
+                },
             },
             "list_credentials": {
                 "type": "function",
                 "function": {
                     "name": "list_credentials",
                     "description": "Lists credentials in AWX",
-                    "parameters": {
-                        "type": "object",
-                        "properties": {}
-                    }
-                }
+                    "parameters": {"type": "object", "properties": {}},
+                },
             },
             "get_credential": {
                 "type": "function",
@@ -1186,12 +1181,12 @@ async def list_tools(model_name: str = "granite3.1-dense:2b", conversation_id: O
                         "properties": {
                             "credential_id": {
                                 "type": "integer",
-                                "description": "The ID of credential to retrieve"
+                                "description": "The ID of credential to retrieve",
                             }
                         },
-                        "required": ["credential_id"]
-                    }
-                }
+                        "required": ["credential_id"],
+                    },
+                },
             },
             "create_credential": {
                 "type": "function",
@@ -1203,20 +1198,20 @@ async def list_tools(model_name: str = "granite3.1-dense:2b", conversation_id: O
                         "properties": {
                             "name": {
                                 "type": "string",
-                                "description": "Name of the credential"
+                                "description": "Name of the credential",
                             },
                             "credential_type": {
                                 "type": "integer",
-                                "description": "Type ID of the credential"
+                                "description": "Type ID of the credential",
                             },
                             "inputs": {
                                 "type": "object",
-                                "description": "Credential inputs"
-                            }
+                                "description": "Credential inputs",
+                            },
                         },
-                        "required": ["name", "credential_type", "inputs"]
-                    }
-                }
+                        "required": ["name", "credential_type", "inputs"],
+                    },
+                },
             },
             "update_credential": {
                 "type": "function",
@@ -1228,20 +1223,20 @@ async def list_tools(model_name: str = "granite3.1-dense:2b", conversation_id: O
                         "properties": {
                             "credential_id": {
                                 "type": "integer",
-                                "description": "The ID of credential to update"
+                                "description": "The ID of credential to update",
                             },
                             "name": {
                                 "type": "string",
-                                "description": "Optional new name"
+                                "description": "Optional new name",
                             },
                             "inputs": {
                                 "type": "object",
-                                "description": "Optional new inputs"
-                            }
+                                "description": "Optional new inputs",
+                            },
                         },
-                        "required": ["credential_id"]
-                    }
-                }
+                        "required": ["credential_id"],
+                    },
+                },
             },
             "delete_credential": {
                 "type": "function",
@@ -1253,23 +1248,20 @@ async def list_tools(model_name: str = "granite3.1-dense:2b", conversation_id: O
                         "properties": {
                             "credential_id": {
                                 "type": "integer",
-                                "description": "The ID of credential to delete"
+                                "description": "The ID of credential to delete",
                             }
                         },
-                        "required": ["credential_id"]
-                    }
-                }
+                        "required": ["credential_id"],
+                    },
+                },
             },
             "list_workflow_job_templates": {
                 "type": "function",
                 "function": {
                     "name": "list_workflow_job_templates",
                     "description": "Lists workflow job templates in AWX",
-                    "parameters": {
-                        "type": "object",
-                        "properties": {}
-                    }
-                }
+                    "parameters": {"type": "object", "properties": {}},
+                },
             },
             "create_workflow_job_template": {
                 "type": "function",
@@ -1281,16 +1273,16 @@ async def list_tools(model_name: str = "granite3.1-dense:2b", conversation_id: O
                         "properties": {
                             "name": {
                                 "type": "string",
-                                "description": "Name of the workflow job template"
+                                "description": "Name of the workflow job template",
                             },
                             "description": {
                                 "type": "string",
-                                "description": "Optional description"
-                            }
+                                "description": "Optional description",
+                            },
                         },
-                        "required": ["name"]
-                    }
-                }
+                        "required": ["name"],
+                    },
+                },
             },
             "launch_workflow_job_template": {
                 "type": "function",
@@ -1302,16 +1294,16 @@ async def list_tools(model_name: str = "granite3.1-dense:2b", conversation_id: O
                         "properties": {
                             "workflow_job_template_id": {
                                 "type": "integer",
-                                "description": "The ID of workflow job template to launch"
+                                "description": "The ID of workflow job template to launch",
                             },
                             "extra_vars": {
                                 "type": "object",
-                                "description": "Optional extra variables"
-                            }
+                                "description": "Optional extra variables",
+                            },
                         },
-                        "required": ["workflow_job_template_id"]
-                    }
-                }
+                        "required": ["workflow_job_template_id"],
+                    },
+                },
             },
             "update_workflow_job_template": {
                 "type": "function",
@@ -1323,20 +1315,20 @@ async def list_tools(model_name: str = "granite3.1-dense:2b", conversation_id: O
                         "properties": {
                             "workflow_job_template_id": {
                                 "type": "integer",
-                                "description": "The ID of workflow job template to update"
+                                "description": "The ID of workflow job template to update",
                             },
                             "name": {
                                 "type": "string",
-                                "description": "Optional new name"
+                                "description": "Optional new name",
                             },
                             "description": {
                                 "type": "string",
-                                "description": "Optional new description"
-                            }
+                                "description": "Optional new description",
+                            },
                         },
-                        "required": ["workflow_job_template_id"]
-                    }
-                }
+                        "required": ["workflow_job_template_id"],
+                    },
+                },
             },
             "delete_workflow_job_template": {
                 "type": "function",
@@ -1348,23 +1340,20 @@ async def list_tools(model_name: str = "granite3.1-dense:2b", conversation_id: O
                         "properties": {
                             "workflow_job_template_id": {
                                 "type": "integer",
-                                "description": "The ID of workflow job template to delete"
+                                "description": "The ID of workflow job template to delete",
                             }
                         },
-                        "required": ["workflow_job_template_id"]
-                    }
-                }
+                        "required": ["workflow_job_template_id"],
+                    },
+                },
             },
             "list_notifications": {
                 "type": "function",
                 "function": {
                     "name": "list_notifications",
                     "description": "Lists notification templates in AWX",
-                    "parameters": {
-                        "type": "object",
-                        "properties": {}
-                    }
-                }
+                    "parameters": {"type": "object", "properties": {}},
+                },
             },
             "get_notification": {
                 "type": "function",
@@ -1376,12 +1365,12 @@ async def list_tools(model_name: str = "granite3.1-dense:2b", conversation_id: O
                         "properties": {
                             "notification_id": {
                                 "type": "integer",
-                                "description": "The ID of notification template to retrieve"
+                                "description": "The ID of notification template to retrieve",
                             }
                         },
-                        "required": ["notification_id"]
-                    }
-                }
+                        "required": ["notification_id"],
+                    },
+                },
             },
             "create_notification": {
                 "type": "function",
@@ -1393,20 +1382,24 @@ async def list_tools(model_name: str = "granite3.1-dense:2b", conversation_id: O
                         "properties": {
                             "name": {
                                 "type": "string",
-                                "description": "Name of the notification template"
+                                "description": "Name of the notification template",
                             },
                             "notification_type": {
                                 "type": "string",
-                                "description": "Type of notification"
+                                "description": "Type of notification",
                             },
                             "notification_configuration": {
                                 "type": "object",
-                                "description": "Notification configuration"
-                            }
+                                "description": "Notification configuration",
+                            },
                         },
-                        "required": ["name", "notification_type", "notification_configuration"]
-                    }
-                }
+                        "required": [
+                            "name",
+                            "notification_type",
+                            "notification_configuration",
+                        ],
+                    },
+                },
             },
             "update_notification": {
                 "type": "function",
@@ -1418,20 +1411,20 @@ async def list_tools(model_name: str = "granite3.1-dense:2b", conversation_id: O
                         "properties": {
                             "notification_id": {
                                 "type": "integer",
-                                "description": "The ID of notification template to update"
+                                "description": "The ID of notification template to update",
                             },
                             "name": {
                                 "type": "string",
-                                "description": "Optional new name"
+                                "description": "Optional new name",
                             },
                             "notification_configuration": {
                                 "type": "object",
-                                "description": "Optional new configuration"
-                            }
+                                "description": "Optional new configuration",
+                            },
                         },
-                        "required": ["notification_id"]
-                    }
-                }
+                        "required": ["notification_id"],
+                    },
+                },
             },
             "delete_notification": {
                 "type": "function",
@@ -1443,23 +1436,20 @@ async def list_tools(model_name: str = "granite3.1-dense:2b", conversation_id: O
                         "properties": {
                             "notification_id": {
                                 "type": "integer",
-                                "description": "The ID of notification template to delete"
+                                "description": "The ID of notification template to delete",
                             }
                         },
-                        "required": ["notification_id"]
-                    }
-                }
+                        "required": ["notification_id"],
+                    },
+                },
             },
             "list_instance_groups": {
                 "type": "function",
                 "function": {
                     "name": "list_instance_groups",
                     "description": "Lists instance groups in AWX",
-                    "parameters": {
-                        "type": "object",
-                        "properties": {}
-                    }
-                }
+                    "parameters": {"type": "object", "properties": {}},
+                },
             },
             "get_instance_group": {
                 "type": "function",
@@ -1471,12 +1461,12 @@ async def list_tools(model_name: str = "granite3.1-dense:2b", conversation_id: O
                         "properties": {
                             "instance_group_id": {
                                 "type": "integer",
-                                "description": "The ID of instance group to retrieve"
+                                "description": "The ID of instance group to retrieve",
                             }
                         },
-                        "required": ["instance_group_id"]
-                    }
-                }
+                        "required": ["instance_group_id"],
+                    },
+                },
             },
             "create_instance_group": {
                 "type": "function",
@@ -1488,20 +1478,20 @@ async def list_tools(model_name: str = "granite3.1-dense:2b", conversation_id: O
                         "properties": {
                             "name": {
                                 "type": "string",
-                                "description": "Name of the instance group"
+                                "description": "Name of the instance group",
                             },
                             "policy_instance_percentage": {
                                 "type": "integer",
-                                "description": "Optional policy instance percentage"
+                                "description": "Optional policy instance percentage",
                             },
                             "policy_instance_minimum": {
                                 "type": "integer",
-                                "description": "Optional policy instance minimum"
-                            }
+                                "description": "Optional policy instance minimum",
+                            },
                         },
-                        "required": ["name"]
-                    }
-                }
+                        "required": ["name"],
+                    },
+                },
             },
             "update_instance_group": {
                 "type": "function",
@@ -1513,24 +1503,24 @@ async def list_tools(model_name: str = "granite3.1-dense:2b", conversation_id: O
                         "properties": {
                             "instance_group_id": {
                                 "type": "integer",
-                                "description": "The ID of instance group to update"
+                                "description": "The ID of instance group to update",
                             },
                             "name": {
                                 "type": "string",
-                                "description": "Optional new name"
+                                "description": "Optional new name",
                             },
                             "policy_instance_percentage": {
                                 "type": "integer",
-                                "description": "Optional new policy percentage"
+                                "description": "Optional new policy percentage",
                             },
                             "policy_instance_minimum": {
                                 "type": "integer",
-                                "description": "Optional new policy minimum"
-                            }
+                                "description": "Optional new policy minimum",
+                            },
                         },
-                        "required": ["instance_group_id"]
-                    }
-                }
+                        "required": ["instance_group_id"],
+                    },
+                },
             },
             "delete_instance_group": {
                 "type": "function",
@@ -1542,13 +1532,13 @@ async def list_tools(model_name: str = "granite3.1-dense:2b", conversation_id: O
                         "properties": {
                             "instance_group_id": {
                                 "type": "integer",
-                                "description": "The ID of instance group to delete"
+                                "description": "The ID of instance group to delete",
                             }
                         },
-                        "required": ["instance_group_id"]
-                    }
-                }
-            }
+                        "required": ["instance_group_id"],
+                    },
+                },
+            },
         }
 
         # Filter tools based on model capabilities

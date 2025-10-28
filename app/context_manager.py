@@ -8,6 +8,7 @@ from datetime import datetime
 @dataclass
 class ToolCall:
     """Represents a tool call in the conversation."""
+
     tool_name: str
     parameters: Dict[str, Any]
     result: Any
@@ -19,20 +20,32 @@ class ToolCall:
 @dataclass
 class ConversationContext:
     """Manages conversation context for optimal LLM performance."""
+
     tool_calls: List[ToolCall]
     max_context_items: int
     context_summary_trigger: int
     model_name: str
 
-    def __init__(self, model_name: str, max_context_items: int = 10, context_summary_trigger: int = 20):
+    def __init__(
+        self,
+        model_name: str,
+        max_context_items: int = 10,
+        context_summary_trigger: int = 20,
+    ):
         self.tool_calls: List[ToolCall] = []
         self.max_context_items = max_context_items
         self.context_summary_trigger = context_summary_trigger
         self.model_name = model_name
         self._summary: Optional[str] = None
 
-    def add_tool_call(self, tool_name: str, parameters: Dict[str, Any],
-                     result: Any, success: bool, response_time: float):
+    def add_tool_call(
+        self,
+        tool_name: str,
+        parameters: Dict[str, Any],
+        result: Any,
+        success: bool,
+        response_time: float,
+    ):
         """Add a tool call to the context."""
         tool_call = ToolCall(
             tool_name=tool_name,
@@ -40,7 +53,7 @@ class ConversationContext:
             result=result,
             timestamp=datetime.now(),
             success=success,
-            response_time=response_time
+            response_time=response_time,
         )
 
         self.tool_calls.append(tool_call)
@@ -52,7 +65,7 @@ class ConversationContext:
     def _prune_context(self):
         """Prune old context items to stay within limits."""
         # Keep the most recent items
-        self.tool_calls = self.tool_calls[-self.max_context_items:]
+        self.tool_calls = self.tool_calls[-self.max_context_items :]
 
     def get_recent_context(self, limit: Optional[int] = None) -> List[ToolCall]:
         """Get recent tool calls for context."""
@@ -65,7 +78,9 @@ class ConversationContext:
         if len(self.tool_calls) < self.context_summary_trigger:
             return self._generate_recent_summary()
 
-        if self._summary is None or len(self.tool_calls) % 5 == 0:  # Update summary periodically
+        if (
+            self._summary is None or len(self.tool_calls) % 5 == 0
+        ):  # Update summary periodically
             self._summary = self._generate_full_summary()
 
         return self._summary
@@ -118,7 +133,9 @@ class ConversationContext:
         if not recent_calls:
             return False
 
-        success_rate = sum(1 for call in recent_calls if call.success) / len(recent_calls)
+        success_rate = sum(1 for call in recent_calls if call.success) / len(
+            recent_calls
+        )
 
         # Simplify if success rate is low (model struggling)
         return success_rate < 0.6
@@ -145,7 +162,8 @@ class ConversationContext:
             "unique_tools": unique_tools,
             "success_rate": success_rate,
             "most_used_tools": most_used,
-            "average_response_time": sum(call.response_time for call in self.tool_calls) / total_calls
+            "average_response_time": sum(call.response_time for call in self.tool_calls)
+            / total_calls,
         }
 
     def reset_context(self):
@@ -163,13 +181,13 @@ class ConversationContext:
                     "result": str(call.result)[:500],  # Truncate long results
                     "timestamp": call.timestamp.isoformat(),
                     "success": call.success,
-                    "response_time": call.response_time
+                    "response_time": call.response_time,
                 }
                 for call in self.tool_calls
             ],
             "max_context_items": self.max_context_items,
             "context_summary_trigger": self.context_summary_trigger,
-            "model_name": self.model_name
+            "model_name": self.model_name,
         }
 
 
@@ -185,11 +203,12 @@ class ContextManager:
             # Import here to avoid circular imports
             try:
                 from app.model_capabilities import get_context_limits
+
                 limits = get_context_limits(model_name)
                 self.conversations[conversation_id] = ConversationContext(
                     model_name=model_name,
                     max_context_items=limits["max_context_items"],
-                    context_summary_trigger=limits["context_summary_trigger"]
+                    context_summary_trigger=limits["context_summary_trigger"],
                 )
             except ImportError:
                 # Fallback limits
