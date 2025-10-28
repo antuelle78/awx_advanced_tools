@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
       - name: mcp-server
-        image: ghcr.io/antuelle78/awx_advanced_tools:testing
+        image: docker.io/antuelle78/awx_advanced_tools:latest
         ports:
         - containerPort: 8000
         envFrom:
@@ -141,5 +141,5 @@ spec:
     - protocol: TCP
       port: 80
       targetPort: 80
-      nodePort: 30080
+      nodePort: 31005
   type: NodePort

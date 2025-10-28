@@ -15,8 +15,20 @@ import json
 import os
 from typing import Any, Dict
 from abc import ABC, abstractmethod
+from importlib.util import find_spec
 
 from app.config import settings
+
+
+try:
+    import openai
+except ImportError:
+    openai = None  # type: ignore
+
+try:
+    import ollama
+except ImportError:
+    ollama = None  # type: ignore
 
 
 class BaseLLMClient(ABC):
@@ -34,14 +46,12 @@ class OpenAIClient(BaseLLMClient):
     """Simple wrapper around the OpenAI chat completion API."""
 
     def __init__(self) -> None:
-        try:
-            import openai
-        except ImportError as exc:  # pragma: no cover
+        if openai is None:  # pragma: no cover
             raise RuntimeError(
                 "OpenAI SDK not installed. Install with `pip install openai`"
-            ) from exc
+            )
 
-        self.openai = openai
+        self.openai = openai  # type: ignore[assignment]
         self.endpoint = settings.llm_endpoint
         self.model = settings.llm_model
         self.api_key = settings.llm_api_key
@@ -86,13 +96,11 @@ class OllamaClient(BaseLLMClient):
     """Client for Ollama."""
 
     def __init__(self) -> None:
-        try:
-            import ollama
-        except ImportError as exc:  # pragma: no cover
+        if ollama is None:  # pragma: no cover
             raise RuntimeError(
                 "Ollama SDK not installed. Install with `pip install ollama`"
-            ) from exc
-        self.client = ollama.AsyncClient(host=settings.llm_endpoint)
+            )
+        self.client = ollama.AsyncClient(host=settings.llm_endpoint)  # type: ignore
         self.model = settings.llm_model
         self.temperature = float(os.getenv("LLM_TEMPERATURE", "0.2"))
 
@@ -125,12 +133,15 @@ class OllamaClient(BaseLLMClient):
 def get_llm_client() -> BaseLLMClient:
     if settings.llm_provider == "ollama":
         return OllamaClient()
-    from importlib.util import find_spec
+
     if find_spec("openai") is None:
         # OpenAI SDK not available, fallback to Ollama if configured
         if settings.llm_provider == "ollama":
             return OllamaClient()
-        raise RuntimeError("OpenAI SDK not installed and llm_provider not set to ollama")
+        raise RuntimeError(
+            "OpenAI SDK not installed and llm_provider not set to ollama"
+        )
     return OpenAIClient()
+
 
 LLMClient = get_llm_client()

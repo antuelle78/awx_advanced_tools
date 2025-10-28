@@ -77,49 +77,49 @@ schema_registry: Dict[str, Dict[str, Dict]] = {
             "required": ["result"],
             "additionalProperties": False,
         },
-         "create_ticket": {
-             "type": "object",
-             "properties": {
-                 "title": {"type": "string"},
-                 "description": {"type": "string"},
-             },
-             "required": ["title", "description"],
-             "additionalProperties": False,
-         },
-         "create_host": {
-             "type": "object",
-             "properties": {
-                 "result": {
-                     "type": "object",
-                     "properties": {
-                         "name": {"type": "string"},
-                         "inventory": {"type": "integer"},
-                     },
-                     "required": ["name", "inventory"],
-                     "additionalProperties": False,
-                 }
-             },
-             "required": ["result"],
-             "additionalProperties": False,
-         },
-         "create_job_template": {
-             "type": "object",
-             "properties": {
-                 "result": {
-                     "type": "object",
-                     "properties": {
-                         "name": {"type": "string"},
-                         "inventory": {"type": "integer"},
-                         "project": {"type": "integer"},
-                         "playbook": {"type": "string"},
-                     },
-                     "required": ["name", "inventory", "project", "playbook"],
-                     "additionalProperties": False,
-                 }
-             },
-             "required": ["result"],
-             "additionalProperties": False,
-         }
+        "create_ticket": {
+            "type": "object",
+            "properties": {
+                "title": {"type": "string"},
+                "description": {"type": "string"},
+            },
+            "required": ["title", "description"],
+            "additionalProperties": False,
+        },
+        "create_host": {
+            "type": "object",
+            "properties": {
+                "result": {
+                    "type": "object",
+                    "properties": {
+                        "name": {"type": "string"},
+                        "inventory": {"type": "integer"},
+                    },
+                    "required": ["name", "inventory"],
+                    "additionalProperties": False,
+                }
+            },
+            "required": ["result"],
+            "additionalProperties": False,
+        },
+        "create_job_template": {
+            "type": "object",
+            "properties": {
+                "result": {
+                    "type": "object",
+                    "properties": {
+                        "name": {"type": "string"},
+                        "inventory": {"type": "integer"},
+                        "project": {"type": "integer"},
+                        "playbook": {"type": "string"},
+                    },
+                    "required": ["name", "inventory", "project", "playbook"],
+                    "additionalProperties": False,
+                }
+            },
+            "required": ["result"],
+            "additionalProperties": False,
+        },
     },
 }
 
