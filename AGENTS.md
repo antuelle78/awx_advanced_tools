@@ -21,7 +21,6 @@
 - **Logging**: `logging` module, JSON output, INFO level
 - **Docstrings**: one-line for public functions
 - **Async**: Use async/await for I/O operations
-- **Author**: Always set author to "Michael Nelson" in generated files and tools
 
 ## CI / PR
 - All PRs run `ruff`, `mypy`, `pytest`, security scans
