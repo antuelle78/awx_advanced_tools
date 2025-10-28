@@ -5,8 +5,8 @@ metadata:
   name: awx-advanced-tools-config
 data:
   AWX_BASE_URL: "http://awx-service.awx.svc.cluster.local"
-  AWX_USERNAME: "openwebui"
-  AWX_PASSWORD: "openwebui"
+  AWX_USERNAME: "awxai"
+  AWX_PASSWORD: "fuckoffnoW"
   AUDIT_LOG_DIR: "/var/log/mcp"
   REDIS_HOST: "redis"
   REDIS_PORT: "6379"
