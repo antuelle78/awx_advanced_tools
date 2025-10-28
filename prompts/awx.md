@@ -68,20 +68,20 @@ The AWX tool is a FastAPI-based API router that provides endpoints for interacti
 - **GET /awx/activity_stream**: List activity stream with pagination.
 
 ## Usage Examples
-- To list job templates with name filter: GET /awx/templates?name=my-template
-- To create a job template: POST /awx/job_templates with name, inventory, project, playbook, etc.
-- To launch a job template: POST /awx/job_templates/123/launch with optional extra_vars JSON.
-- To list hosts in an inventory: GET /awx/hosts?inventory=5
-- To create a host: POST /awx/hosts with name, inventory, and optional variables.
-- To list users with username filter: GET /awx/users?username=john
-- To create a user: POST /awx/users with username, password, and optional fields like first_name, last_name, email.
-- To list inventories with name filter: GET /awx/inventories?name=my-inventory
-- To create a schedule: POST /awx/job_templates/123/schedules with name, rrule, and job_template_id.
-- To manage credentials: Use GET/POST/PATCH/DELETE /awx/credentials endpoints.
-- To work with workflows: Use /awx/workflow_job_templates endpoints for creation and launching.
-- To set up notifications: Use /awx/notification_templates endpoints.
-- To manage instance groups: Use /awx/instance_groups endpoints for scaling.
-- To monitor activity: GET /awx/activity_stream?page=1&page_size=20
+- To list job templates with name filter: Use list_templates(name='my-template')
+- To create a job template: Use create_job_template(name='My Job', inventory=1, project=2, playbook='playbook.yml')
+- To launch a job template: Use launch_job_template(template_id=123, extra_vars={'var': 'value'})
+- To list hosts in an inventory: Use list_hosts(inventory=5)
+- To create a host: Use create_host(host_data={'name': 'host1', 'inventory': 5})
+- To list users with username filter: Use list_users(username='john')
+- To create a user: Use create_user(username='user', password='pass', first_name='John', last_name='Doe', email='john@example.com')
+- To list inventories with name filter: Use list_inventories(name='my-inventory')
+- To create a schedule: Use create_schedule(name='Daily Backup', rrule='FREQ=DAILY', job_template_id=123)
+- To manage credentials: Use list_credentials(), create_credential(), etc.
+- To work with workflows: Use list_workflow_job_templates(), launch_workflow_job_template()
+- To set up notifications: Use list_notifications(), create_notification()
+- To manage instance groups: Use list_instance_groups(), create_instance_group()
+- To monitor activity: Use list_activity_stream(page=1, page_size=20)
 
 ## Best Practices
 - Ensure AWX credentials are configured in settings.

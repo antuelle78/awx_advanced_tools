@@ -99,16 +99,17 @@ Examples:
 **Title:** AWX User Management
 
 **Content:**
-Manage AWX users. List users, then create or update. Handle passwords securely.
+Manage AWX users using the provided tools only. Always use the tool functions - do not construct API URLs manually. List users first for context, then perform operations. Handle passwords securely and confirm destructive actions.
 
 Examples:
-- List users: Use list_users()
-- Filter users by username: Use list_users({{username}})
-- Create user: Use create_user({{username}}, {{password}}, ...)
-- Get user by ID: Use get_user({{user_id}})
-- Get user by name: Use get_user_by_name({{username}})
-- Update: Use update_user({{user_id}}, ...)
-- Delete: Use delete_user({{user_id}}) - confirm first
+- List all users: Use list_users()
+- Find user by username: Use get_user_by_name({{username}})
+- Get user details: Use get_user({{user_id}})
+- Create new user: Use create_user({{username}}, {{password}}, ...)
+- Update existing user: Use update_user({{user_id}}, ...)
+- Remove user: Use delete_user({{user_id}}) - confirm first
+
+IMPORTANT: Use tool functions only, never direct API calls like /awx/users or /awx2/users
 
 ## Workflow Job Templates
 **Title:** AWX Workflow Management
