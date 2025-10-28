@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
       - name: mcp-server
-        image: docker.io/antuelle78/awx_advanced_tools:latest
+        image: docker.io/antuelle78/awx_advanced_tools:testing
         ports:
         - containerPort: 8000
         envFrom:
