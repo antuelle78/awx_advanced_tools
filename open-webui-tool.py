@@ -155,14 +155,14 @@ class PromptOptimizer:
         """Get an optimized prompt for a specific tool based on model capabilities."""
         try:
             # Import here to avoid circular imports
-            from app.model_capabilities import should_use_simplified_prompt
+            from app.model_capabilities import should_use_simplified_prompt  # type: ignore[import]
 
             # Use simplified prompts for smaller models
             if model_name and should_use_simplified_prompt(model_name, tool_name):
                 prompts = self.simple_prompts
             else:
                 prompts = self.detailed_prompts
-        except ImportError:
+        except (ImportError, ModuleNotFoundError):
             # Fallback to detailed prompts if model_capabilities not available
             prompts = self.detailed_prompts
 
@@ -182,8 +182,8 @@ class PromptOptimizer:
 class Tools:
     class Valves(BaseModel):
         mcp_server_url: str = Field(
-            default="http://host.docker.internal:8001",
-            description="The base URL of MCP server.",
+            default="http://localhost:31005",
+            description="The base URL of MCP server. For K3s deployment, use the NodePort (default: http://localhost:31005). For local Docker, use http://host.docker.internal:8001.",
         )
         mcp_username: str = Field(
             default="openwebui", description="Username for MCP server authentication."
@@ -224,10 +224,10 @@ class Tools:
         """Lazy initialization of context manager."""
         if self._context_manager is None:
             try:
-                from app.context_manager import context_manager
+                from app.context_manager import context_manager  # type: ignore[import]
 
                 self._context_manager = context_manager
-            except ImportError:
+            except (ImportError, ModuleNotFoundError):
                 self._context_manager = None
         return self._context_manager
 
@@ -236,10 +236,10 @@ class Tools:
         """Lazy initialization of fallback handler."""
         if self._fallback_handler is None:
             try:
-                from app.fallback_handler import fallback_handler
+                from app.fallback_handler import fallback_handler  # type: ignore[import]
 
                 self._fallback_handler = fallback_handler
-            except ImportError:
+            except (ImportError, ModuleNotFoundError):
                 self._fallback_handler = None
         return self._fallback_handler
 
@@ -248,10 +248,10 @@ class Tools:
         """Lazy initialization of response simplifier."""
         if self._response_simplifier is None:
             try:
-                from app.fallback_handler import response_simplifier
+                from app.fallback_handler import response_simplifier  # type: ignore[import]
 
                 self._response_simplifier = response_simplifier
-            except ImportError:
+            except (ImportError, ModuleNotFoundError):
                 self._response_simplifier = None
         return self._response_simplifier
 
@@ -271,10 +271,10 @@ class Tools:
             return list(self.prompt_optimizer.detailed_prompts.keys())
 
         try:
-            from app.model_capabilities import get_available_tools
+            from app.model_capabilities import get_available_tools  # type: ignore[import]
 
             return get_available_tools(self.valves.model_name, 0)
-        except ImportError:
+        except (ImportError, ModuleNotFoundError):
             return list(self.prompt_optimizer.detailed_prompts.keys())
 
     def should_simplify_operation(self, operation: str) -> bool:
@@ -283,10 +283,10 @@ class Tools:
             return False
 
         try:
-            from app.model_capabilities import should_use_simplified_prompt
+            from app.model_capabilities import should_use_simplified_prompt  # type: ignore[import]
 
             return should_use_simplified_prompt(self.valves.model_name, operation)
-        except ImportError:
+        except (ImportError, ModuleNotFoundError):
             return False
 
     def log_tool_usage(self, tool_name: str, success: bool, response_time: float):
@@ -312,7 +312,7 @@ class Tools:
     ) -> Dict[str, str]:
         """Get optimized prompts for all available tools based on model."""
         try:
-            from app.model_capabilities import get_available_tools
+            from app.model_capabilities import get_available_tools  # type: ignore[import]
 
             available_tools = get_available_tools(
                 model_name or "granite3.1-dense:2b", 0
@@ -325,7 +325,7 @@ class Tools:
                     tool, model_name
                 )
             return prompts
-        except ImportError:
+        except (ImportError, ModuleNotFoundError):
             # Fallback to all detailed prompts
             return self.prompt_optimizer.detailed_prompts
 
