@@ -4,7 +4,7 @@ kind: ConfigMap
 metadata:
   name: awx-advanced-tools-config
 data:
-  AWX_BASE_URL: "http://192.168.122.46:31366"
+  AWX_BASE_URL: "http://awx-service.awx.svc.cluster.local"
   AWX_USERNAME: "openwebui"
   AWX_PASSWORD: "openwebui"
   AUDIT_LOG_DIR: "/var/log/mcp"
@@ -12,7 +12,7 @@ data:
   REDIS_PORT: "6379"
   REDIS_DB: "0"
   LLM_MODEL: "gpt-4o"
-  LLM_ENDPOINT: "http://host.docker.internal:11434"
+  LLM_ENDPOINT: "http://10.2.0.150:11434"
 ---
 # Nginx Configuration ConfigMap
 apiVersion: v1
