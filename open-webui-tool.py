@@ -506,7 +506,7 @@ class Tools:
         try:
             url = f"{self.mcp_server_url}/awx/job_templates/"
             params = {"name": name, "inventory": inventory, "project": project, "playbook": playbook}
-            payload = {}
+            payload: Dict[str, Any] = {}
             if description:
                 payload["description"] = description
             if extra_vars:
@@ -1034,7 +1034,7 @@ class Tools:
         :return: A JSON string containing the updated schedule details.
         """
         url = f"{self.mcp_server_url}/awx/schedules/{schedule_id}"
-        payload = {}
+        payload: Dict[str, Any] = {}
         if name:
             payload["name"] = name
         if rrule:
@@ -1382,7 +1382,7 @@ class Tools:
         :return: A JSON string containing the updated credential details.
         """
         url = f"{self.mcp_server_url}/awx/credentials/{credential_id}"
-        payload = {}
+        payload: Dict[str, Any] = {}
         if name:
             payload["name"] = name
         if inputs:
@@ -1618,7 +1618,7 @@ class Tools:
         :return: A JSON string containing the updated notification template details.
         """
         url = f"{self.mcp_server_url}/awx/notifications/{notification_id}"
-        payload = {}
+        payload: Dict[str, Any] = {}
         if name:
             payload["name"] = name
         if notification_configuration:
