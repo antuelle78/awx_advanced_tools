@@ -5,7 +5,6 @@ Shared authentication and authorization logic.
 import os
 from fastapi import Request, HTTPException, Depends
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
-from typing import Optional
 
 
 security = HTTPBasic()

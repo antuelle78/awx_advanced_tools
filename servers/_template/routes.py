@@ -4,9 +4,7 @@ API routes for {SERVER_NAME} server.
 Define all endpoints for this specialized server here.
 """
 
-from fastapi import APIRouter, HTTPException
-from shared.awx_client import awx_client
-import httpx
+from fastapi import APIRouter
 
 router = APIRouter()
 

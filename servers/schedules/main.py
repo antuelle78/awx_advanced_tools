@@ -1,9 +1,9 @@
 """Schedules Management MCP Server - Port: 8007"""
-import sys, os
+import sys
+import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 
 from fastapi import FastAPI
-from shared.awx_client import awx_client
 from shared.middleware import setup_middleware
 from .routes import router
 

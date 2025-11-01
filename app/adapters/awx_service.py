@@ -500,7 +500,7 @@ class AWXClient:
         """Create a new job template."""
         url = f"{self.base_url}/api/v2/job_templates/"
         params = {"name": name, "inventory": inventory, "project": project, "playbook": playbook}
-        payload = {}
+        payload: dict[str, Any] = {}
         if description:
             payload["description"] = description
         if extra_vars:
