@@ -1,0 +1,663 @@
+# Multi-Server MCP Architecture - Kubernetes Deployment
+# This manifest deploys all 10 specialized MCP servers for AWX management
+#
+# Servers:
+# 1. Core (8001) - Basic AWX operations
+# 2. Inventory (8002) - Inventory and host management
+# 3. Templates (8003) - Job template operations
+# 4. Users (8004) - User and team management
+# 5. Projects (8005) - SCM project management
+# 6. Organizations (8006) - Organization CRUD
+# 7. Schedules (8007) - Job scheduling
+# 8. Advanced (8008) - Credentials and advanced ops
+# 9. Notifications (8009) - Activity stream
+# 10. Infrastructure (8010) - System info and config
+
+---
+# Core Server (8001)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mcp-core
+  labels:
+    app: mcp-core
+    tier: mcp-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mcp-core
+  template:
+    metadata:
+      labels:
+        app: mcp-core
+        tier: mcp-server
+    spec:
+      containers:
+      - name: mcp-core
+        image: ghcr.io/antuelle78/awx_advanced_tools:mcp-core
+        ports:
+        - containerPort: 8000
+        envFrom:
+        - configMapRef:
+            name: awx-advanced-tools-config
+        env:
+        - name: SERVER_NAME
+          value: "core"
+        - name: SERVER_PORT
+          value: "8000"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 10
+          periodSeconds: 30
+          timeoutSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          timeoutSeconds: 5
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mcp-core
+  labels:
+    app: mcp-core
+spec:
+  selector:
+    app: mcp-core
+  ports:
+  - protocol: TCP
+    port: 8001
+    targetPort: 8000
+  type: ClusterIP
+---
+# Inventory Server (8002)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mcp-inventory
+  labels:
+    app: mcp-inventory
+    tier: mcp-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mcp-inventory
+  template:
+    metadata:
+      labels:
+        app: mcp-inventory
+        tier: mcp-server
+    spec:
+      containers:
+      - name: mcp-inventory
+        image: ghcr.io/antuelle78/awx_advanced_tools:mcp-inventory
+        ports:
+        - containerPort: 8000
+        envFrom:
+        - configMapRef:
+            name: awx-advanced-tools-config
+        env:
+        - name: SERVER_NAME
+          value: "inventory"
+        - name: SERVER_PORT
+          value: "8000"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 10
+          periodSeconds: 30
+          timeoutSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          timeoutSeconds: 5
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mcp-inventory
+  labels:
+    app: mcp-inventory
+spec:
+  selector:
+    app: mcp-inventory
+  ports:
+  - protocol: TCP
+    port: 8002
+    targetPort: 8000
+  type: ClusterIP
+---
+# Templates Server (8003)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mcp-templates
+  labels:
+    app: mcp-templates
+    tier: mcp-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mcp-templates
+  template:
+    metadata:
+      labels:
+        app: mcp-templates
+        tier: mcp-server
+    spec:
+      containers:
+      - name: mcp-templates
+        image: ghcr.io/antuelle78/awx_advanced_tools:mcp-templates
+        ports:
+        - containerPort: 8000
+        envFrom:
+        - configMapRef:
+            name: awx-advanced-tools-config
+        env:
+        - name: SERVER_NAME
+          value: "templates"
+        - name: SERVER_PORT
+          value: "8000"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 10
+          periodSeconds: 30
+          timeoutSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          timeoutSeconds: 5
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mcp-templates
+  labels:
+    app: mcp-templates
+spec:
+  selector:
+    app: mcp-templates
+  ports:
+  - protocol: TCP
+    port: 8003
+    targetPort: 8000
+  type: ClusterIP
+---
+# Users Server (8004)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mcp-users
+  labels:
+    app: mcp-users
+    tier: mcp-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mcp-users
+  template:
+    metadata:
+      labels:
+        app: mcp-users
+        tier: mcp-server
+    spec:
+      containers:
+      - name: mcp-users
+        image: ghcr.io/antuelle78/awx_advanced_tools:mcp-users
+        ports:
+        - containerPort: 8000
+        envFrom:
+        - configMapRef:
+            name: awx-advanced-tools-config
+        env:
+        - name: SERVER_NAME
+          value: "users"
+        - name: SERVER_PORT
+          value: "8000"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 10
+          periodSeconds: 30
+          timeoutSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          timeoutSeconds: 5
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mcp-users
+  labels:
+    app: mcp-users
+spec:
+  selector:
+    app: mcp-users
+  ports:
+  - protocol: TCP
+    port: 8004
+    targetPort: 8000
+  type: ClusterIP
+---
+# Projects Server (8005)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mcp-projects
+  labels:
+    app: mcp-projects
+    tier: mcp-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mcp-projects
+  template:
+    metadata:
+      labels:
+        app: mcp-projects
+        tier: mcp-server
+    spec:
+      containers:
+      - name: mcp-projects
+        image: ghcr.io/antuelle78/awx_advanced_tools:mcp-projects
+        ports:
+        - containerPort: 8000
+        envFrom:
+        - configMapRef:
+            name: awx-advanced-tools-config
+        env:
+        - name: SERVER_NAME
+          value: "projects"
+        - name: SERVER_PORT
+          value: "8000"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 10
+          periodSeconds: 30
+          timeoutSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          timeoutSeconds: 5
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mcp-projects
+  labels:
+    app: mcp-projects
+spec:
+  selector:
+    app: mcp-projects
+  ports:
+  - protocol: TCP
+    port: 8005
+    targetPort: 8000
+  type: ClusterIP
+---
+# Organizations Server (8006)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mcp-organizations
+  labels:
+    app: mcp-organizations
+    tier: mcp-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mcp-organizations
+  template:
+    metadata:
+      labels:
+        app: mcp-organizations
+        tier: mcp-server
+    spec:
+      containers:
+      - name: mcp-organizations
+        image: ghcr.io/antuelle78/awx_advanced_tools:mcp-organizations
+        ports:
+        - containerPort: 8000
+        envFrom:
+        - configMapRef:
+            name: awx-advanced-tools-config
+        env:
+        - name: SERVER_NAME
+          value: "organizations"
+        - name: SERVER_PORT
+          value: "8000"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 10
+          periodSeconds: 30
+          timeoutSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          timeoutSeconds: 5
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mcp-organizations
+  labels:
+    app: mcp-organizations
+spec:
+  selector:
+    app: mcp-organizations
+  ports:
+  - protocol: TCP
+    port: 8006
+    targetPort: 8000
+  type: ClusterIP
+---
+# Schedules Server (8007)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mcp-schedules
+  labels:
+    app: mcp-schedules
+    tier: mcp-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mcp-schedules
+  template:
+    metadata:
+      labels:
+        app: mcp-schedules
+        tier: mcp-server
+    spec:
+      containers:
+      - name: mcp-schedules
+        image: ghcr.io/antuelle78/awx_advanced_tools:mcp-schedules
+        ports:
+        - containerPort: 8000
+        envFrom:
+        - configMapRef:
+            name: awx-advanced-tools-config
+        env:
+        - name: SERVER_NAME
+          value: "schedules"
+        - name: SERVER_PORT
+          value: "8000"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 10
+          periodSeconds: 30
+          timeoutSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          timeoutSeconds: 5
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mcp-schedules
+  labels:
+    app: mcp-schedules
+spec:
+  selector:
+    app: mcp-schedules
+  ports:
+  - protocol: TCP
+    port: 8007
+    targetPort: 8000
+  type: ClusterIP
+---
+# Advanced Server (8008)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mcp-advanced
+  labels:
+    app: mcp-advanced
+    tier: mcp-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mcp-advanced
+  template:
+    metadata:
+      labels:
+        app: mcp-advanced
+        tier: mcp-server
+    spec:
+      containers:
+      - name: mcp-advanced
+        image: ghcr.io/antuelle78/awx_advanced_tools:mcp-advanced
+        ports:
+        - containerPort: 8000
+        envFrom:
+        - configMapRef:
+            name: awx-advanced-tools-config
+        env:
+        - name: SERVER_NAME
+          value: "advanced"
+        - name: SERVER_PORT
+          value: "8000"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 10
+          periodSeconds: 30
+          timeoutSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          timeoutSeconds: 5
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mcp-advanced
+  labels:
+    app: mcp-advanced
+spec:
+  selector:
+    app: mcp-advanced
+  ports:
+  - protocol: TCP
+    port: 8008
+    targetPort: 8000
+  type: ClusterIP
+---
+# Notifications Server (8009)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mcp-notifications
+  labels:
+    app: mcp-notifications
+    tier: mcp-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mcp-notifications
+  template:
+    metadata:
+      labels:
+        app: mcp-notifications
+        tier: mcp-server
+    spec:
+      containers:
+      - name: mcp-notifications
+        image: ghcr.io/antuelle78/awx_advanced_tools:mcp-notifications
+        ports:
+        - containerPort: 8000
+        envFrom:
+        - configMapRef:
+            name: awx-advanced-tools-config
+        env:
+        - name: SERVER_NAME
+          value: "notifications"
+        - name: SERVER_PORT
+          value: "8000"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 10
+          periodSeconds: 30
+          timeoutSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          timeoutSeconds: 5
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mcp-notifications
+  labels:
+    app: mcp-notifications
+spec:
+  selector:
+    app: mcp-notifications
+  ports:
+  - protocol: TCP
+    port: 8009
+    targetPort: 8000
+  type: ClusterIP
+---
+# Infrastructure Server (8010)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mcp-infrastructure
+  labels:
+    app: mcp-infrastructure
+    tier: mcp-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mcp-infrastructure
+  template:
+    metadata:
+      labels:
+        app: mcp-infrastructure
+        tier: mcp-server
+    spec:
+      containers:
+      - name: mcp-infrastructure
+        image: ghcr.io/antuelle78/awx_advanced_tools:mcp-infrastructure
+        ports:
+        - containerPort: 8000
+        envFrom:
+        - configMapRef:
+            name: awx-advanced-tools-config
+        env:
+        - name: SERVER_NAME
+          value: "infrastructure"
+        - name: SERVER_PORT
+          value: "8000"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 10
+          periodSeconds: 30
+          timeoutSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          timeoutSeconds: 5
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mcp-infrastructure
+  labels:
+    app: mcp-infrastructure
+spec:
+  selector:
+    app: mcp-infrastructure
+  ports:
+  - protocol: TCP
+    port: 8010
+    targetPort: 8000
+  type: ClusterIP
+---
+# Gateway Ingress (optional - uncomment if using Ingress)
+# apiVersion: networking.k8s.io/v1
+# kind: Ingress
+# metadata:
+#   name: mcp-gateway-ingress
+#   annotations:
+#     nginx.ingress.kubernetes.io/rewrite-target: /
+# spec:
+#   rules:
+#   - host: mcp.example.com
+#     http:
+#       paths:
+#       - path: /core
+#         pathType: Prefix
+#         backend:
+#           service:
+#             name: mcp-core
+#             port:
+#               number: 8001
+#       - path: /inventory
+#         pathType: Prefix
+#         backend:
+#           service:
+#             name: mcp-inventory
+#             port:
+#               number: 8002
+#       # ... add more paths for other servers

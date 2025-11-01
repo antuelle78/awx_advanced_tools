@@ -113,6 +113,42 @@ graph TB
 - 🛡️ **Safety Layer**: Dry-run modes and confirmation workflows
 - 🔄 **Real-time Sync**: Live status updates and activity monitoring
 
+### 🏭 Multi-Server Architecture
+
+For optimal performance with small LLMs, AWX Advanced Tools supports a **distributed multi-server deployment** that splits functionality across specialized microservices:
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    10 Specialized Servers                    │
+├──────────┬──────────┬──────────┬──────────┬─────────────────┤
+│ Core     │ Inventory│ Templates│ Users    │ Projects        │
+│ (8001)   │ (8002)   │ (8003)   │ (8004)   │ (8005)          │
+│ 6 tools  │ 8 tools  │ 7 tools  │ 7 tools  │ 7 tools         │
+├──────────┼──────────┼──────────┼──────────┼─────────────────┤
+│ Orgs     │ Schedules│ Advanced │ Notify   │ Infra           │
+│ (8006)   │ (8007)   │ (8008)   │ (8009)   │ (8010)          │
+│ 6 tools  │ 7 tools  │ 5 tools  │ 2 tools  │ 3 tools         │
+└──────────┴──────────┴──────────┴──────────┴─────────────────┘
+            ▲
+            │ Each server: 5-8 tools (perfect for small models)
+            │ Shared AWX client library for consistency
+            │ Independent scaling and deployment
+```
+
+**Benefits:**
+- 🎯 **Small LLM Friendly**: Each server exposes only 5-8 tools instead of 40+
+- ⚡ **Better Performance**: Reduced context size = faster inference
+- 🔄 **Independent Scaling**: Scale busy services independently
+- 🛡️ **Fault Isolation**: One service failure doesn't affect others
+- 📦 **Easy Deployment**: Docker Compose or Kubernetes
+
+**Quick Start Multi-Server:**
+```bash
+docker compose -f docker-compose.multi.yml up -d
+```
+
+All 10 servers share a common AWX client library (`shared/awx_client.py`) ensuring consistent behavior across the architecture. See [MULTI_SERVER_README.md](MULTI_SERVER_README.md) for detailed documentation.
+
 <a id="quick-start"></a>
 ## 🚀 Quick Start (5 minutes)
 
@@ -203,13 +239,51 @@ All settings are read from environment variables. Create a `.env` file in the pr
 <a id="running-the-server"></a>
 ## 5. Running the Server
 
-The easiest way to run the server is with Docker Compose.
+### 5.1 Monolithic Deployment (Single Server)
+
+The simplest deployment runs everything in one container:
 
 ```bash
 docker compose up -d
 ```
 
-The server will be available at `http://localhost:8001`. All API endpoints (except /health and /login) require JWT authentication. Use the `/login` endpoint to obtain a JWT token, then include it in the `Authorization` header as `Bearer <token>`. The gateway provides authentication and proxies requests to the server.
+The server will be available at `http://localhost:8001`. All API endpoints (except /health and /login) require JWT authentication.
+
+### 5.2 Multi-Server Deployment (Recommended for Small LLMs)
+
+For better performance with smaller language models, use the distributed architecture:
+
+```bash
+docker compose -f docker-compose.multi.yml up -d
+```
+
+This deploys 10 specialized servers on ports 8001-8010:
+- **Core** (8001): Basic AWX operations
+- **Inventory** (8002): Inventory and host management
+- **Templates** (8003): Job template operations
+- **Users** (8004): User and team management
+- **Projects** (8005): SCM project management
+- **Organizations** (8006): Organization CRUD
+- **Schedules** (8007): Job scheduling
+- **Advanced** (8008): Credentials and advanced operations
+- **Notifications** (8009): Activity stream monitoring
+- **Infrastructure** (8010): System info and configuration
+
+Each server exposes 5-8 tools, making them ideal for small LLMs with limited context windows. See the [Multi-Server README](MULTI_SERVER_README.md) for detailed documentation.
+
+### 5.3 Kubernetes Deployment
+
+For production environments, use the Kubernetes manifests:
+
+```bash
+# Single server
+kubectl apply -f k8s/
+
+# Multi-server architecture
+kubectl apply -f k8s/multi-server-deployment.yaml
+```
+
+All API endpoints (except /health and /login) require JWT authentication. Use the `/login` endpoint to obtain a JWT token, then include it in the `Authorization` header as `Bearer <token>`.
 
 ---
 

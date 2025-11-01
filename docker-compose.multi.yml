@@ -1,0 +1,338 @@
+version: '3.8'
+
+# Multi-Server MCP Architecture
+# This compose file runs specialized MCP servers on different ports
+
+services:
+  # Gateway - Routes requests to appropriate servers (commented out - access servers directly)
+  # gateway:
+  #   build: ./gateway
+  #   ports:
+  #     - "8000:8000"
+  #   environment:
+  #     - CORE_SERVER=http://core:8001
+  #     - INVENTORY_SERVER=http://inventory:8002
+  #     - TEMPLATES_SERVER=http://templates:8003
+  #     - USERS_SERVER=http://users:8004
+  #     - PROJECTS_SERVER=http://projects:8005
+  #     - ORGANIZATIONS_SERVER=http://organizations:8006
+  #     - SCHEDULES_SERVER=http://schedules:8007
+  #     - ADVANCED_SERVER=http://advanced:8008
+  #     - NOTIFICATIONS_SERVER=http://notifications:8009
+  #     - INFRASTRUCTURE_SERVER=http://infrastructure:8010
+  #     - REDIS_HOST=redis
+  #     - REDIS_PORT=6379
+  #   depends_on:
+  #     - core
+  #     - inventory
+  #     - templates
+  #     - redis
+  #   networks:
+  #     - mcp-network
+
+  # Core Operations Server (Port 8001)
+  core:
+    build:
+      context: .
+      dockerfile: servers/core/Dockerfile
+    ports:
+      - "8001:8001"
+    environment:
+      - AWX_BASE_URL=${AWX_BASE_URL:-http://192.168.122.46:31366}
+      - AWX_USERNAME=${AWX_USERNAME:-openwebui}
+      - AWX_PASSWORD=${AWX_PASSWORD:-openwebui}
+      - AUDIT_LOG_DIR=/var/log/mcp
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    volumes:
+      - ./logs/core:/var/log/mcp
+      - ./shared:/app/shared
+      - ./servers/core:/app/servers/core
+    depends_on:
+      - redis
+    networks:
+      - mcp-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Inventory Management Server (Port 8002)
+  inventory:
+    build:
+      context: .
+      dockerfile: servers/inventory/Dockerfile
+    ports:
+      - "8002:8002"
+    environment:
+      - AWX_BASE_URL=${AWX_BASE_URL:-http://192.168.122.46:31366}
+      - AWX_USERNAME=${AWX_USERNAME:-openwebui}
+      - AWX_PASSWORD=${AWX_PASSWORD:-openwebui}
+      - AUDIT_LOG_DIR=/var/log/mcp
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    volumes:
+      - ./logs/inventory:/var/log/mcp
+      - ./shared:/app/shared
+      - ./servers/inventory:/app/servers/inventory
+    depends_on:
+      - redis
+    networks:
+      - mcp-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8002/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Templates Server (Port 8003)
+  templates:
+    build:
+      context: .
+      dockerfile: servers/templates/Dockerfile
+    ports:
+      - "8003:8003"
+    environment:
+      - AWX_BASE_URL=${AWX_BASE_URL:-http://192.168.122.46:31366}
+      - AWX_USERNAME=${AWX_USERNAME:-openwebui}
+      - AWX_PASSWORD=${AWX_PASSWORD:-openwebui}
+      - AUDIT_LOG_DIR=/var/log/mcp
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    volumes:
+      - ./logs/templates:/var/log/mcp
+      - ./shared:/app/shared
+      - ./servers/templates:/app/servers/templates
+    depends_on:
+      - redis
+    networks:
+      - mcp-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8003/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Redis - Shared caching
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+    networks:
+      - mcp-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Nginx Gateway (Optional - for external access)
+  # nginx:
+  #   image: nginx:alpine
+  #   ports:
+  #     - "8080:80"
+  #   volumes:
+  #     - ./nginx-multi.conf:/etc/nginx/nginx.conf:ro
+  #     - ./htpasswd:/etc/nginx/.htpasswd:ro
+  #   depends_on:
+  #     - gateway
+  #   networks:
+  #     - mcp-network
+
+  # User Management Server (Port 8004)
+  users:
+    build:
+      context: .
+      dockerfile: servers/users/Dockerfile
+    ports:
+      - "8004:8004"
+    environment:
+      - AWX_BASE_URL=${AWX_BASE_URL:-http://192.168.122.46:31366}
+      - AWX_USERNAME=${AWX_USERNAME:-openwebui}
+      - AWX_PASSWORD=${AWX_PASSWORD:-openwebui}
+      - AUDIT_LOG_DIR=/var/log/mcp
+      - REDIS_HOST=redis
+    volumes:
+      - ./logs/users:/var/log/mcp
+      - ./shared:/app/shared
+      - ./servers/users:/app/servers/users
+    depends_on:
+      - redis
+    networks:
+      - mcp-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8004/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Project Management Server (Port 8005)
+  projects:
+    build:
+      context: .
+      dockerfile: servers/projects/Dockerfile
+    ports:
+      - "8005:8005"
+    environment:
+      - AWX_BASE_URL=${AWX_BASE_URL:-http://192.168.122.46:31366}
+      - AWX_USERNAME=${AWX_USERNAME:-openwebui}
+      - AWX_PASSWORD=${AWX_PASSWORD:-openwebui}
+      - AUDIT_LOG_DIR=/var/log/mcp
+      - REDIS_HOST=redis
+    volumes:
+      - ./logs/projects:/var/log/mcp
+      - ./shared:/app/shared
+      - ./servers/projects:/app/servers/projects
+    depends_on:
+      - redis
+    networks:
+      - mcp-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8005/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Organization Management Server (Port 8006)
+  organizations:
+    build:
+      context: .
+      dockerfile: servers/organizations/Dockerfile
+    ports:
+      - "8006:8006"
+    environment:
+      - AWX_BASE_URL=${AWX_BASE_URL:-http://192.168.122.46:31366}
+      - AWX_USERNAME=${AWX_USERNAME:-openwebui}
+      - AWX_PASSWORD=${AWX_PASSWORD:-openwebui}
+      - AUDIT_LOG_DIR=/var/log/mcp
+      - REDIS_HOST=redis
+    volumes:
+      - ./logs/organizations:/var/log/mcp
+      - ./shared:/app/shared
+      - ./servers/organizations:/app/servers/organizations
+    depends_on:
+      - redis
+    networks:
+      - mcp-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8006/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Schedules Management Server (Port 8007)
+  schedules:
+    build:
+      context: .
+      dockerfile: servers/schedules/Dockerfile
+    ports:
+      - "8007:8007"
+    environment:
+      - AWX_BASE_URL=${AWX_BASE_URL:-http://192.168.122.46:31366}
+      - AWX_USERNAME=${AWX_USERNAME:-openwebui}
+      - AWX_PASSWORD=${AWX_PASSWORD:-openwebui}
+      - AUDIT_LOG_DIR=/var/log/mcp
+      - REDIS_HOST=redis
+    volumes:
+      - ./logs/schedules:/var/log/mcp
+      - ./shared:/app/shared
+      - ./servers/schedules:/app/servers/schedules
+    depends_on:
+      - redis
+    networks:
+      - mcp-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8007/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Advanced Operations Server (Port 8008)
+  advanced:
+    build:
+      context: .
+      dockerfile: servers/advanced/Dockerfile
+    ports:
+      - "8008:8008"
+    environment:
+      - AWX_BASE_URL=${AWX_BASE_URL:-http://192.168.122.46:31366}
+      - AWX_USERNAME=${AWX_USERNAME:-openwebui}
+      - AWX_PASSWORD=${AWX_PASSWORD:-openwebui}
+      - AUDIT_LOG_DIR=/var/log/mcp
+      - REDIS_HOST=redis
+    volumes:
+      - ./logs/advanced:/var/log/mcp
+      - ./shared:/app/shared
+      - ./servers/advanced:/app/servers/advanced
+    depends_on:
+      - redis
+    networks:
+      - mcp-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8008/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Notifications Server (Port 8009)
+  notifications:
+    build:
+      context: .
+      dockerfile: servers/notifications/Dockerfile
+    ports:
+      - "8009:8009"
+    environment:
+      - AWX_BASE_URL=${AWX_BASE_URL:-http://192.168.122.46:31366}
+      - AWX_USERNAME=${AWX_USERNAME:-openwebui}
+      - AWX_PASSWORD=${AWX_PASSWORD:-openwebui}
+      - AUDIT_LOG_DIR=/var/log/mcp
+      - REDIS_HOST=redis
+    volumes:
+      - ./logs/notifications:/var/log/mcp
+      - ./shared:/app/shared
+      - ./servers/notifications:/app/servers/notifications
+    depends_on:
+      - redis
+    networks:
+      - mcp-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8009/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Infrastructure Server (Port 8010)
+  infrastructure:
+    build:
+      context: .
+      dockerfile: servers/infrastructure/Dockerfile
+    ports:
+      - "8010:8010"
+    environment:
+      - AWX_BASE_URL=${AWX_BASE_URL:-http://192.168.122.46:31366}
+      - AWX_USERNAME=${AWX_USERNAME:-openwebui}
+      - AWX_PASSWORD=${AWX_PASSWORD:-openwebui}
+      - AUDIT_LOG_DIR=/var/log/mcp
+      - REDIS_HOST=redis
+    volumes:
+      - ./logs/infrastructure:/var/log/mcp
+      - ./shared:/app/shared
+      - ./servers/infrastructure:/app/servers/infrastructure
+    depends_on:
+      - redis
+    networks:
+      - mcp-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8010/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+
+networks:
+  mcp-network:
+    driver: bridge
+
+volumes:
+  redis-data:
