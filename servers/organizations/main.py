@@ -20,7 +20,7 @@ app = FastAPI(
     description="Organization management operations",
     version="2.0.0",
     docs_url="/docs",
-    redoc_url="/redoc"
+    redoc_url="/redoc",
 )
 
 setup_middleware(app)
@@ -32,7 +32,7 @@ async def health():
     return {
         "status": "healthy",
         "server": "Organization Management",
-        "version": "2.0.0"
+        "version": "2.0.0",
     }
 
 
@@ -43,14 +43,14 @@ async def ready():
         return {
             "ready": True,
             "server": "Organization Management",
-            "awx_connected": True
+            "awx_connected": True,
         }
     except Exception as e:
         return {
             "ready": False,
             "server": "Organization Management",
             "awx_connected": False,
-            "error": str(e)
+            "error": str(e),
         }
 
 
@@ -66,14 +66,15 @@ async def root():
             "create_organization",
             "update_organization",
             "delete_organization",
-            "test_connection"
+            "test_connection",
         ],
         "docs": "/docs",
         "health": "/health",
-        "ready": "/ready"
+        "ready": "/ready",
     }
 
 
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(app, host="0.0.0.0", port=8006)

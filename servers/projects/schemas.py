@@ -10,6 +10,7 @@ from typing import Optional
 
 class CreateProjectRequest(BaseModel):
     """Request model for creating a project."""
+
     name: str
     scm_type: str  # e.g., 'git', 'svn', 'hg', 'insights'
     scm_url: str
@@ -18,6 +19,7 @@ class CreateProjectRequest(BaseModel):
 
 class UpdateProjectRequest(BaseModel):
     """Request model for updating a project."""
+
     name: Optional[str] = None
     scm_type: Optional[str] = None
     scm_url: Optional[str] = None
@@ -26,6 +28,7 @@ class UpdateProjectRequest(BaseModel):
 
 class ProjectResponse(BaseModel):
     """Response model for project details."""
+
     id: int
     name: str
     scm_type: str

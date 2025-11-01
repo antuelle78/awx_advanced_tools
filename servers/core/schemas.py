@@ -8,11 +8,13 @@ from typing import Optional, Dict, Any
 
 class LaunchJobRequest(BaseModel):
     """Request model for launching a job template."""
+
     extra_vars: Optional[Dict[str, Any]] = None
 
 
 class JobStatusResponse(BaseModel):
     """Response model for job status."""
+
     id: int
     status: str
     name: str

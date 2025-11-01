@@ -75,20 +75,26 @@ async def test_list_templates(mock_httpx):
     result = await awx_client.list_templates()
     assert result["url"].endswith("/job_templates/")
 
+
 @pytest.mark.asyncio
 async def test_create_job_template(mock_httpx):
-    result = await awx_client.create_job_template("Test Job Template", 1, 1, "playbook.yml")
+    result = await awx_client.create_job_template(
+        "Test Job Template", 1, 1, "playbook.yml"
+    )
     assert result["params"]["name"] == "Test Job Template"
+
 
 @pytest.mark.asyncio
 async def test_create_host(mock_httpx):
     result = await awx_client.create_host({"name": "Test Host", "inventory": 1})
     assert result["json"]["name"] == "Test Host"
 
+
 @pytest.mark.asyncio
 async def test_validate_host_valid():
     client = AWXClient()
     assert client.validate_host({"name": "Test", "inventory": 1})
+
 
 @pytest.mark.asyncio
 async def test_validate_host_invalid():
@@ -108,6 +114,7 @@ async def test_delete_user_success_with_json_response(mock_httpx):
 @pytest.mark.asyncio
 async def test_delete_user_success_empty_response(mock_httpx):
     """Test successful user deletion with empty response (204 No Content)."""
+
     # Create a response that raises ValueError on json() call (simulating empty body)
     class EmptyResponse:
         def json(self):
@@ -120,11 +127,19 @@ async def test_delete_user_success_empty_response(mock_httpx):
     async def dummy_delete_request(method, url, json=None, params=None, headers=None):
         if method == "DELETE":
             return EmptyResponse()
-        return DummyResponse({
-            "method": method, "url": url, "json": json, "params": params, "headers": headers
-        })
+        return DummyResponse(
+            {
+                "method": method,
+                "url": url,
+                "json": json,
+                "params": params,
+                "headers": headers,
+            }
+        )
 
-    mock_httpx.return_value.__aenter__.return_value.request = AsyncMock(side_effect=dummy_delete_request)
+    mock_httpx.return_value.__aenter__.return_value.request = AsyncMock(
+        side_effect=dummy_delete_request
+    )
 
     result = await awx_client.delete_user(123)
     assert result == {"status": "deleted", "id": 123}
@@ -147,14 +162,23 @@ async def test_delete_user_invalid_user_id():
 @pytest.mark.asyncio
 async def test_delete_user_http_error(mock_httpx):
     """Test delete_user with HTTP error responses."""
+
     async def dummy_error_request(method, url, json=None, params=None, headers=None):
         if method == "DELETE":
             return DummyResponse({"detail": "Not found"}, 404)
-        return DummyResponse({
-            "method": method, "url": url, "json": json, "params": params, "headers": headers
-        })
+        return DummyResponse(
+            {
+                "method": method,
+                "url": url,
+                "json": json,
+                "params": params,
+                "headers": headers,
+            }
+        )
 
-    mock_httpx.return_value.__aenter__.return_value.request = AsyncMock(side_effect=dummy_error_request)
+    mock_httpx.return_value.__aenter__.return_value.request = AsyncMock(
+        side_effect=dummy_error_request
+    )
 
     # Test that HTTP errors are propagated
     with pytest.raises(httpx.HTTPStatusError):

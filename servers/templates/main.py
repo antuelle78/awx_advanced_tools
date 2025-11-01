@@ -21,7 +21,7 @@ app = FastAPI(
     description="Job and workflow template management operations",
     version="2.0.0",
     docs_url="/docs",
-    redoc_url="/redoc"
+    redoc_url="/redoc",
 )
 
 # Setup middleware
@@ -34,11 +34,7 @@ app.include_router(router)
 @app.get("/health")
 async def health():
     """Health check endpoint."""
-    return {
-        "status": "healthy",
-        "server": "Templates",
-        "version": "2.0.0"
-    }
+    return {"status": "healthy", "server": "Templates", "version": "2.0.0"}
 
 
 @app.get("/ready")
@@ -47,17 +43,13 @@ async def ready():
     try:
         # Test AWX connection by listing workflow templates
         await awx_client.list_workflow_job_templates()
-        return {
-            "ready": True,
-            "server": "Templates",
-            "awx_connected": True
-        }
+        return {"ready": True, "server": "Templates", "awx_connected": True}
     except Exception as e:
         return {
             "ready": False,
             "server": "Templates",
             "awx_connected": False,
-            "error": str(e)
+            "error": str(e),
         }
 
 
@@ -75,14 +67,15 @@ async def root():
             "update_workflow_template",
             "delete_workflow_template",
             "launch_workflow_template",
-            "test_connection"
+            "test_connection",
         ],
         "docs": "/docs",
         "health": "/health",
-        "ready": "/ready"
+        "ready": "/ready",
     }
 
 
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(app, host="0.0.0.0", port=8003)

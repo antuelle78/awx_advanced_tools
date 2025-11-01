@@ -40,7 +40,7 @@ async def create_inventory(request: CreateInventoryRequest):
         return await awx_client.create_inventory(
             name=request.name,
             variables=request.variables,
-            organization=request.organization
+            organization=request.organization,
         )
     except httpx.HTTPStatusError as exc:
         raise HTTPException(status_code=exc.response.status_code, detail=str(exc))
@@ -77,10 +77,7 @@ async def list_hosts(inventory: int = None):
 async def create_host(request: CreateHostRequest):
     """Create a new host."""
     try:
-        host_data = {
-            "name": request.name,
-            "inventory": request.inventory
-        }
+        host_data = {"name": request.name, "inventory": request.inventory}
         if request.variables:
             host_data["variables"] = request.variables
         return await awx_client.create_host(host_data)
@@ -93,9 +90,8 @@ async def test_connection():
     """Test AWX connection."""
     try:
         result = await awx_client.list_inventories()
-        return {
-            "status": "connected",
-            "inventory_count": result.get("count", 0)
-        }
+        return {"status": "connected", "inventory_count": result.get("count", 0)}
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=f"AWX connection failed: {str(exc)}")
+        raise HTTPException(
+            status_code=500, detail=f"AWX connection failed: {str(exc)}"
+        )

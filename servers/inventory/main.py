@@ -21,7 +21,7 @@ app = FastAPI(
     description="Inventory and host management operations",
     version="2.0.0",
     docs_url="/docs",
-    redoc_url="/redoc"
+    redoc_url="/redoc",
 )
 
 # Setup middleware
@@ -34,11 +34,7 @@ app.include_router(router)
 @app.get("/health")
 async def health():
     """Health check endpoint."""
-    return {
-        "status": "healthy",
-        "server": "Inventory Management",
-        "version": "2.0.0"
-    }
+    return {"status": "healthy", "server": "Inventory Management", "version": "2.0.0"}
 
 
 @app.get("/ready")
@@ -47,17 +43,13 @@ async def ready():
     try:
         # Test AWX connection by listing inventories
         await awx_client.list_inventories()
-        return {
-            "ready": True,
-            "server": "Inventory Management",
-            "awx_connected": True
-        }
+        return {"ready": True, "server": "Inventory Management", "awx_connected": True}
     except Exception as e:
         return {
             "ready": False,
             "server": "Inventory Management",
             "awx_connected": False,
-            "error": str(e)
+            "error": str(e),
         }
 
 
@@ -76,14 +68,15 @@ async def root():
             "sync_inventory",
             "list_hosts",
             "create_host",
-            "test_connection"
+            "test_connection",
         ],
         "docs": "/docs",
         "health": "/health",
-        "ready": "/ready"
+        "ready": "/ready",
     }
 
 
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(app, host="0.0.0.0", port=8002)

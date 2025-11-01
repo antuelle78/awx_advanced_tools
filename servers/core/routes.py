@@ -56,9 +56,8 @@ async def test_connection():
     """Test AWX connection."""
     try:
         result = await awx_client.list_templates()
-        return {
-            "status": "connected",
-            "template_count": result.get("count", 0)
-        }
+        return {"status": "connected", "template_count": result.get("count", 0)}
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=f"AWX connection failed: {str(exc)}")
+        raise HTTPException(
+            status_code=500, detail=f"AWX connection failed: {str(exc)}"
+        )

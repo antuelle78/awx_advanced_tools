@@ -1,9 +1,11 @@
 """API routes for Notifications server."""
+
 from fastapi import APIRouter, HTTPException
 from shared.awx_client import awx_client
 import httpx
 
 router = APIRouter()
+
 
 @router.get("/activity_stream")
 async def get_activity_stream(page: int = 1):
@@ -17,6 +19,7 @@ async def get_activity_stream(page: int = 1):
     except httpx.HTTPStatusError as exc:
         raise HTTPException(status_code=exc.response.status_code, detail=str(exc))
 
+
 @router.get("/test")
 async def test_connection():
     """Test AWX connection."""
@@ -26,4 +29,6 @@ async def test_connection():
         result = resp.json()
         return {"status": "connected", "activity_count": result.get("count", 0)}
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=f"AWX connection failed: {str(exc)}")
+        raise HTTPException(
+            status_code=500, detail=f"AWX connection failed: {str(exc)}"
+        )

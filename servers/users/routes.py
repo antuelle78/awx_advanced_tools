@@ -53,7 +53,7 @@ async def create_user(request: CreateUserRequest):
             password=request.password,
             first_name=request.first_name,
             last_name=request.last_name,
-            email=request.email
+            email=request.email,
         )
     except httpx.HTTPStatusError as exc:
         raise HTTPException(status_code=exc.response.status_code, detail=str(exc))
@@ -68,7 +68,7 @@ async def update_user(user_id: int, request: UpdateUserRequest):
             username=request.username,
             first_name=request.first_name,
             last_name=request.last_name,
-            email=request.email
+            email=request.email,
         )
     except httpx.HTTPStatusError as exc:
         raise HTTPException(status_code=exc.response.status_code, detail=str(exc))
@@ -88,9 +88,8 @@ async def test_connection():
     """Test AWX connection."""
     try:
         result = await awx_client.list_users()
-        return {
-            "status": "connected",
-            "user_count": result.get("count", 0)
-        }
+        return {"status": "connected", "user_count": result.get("count", 0)}
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=f"AWX connection failed: {str(exc)}")
+        raise HTTPException(
+            status_code=500, detail=f"AWX connection failed: {str(exc)}"
+        )

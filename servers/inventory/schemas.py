@@ -8,6 +8,7 @@ from typing import Optional, Dict, Any
 
 class CreateInventoryRequest(BaseModel):
     """Request model for creating an inventory."""
+
     name: str
     variables: Optional[Dict[str, Any]] = None
     organization: Optional[int] = None
@@ -15,6 +16,7 @@ class CreateInventoryRequest(BaseModel):
 
 class CreateHostRequest(BaseModel):
     """Request model for creating a host."""
+
     name: str
     inventory: int
     variables: Optional[Dict[str, Any]] = None
@@ -22,6 +24,7 @@ class CreateHostRequest(BaseModel):
 
 class InventoryResponse(BaseModel):
     """Response model for inventory details."""
+
     id: int
     name: str
     organization: Optional[int] = None

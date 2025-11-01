@@ -25,7 +25,7 @@ app = FastAPI(
     description="{DESCRIPTION}",
     version="2.0.0",
     docs_url="/docs",
-    redoc_url="/redoc"
+    redoc_url="/redoc",
 )
 
 # Setup middleware
@@ -38,11 +38,7 @@ app.include_router(router)
 @app.get("/health")
 async def health():
     """Health check endpoint."""
-    return {
-        "status": "healthy",
-        "server": "{SERVER_NAME}",
-        "version": "2.0.0"
-    }
+    return {"status": "healthy", "server": "{SERVER_NAME}", "version": "2.0.0"}
 
 
 @app.get("/ready")
@@ -51,17 +47,13 @@ async def ready():
     try:
         # Test AWX connection by listing templates
         await awx_client.list_templates()
-        return {
-            "ready": True,
-            "server": "{SERVER_NAME}",
-            "awx_connected": True
-        }
+        return {"ready": True, "server": "{SERVER_NAME}", "awx_connected": True}
     except Exception as e:
         return {
             "ready": False,
             "server": "{SERVER_NAME}",
             "awx_connected": False,
-            "error": str(e)
+            "error": str(e),
         }
 
 
@@ -73,12 +65,13 @@ async def root():
         "version": "2.0.0",
         "docs": "/docs",
         "health": "/health",
-        "ready": "/ready"
+        "ready": "/ready",
     }
 
 
 if __name__ == "__main__":
     import uvicorn
     import os
+
     port = int(os.getenv("PORT", "8000"))
     uvicorn.run(app, host="0.0.0.0", port=port)

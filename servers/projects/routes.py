@@ -40,7 +40,7 @@ async def create_project(request: CreateProjectRequest):
             name=request.name,
             scm_type=request.scm_type,
             scm_url=request.scm_url,
-            description=request.description
+            description=request.description,
         )
     except httpx.HTTPStatusError as exc:
         raise HTTPException(status_code=exc.response.status_code, detail=str(exc))
@@ -55,7 +55,7 @@ async def update_project(project_id: int, request: UpdateProjectRequest):
             name=request.name,
             scm_type=request.scm_type,
             scm_url=request.scm_url,
-            description=request.description
+            description=request.description,
         )
     except httpx.HTTPStatusError as exc:
         raise HTTPException(status_code=exc.response.status_code, detail=str(exc))
@@ -84,9 +84,8 @@ async def test_connection():
     """Test AWX connection."""
     try:
         result = await awx_client.list_projects()
-        return {
-            "status": "connected",
-            "project_count": result.get("count", 0)
-        }
+        return {"status": "connected", "project_count": result.get("count", 0)}
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=f"AWX connection failed: {str(exc)}")
+        raise HTTPException(
+            status_code=500, detail=f"AWX connection failed: {str(exc)}"
+        )

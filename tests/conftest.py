@@ -8,6 +8,7 @@ import sys
 os.environ["LLM_PROVIDER"] = "ollama"
 os.environ["AUDIT_LOG_DIR"] = "/tmp/audit"
 
+
 # Create a dummy openai module with minimal ChatCompletion
 class DummyChatCompletion:
     async def acreate(self, **kwargs):
@@ -26,9 +27,11 @@ class DummyChatCompletion:
 
         return DummyResponse()
 
+
 # Add dummy openai to sys.modules
-sys.modules["openai"] = type(sys)('openai')
+sys.modules["openai"] = type(sys)("openai")
 sys.modules["openai"].ChatCompletion = DummyChatCompletion()
+
 
 # Create a dummy ollama module
 class DummyAsyncClient:
@@ -38,5 +41,6 @@ class DummyAsyncClient:
     async def generate(self, **kwargs):
         return {"response": '{"test": "data"}'}
 
-sys.modules["ollama"] = type(sys)('ollama')
+
+sys.modules["ollama"] = type(sys)("ollama")
 sys.modules["ollama"].AsyncClient = DummyAsyncClient

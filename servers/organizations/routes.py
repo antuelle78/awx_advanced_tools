@@ -37,8 +37,7 @@ async def create_organization(request: CreateOrganizationRequest):
     """Create a new organization."""
     try:
         return await awx_client.create_organization(
-            name=request.name,
-            description=request.description
+            name=request.name, description=request.description
         )
     except httpx.HTTPStatusError as exc:
         raise HTTPException(status_code=exc.response.status_code, detail=str(exc))
@@ -51,7 +50,7 @@ async def update_organization(organization_id: int, request: UpdateOrganizationR
         return await awx_client.update_organization(
             organization_id=organization_id,
             name=request.name,
-            description=request.description
+            description=request.description,
         )
     except httpx.HTTPStatusError as exc:
         raise HTTPException(status_code=exc.response.status_code, detail=str(exc))
@@ -71,9 +70,8 @@ async def test_connection():
     """Test AWX connection."""
     try:
         result = await awx_client.list_organizations()
-        return {
-            "status": "connected",
-            "organization_count": result.get("count", 0)
-        }
+        return {"status": "connected", "organization_count": result.get("count", 0)}
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=f"AWX connection failed: {str(exc)}")
+        raise HTTPException(
+            status_code=500, detail=f"AWX connection failed: {str(exc)}"
+        )

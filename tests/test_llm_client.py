@@ -26,7 +26,9 @@ class TestGetLLMClient:
 
     @patch("app.llm.client.settings")
     @patch("importlib.util.find_spec")
-    def test_get_llm_client_openai_unavailable_fallback_ollama(self, mock_find_spec, mock_settings):
+    def test_get_llm_client_openai_unavailable_fallback_ollama(
+        self, mock_find_spec, mock_settings
+    ):
         mock_settings.llm_provider = "ollama"
         mock_find_spec.return_value = None  # OpenAI not available
         client = get_llm_client()
@@ -34,7 +36,9 @@ class TestGetLLMClient:
 
     @patch("app.llm.client.settings")
     @patch("importlib.util.find_spec")
-    def test_get_llm_client_openai_unavailable_error(self, mock_find_spec, mock_settings):
+    def test_get_llm_client_openai_unavailable_error(
+        self, mock_find_spec, mock_settings
+    ):
         mock_settings.llm_provider = "default"
         mock_find_spec.return_value = None  # OpenAI not available
         with pytest.raises(RuntimeError, match="OpenAI SDK not installed"):

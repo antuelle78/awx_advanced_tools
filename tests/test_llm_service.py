@@ -12,7 +12,9 @@ class TestPromptService:
     @patch("app.llm.service.TEMPLATES")
     @patch("app.llm.service.get_schema")
     @pytest.mark.asyncio
-    async def test_generate_payload_success(self, mock_get_schema, mock_templates, mock_get_client):
+    async def test_generate_payload_success(
+        self, mock_get_schema, mock_templates, mock_get_client
+    ):
         # Mock LLM client
         mock_client = AsyncMock()
         mock_client.get_payload = AsyncMock(return_value={"name": "test"})
@@ -35,7 +37,9 @@ class TestPromptService:
     @patch("app.llm.service.get_llm_client")
     @patch("app.llm.service.TEMPLATES")
     @pytest.mark.asyncio
-    async def test_generate_payload_unknown_action(self, mock_templates, mock_get_client):
+    async def test_generate_payload_unknown_action(
+        self, mock_templates, mock_get_client
+    ):
         mock_templates.__contains__ = lambda self, key: False
         service = PromptService()
         with pytest.raises(ValueError, match="Unknown action"):
@@ -46,7 +50,9 @@ class TestPromptService:
     @patch("app.llm.service.get_schema")
     @patch("app.llm.service._CACHE", {})  # Clear cache
     @pytest.mark.asyncio
-    async def test_generate_payload_cache_hit(self, mock_get_schema, mock_templates, mock_get_client):
+    async def test_generate_payload_cache_hit(
+        self, mock_get_schema, mock_templates, mock_get_client
+    ):
         mock_client = AsyncMock()
         mock_client.get_payload.return_value = {"test": "data"}
         mock_get_client.return_value = mock_client
@@ -66,7 +72,9 @@ class TestPromptService:
     @patch("app.llm.service.TEMPLATES")
     @patch("app.llm.service.get_schema")
     @pytest.mark.asyncio
-    async def test_generate_payload_validation_error(self, mock_get_schema, mock_templates, mock_get_client):
+    async def test_generate_payload_validation_error(
+        self, mock_get_schema, mock_templates, mock_get_client
+    ):
         mock_client = AsyncMock()
         mock_client.get_payload = AsyncMock(return_value={"invalid": "data"})
         mock_get_client.return_value = mock_client

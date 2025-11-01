@@ -1,9 +1,11 @@
 """API routes for Infrastructure server."""
+
 from fastapi import APIRouter, HTTPException
 from shared.awx_client import awx_client
 import httpx
 
 router = APIRouter()
+
 
 @router.get("/ping")
 async def ping_awx():
@@ -15,6 +17,7 @@ async def ping_awx():
     except httpx.HTTPStatusError as exc:
         raise HTTPException(status_code=exc.response.status_code, detail=str(exc))
 
+
 @router.get("/config")
 async def get_config():
     """Get AWX configuration."""
@@ -25,6 +28,7 @@ async def get_config():
     except httpx.HTTPStatusError as exc:
         raise HTTPException(status_code=exc.response.status_code, detail=str(exc))
 
+
 @router.get("/test")
 async def test_connection():
     """Test AWX connection."""
@@ -34,4 +38,6 @@ async def test_connection():
         result = resp.json()
         return {"status": "connected", "version": result.get("version", "unknown")}
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=f"AWX connection failed: {str(exc)}")
+        raise HTTPException(
+            status_code=500, detail=f"AWX connection failed: {str(exc)}"
+        )
