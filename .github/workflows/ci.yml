@@ -2,7 +2,7 @@ name: CI/CD
 
 on:
   push:
-    branches: [ master, main ]
+    branches: [ master, main, small ]  # Added 'small' branch for testing
   pull_request:
     branches: [ master, main ]
   release:
