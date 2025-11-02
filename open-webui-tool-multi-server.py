@@ -85,7 +85,7 @@ class Tools:
 
         # Model optimization
         model_name: str = Field(
-            default="granite3.1-dense:2b",
+            default="granite4:3b",
             description="Current model name for capability optimization",
         )
         enable_model_optimization: bool = Field(

@@ -6,15 +6,15 @@ services:
     expose:
       - "8000"
     environment:
-      - AWX_BASE_URL=http://192.168.122.46:31366
-      - AWX_USERNAME=openwebui
-      - AWX_PASSWORD=openwebui
-      - AUDIT_LOG_DIR=/var/log/mcp
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
-      - REDIS_DB=0
-      - LLM_MODEL=gpt-4o
-      - LLM_ENDPOINT="http://host.docker.internal:11434"
+      AWX_BASE_URL: http://192.168.122.46:31366
+      AWX_USERNAME: openwebui
+      AWX_PASSWORD: openwebui
+      AUDIT_LOG_DIR: /var/log/mcp
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      REDIS_DB: "0"
+      LLM_MODEL: granite4:3b
+      LLM_ENDPOINT: "http://host.docker.internal:11434"
     volumes:
       - ./logs:/var/log/mcp
     depends_on:

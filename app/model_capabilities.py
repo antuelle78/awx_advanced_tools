@@ -113,6 +113,34 @@ MODEL_CAPABILITIES: Dict[str, ModelCapabilities] = {
         supports_multilingual=False,
         recommended_batch_size=1,
     ),
+    # Granite 4.0 models (October 2025) - Enterprise optimized
+    "granite4:3b": ModelCapabilities(
+        max_tools=20,
+        context_window=131072,
+        complex_reasoning=True,
+        json_accuracy="high",  # Native structured output support
+        max_concurrent_tools=3,
+        supports_multilingual=True,
+        recommended_batch_size=6,
+    ),
+    "granite4:7b-a1b-h": ModelCapabilities(
+        max_tools=25,
+        context_window=131072,
+        complex_reasoning=True,
+        json_accuracy="high",
+        max_concurrent_tools=4,
+        supports_multilingual=True,
+        recommended_batch_size=8,
+    ),
+    "granite4:32b-a9b-h": ModelCapabilities(
+        max_tools=35,
+        context_window=131072,
+        complex_reasoning=True,
+        json_accuracy="high",
+        max_concurrent_tools=5,
+        supports_multilingual=True,
+        recommended_batch_size=10,
+    ),
 }
 
 
@@ -227,6 +255,31 @@ def get_available_tools(model_name: str, conversation_length: int = 0) -> List[s
     """Get available tools based on model capabilities and conversation context."""
     capabilities = get_model_capabilities(model_name)
 
+    # Granite 4 optimization: More aggressive tool exposure
+    if "granite4" in model_name.lower():
+        # Start with basic tools
+        available_tools = TOOL_GROUPS["basic"].copy()
+
+        # Add inventory tools immediately (Granite 4 can handle it)
+        available_tools.extend(TOOL_GROUPS["inventory"])
+
+        # Add user management tools (Granite 4 has high JSON accuracy)
+        available_tools.extend(TOOL_GROUPS["users"])
+
+        # Add project/organization tools (complex reasoning capable)
+        available_tools.extend(TOOL_GROUPS["projects"])
+        available_tools.extend(TOOL_GROUPS["organizations"])
+
+        # Add scheduling for Granite 4's advanced reasoning
+        available_tools.extend(TOOL_GROUPS["schedules"])
+
+        # Add advanced tools (Granite 4 is enterprise-ready)
+        available_tools.extend(TOOL_GROUPS["advanced"])
+
+        # Limit to model's max_tools capacity
+        return available_tools[: capabilities.max_tools]
+
+    # Standard logic for other models
     # Start with basic tools
     available_tools = TOOL_GROUPS["basic"].copy()
 
@@ -272,6 +325,14 @@ def should_use_simplified_prompt(model_name: str, tool_name: str) -> bool:
 def get_context_limits(model_name: str) -> Dict[str, int]:
     """Get context management limits for a model."""
     capabilities = get_model_capabilities(model_name)
+
+    # Granite 4 optimization: Better utilize large context windows
+    if "granite4" in model_name.lower():
+        return {
+            "max_context_items": min(15, capabilities.recommended_batch_size * 2),
+            "context_summary_trigger": capabilities.recommended_batch_size * 4,
+            "max_tool_calls_per_response": capabilities.max_concurrent_tools,
+        }
 
     return {
         "max_context_items": min(10, capabilities.recommended_batch_size * 2),
