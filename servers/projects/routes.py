@@ -8,6 +8,7 @@ Handles:
 
 from fastapi import APIRouter, HTTPException
 from shared.awx_client import awx_client
+from shared.table_formatter import TableFormatter
 from .schemas import CreateProjectRequest, UpdateProjectRequest
 import httpx
 
@@ -16,11 +17,12 @@ router = APIRouter()
 
 @router.get("/projects")
 async def list_projects(name: str = None):
-    """List all projects, optionally filtered by name."""
+    """List all projects."""
     try:
-        return await awx_client.list_projects(name)
+        data = await awx_client.list_projects(name)
+        return TableFormatter.format_list_response(data, "projects")
     except httpx.HTTPStatusError as exc:
-        raise HTTPException(status_code=exc.response.status_code, detail=str(exc))
+        return TableFormatter.format_error(str(exc), "Project Management")
 
 
 @router.get("/projects/{project_id}")

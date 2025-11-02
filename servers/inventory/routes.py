@@ -9,6 +9,7 @@ Handles:
 
 from fastapi import APIRouter, HTTPException
 from shared.awx_client import awx_client
+from shared.table_formatter import TableFormatter
 from .schemas import CreateInventoryRequest, CreateHostRequest
 import httpx
 
@@ -19,9 +20,10 @@ router = APIRouter()
 async def list_inventories(name: str = None):
     """List all inventories."""
     try:
-        return await awx_client.list_inventories(name)
+        data = await awx_client.list_inventories(name)
+        return TableFormatter.format_list_response(data, "inventories")
     except httpx.HTTPStatusError as exc:
-        raise HTTPException(status_code=exc.response.status_code, detail=str(exc))
+        return TableFormatter.format_error(str(exc), "Inventory Management")
 
 
 @router.get("/inventories/{inventory_id}")

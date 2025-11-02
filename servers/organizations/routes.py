@@ -8,6 +8,7 @@ Handles:
 
 from fastapi import APIRouter, HTTPException
 from shared.awx_client import awx_client
+from shared.table_formatter import TableFormatter
 from .schemas import CreateOrganizationRequest, UpdateOrganizationRequest
 import httpx
 
@@ -16,11 +17,12 @@ router = APIRouter()
 
 @router.get("/organizations")
 async def list_organizations(name: str = None):
-    """List all organizations, optionally filtered by name."""
+    """List all organizations."""
     try:
-        return await awx_client.list_organizations(name)
+        data = await awx_client.list_organizations(name)
+        return TableFormatter.format_list_response(data, "organizations")
     except httpx.HTTPStatusError as exc:
-        raise HTTPException(status_code=exc.response.status_code, detail=str(exc))
+        return TableFormatter.format_error(str(exc), "Organization Management")
 
 
 @router.get("/organizations/{organization_id}")

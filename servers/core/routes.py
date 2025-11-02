@@ -8,6 +8,7 @@ Handles:
 
 from fastapi import APIRouter, HTTPException
 from shared.awx_client import awx_client
+from shared.table_formatter import TableFormatter
 from .schemas import LaunchJobRequest
 import httpx
 
@@ -18,9 +19,10 @@ router = APIRouter()
 async def list_templates(name: str = None):
     """List all job templates."""
     try:
-        return await awx_client.list_templates(name)
+        data = await awx_client.list_templates(name)
+        return TableFormatter.format_list_response(data, "job_templates")
     except httpx.HTTPStatusError as exc:
-        raise HTTPException(status_code=exc.response.status_code, detail=str(exc))
+        return TableFormatter.format_error(str(exc), "Core Operations")
 
 
 @router.post("/job_templates/{template_id}/launch")
@@ -28,27 +30,30 @@ async def launch_job_template(template_id: int, request: LaunchJobRequest = None
     """Launch a job template."""
     try:
         extra_vars = request.extra_vars if request else None
-        return await awx_client.launch_job_template(template_id, extra_vars)
+        data = await awx_client.launch_job_template(template_id, extra_vars)
+        return TableFormatter.format_operation_result("launch_job_template", True, data)
     except httpx.HTTPStatusError as exc:
-        raise HTTPException(status_code=exc.response.status_code, detail=str(exc))
+        return TableFormatter.format_operation_result("launch_job_template", False, error=str(exc))
 
 
 @router.get("/jobs")
 async def list_jobs(page: int = 1):
     """List jobs with pagination."""
     try:
-        return await awx_client.list_jobs(page)
+        data = await awx_client.list_jobs(page)
+        return TableFormatter.format_list_response(data, "jobs")
     except httpx.HTTPStatusError as exc:
-        raise HTTPException(status_code=exc.response.status_code, detail=str(exc))
+        return TableFormatter.format_error(str(exc), "Core Operations")
 
 
 @router.get("/jobs/{job_id}")
 async def get_job(job_id: int):
     """Get job status and details."""
     try:
-        return await awx_client.get_job(job_id)
+        data = await awx_client.get_job(job_id)
+        return TableFormatter.format_single_item(data, "jobs")
     except httpx.HTTPStatusError as exc:
-        raise HTTPException(status_code=exc.response.status_code, detail=str(exc))
+        return TableFormatter.format_error(str(exc), "Core Operations")
 
 
 @router.get("/test")

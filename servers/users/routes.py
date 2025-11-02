@@ -9,6 +9,7 @@ Handles:
 
 from fastapi import APIRouter, HTTPException
 from shared.awx_client import awx_client
+from shared.table_formatter import TableFormatter
 from .schemas import CreateUserRequest, UpdateUserRequest
 import httpx
 
@@ -16,12 +17,13 @@ router = APIRouter()
 
 
 @router.get("/users")
-async def list_users(username: str = None):
-    """List all users, optionally filtered by username."""
+async def list_users():
+    """List all users."""
     try:
-        return await awx_client.list_users(username)
+        data = await awx_client.list_users()
+        return TableFormatter.format_list_response(data, "users")
     except httpx.HTTPStatusError as exc:
-        raise HTTPException(status_code=exc.response.status_code, detail=str(exc))
+        return TableFormatter.format_error(str(exc), "User Management")
 
 
 @router.get("/users/{user_id}")
