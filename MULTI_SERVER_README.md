@@ -27,15 +27,15 @@ This directory contains the refactored multi-server MCP architecture designed to
 Port 8000: Gateway (Smart Routing)
          │
          ├─ Port 8001: Core Operations (6 tools)
-         ├─ Port 8002: Inventory Management (5 tools)
-         ├─ Port 8003: Job Templates (8 tools)
-         ├─ Port 8004: User Management (6 tools)
-         ├─ Port 8005: Project Management (6 tools)
-         ├─ Port 8006: Organization Management (5 tools)
-         ├─ Port 8007: Schedule Management (5 tools)
-         ├─ Port 8008: Advanced Operations (8 tools)
-         ├─ Port 8009: Notifications (4 tools)
-         └─ Port 8010: Infrastructure (4 tools)
+         ├─ Port 8002: Inventory Management (8 tools)
+         ├─ Port 8003: Job Templates (7 tools)
+         ├─ Port 8004: User Management (7 tools)
+         ├─ Port 8005: Project Management (7 tools)
+         ├─ Port 8006: Organization Management (6 tools)
+         ├─ Port 8007: Schedule Management (7 tools)
+         ├─ Port 8008: Advanced Operations (5 tools)
+         ├─ Port 8009: Notifications (2 tools)
+         └─ Port 8010: Infrastructure (3 tools)
 ```
 
 ## 🗂️ Directory Structure

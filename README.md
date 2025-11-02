@@ -453,6 +453,46 @@ AWX_TOKEN=<generated_token>
 
 ## API Reference
 
+### Response Format
+
+All API endpoints return responses formatted as **markdown tables** for optimal LLM consumption. This provides structured, readable output that works well with AI assistants and chat interfaces.
+
+#### Table Response Format
+
+**List Operations** return paginated results in table format:
+```markdown
+| ID | Name | Description | Created | Modified |
+|----|------|-------------|---------|----------|
+| 7  | Demo Job Template | N/A | 2025-09-13 15:39 | 2025-10-25 15:22 |
+| 8  | Backup Template | Automated backup | 2025-10-01 09:15 | 2025-10-25 16:45 |
+```
+
+**Single Item Operations** return detailed key-value tables:
+```markdown
+| Property | Value |
+|----------|-------|
+| Id | 7 |
+| Name | Demo Job Template |
+| Description | N/A |
+| Created | 2025-09-13 15:39 |
+| Modified | 2025-10-25 15:22 |
+```
+
+**Operation Results** show success/failure status:
+```markdown
+| Operation | Status | Details |
+|-----------|--------|---------|
+| Launch Job Template | Success | Job ID: 157 started |
+```
+
+#### Benefits for LLMs
+
+- **Structured Data**: Consistent column layout for easy parsing
+- **Truncated Content**: Long text is automatically truncated with "..."
+- **Formatted Dates**: ISO timestamps converted to readable format
+- **Boolean Values**: True/False shown as "Yes"/"No"
+- **Pagination Info**: Shows total count when results are truncated
+
 ### Health Check Endpoints
 
 All servers expose standard health endpoints:
@@ -509,36 +549,27 @@ List all jobs with pagination.
 - `page_size` (int): Items per page (default: 20)
 
 **Response:**
-```json
-{
-  "count": 156,
-  "next": "/jobs?page=2",
-  "previous": null,
-  "results": [
-    {
-      "id": 42,
-      "name": "Deploy Application",
-      "status": "successful",
-      "created": "2025-11-01T20:00:00Z"
-    }
-  ]
-}
+```markdown
+| ID | Name | Status | Started | Finished |
+|----|------|--------|---------|----------|
+| 42 | Deploy Application | successful | 2025-11-01 20:00 | 2025-11-01 20:05 |
+| 43 | Database Backup | successful | 2025-11-01 19:30 | 2025-11-01 19:45 |
 ```
 
 #### GET /jobs/{job_id}
 Get specific job details.
 
 **Response:**
-```json
-{
-  "id": 42,
-  "name": "Deploy Application",
-  "status": "successful",
-  "job_template": 10,
-  "started": "2025-11-01T20:00:00Z",
-  "finished": "2025-11-01T20:05:00Z",
-  "elapsed": 300
-}
+```markdown
+| Property | Value |
+|----------|-------|
+| Id | 42 |
+| Name | Deploy Application |
+| Status | successful |
+| Job Template | 10 |
+| Started | 2025-11-01 20:00 |
+| Finished | 2025-11-01 20:05 |
+| Elapsed | 300 |
 ```
 
 ### Inventory Server (Port 8002)
@@ -551,18 +582,11 @@ List inventories.
 - `organization` (int): Filter by organization ID
 
 **Response:**
-```json
-{
-  "count": 5,
-  "inventories": [
-    {
-      "id": 1,
-      "name": "Production",
-      "total_hosts": 50,
-      "organization": 1
-    }
-  ]
-}
+```markdown
+| ID | Name | Organization | Hosts Count | Groups Count |
+|----|------|--------------|-------------|--------------|
+| 1  | Production | Default | 50 | 5 |
+| 2  | Staging | Default | 10 | 2 |
 ```
 
 #### POST /inventories
@@ -605,15 +629,160 @@ Launch job template.
 ```
 
 **Response:**
-```json
-{
-  "job_id": 157,
-  "status": "pending",
-  "url": "/jobs/157"
-}
+```markdown
+| Operation | Status | Details |
+|-----------|--------|---------|
+| Launch Job Template | Success | Job ID: 157 started |
 ```
 
 For complete API documentation, see [API_REFERENCE.md](./API_REFERENCE.md).
+
+### Users Server (Port 8004)
+
+#### GET /users
+List all users.
+
+**Response:**
+```markdown
+| ID | Username | First Name | Last Name | Email |
+|----|----------|------------|-----------|-------|
+| 1  | admin | System | Administrator | admin@example.com |
+| 2  | developer | John | Doe | john.doe@example.com |
+```
+
+#### POST /users
+Create a new user.
+
+**Request Body:**
+```json
+{
+  "username": "newuser",
+  "first_name": "New",
+  "last_name": "User",
+  "email": "new@example.com",
+  "password": "secure_password"
+}
+```
+
+**Response:**
+```markdown
+| Operation | Status | Details |
+|-----------|--------|---------|
+| Create User | Success | ID: 3, Name: newuser |
+```
+
+### Projects Server (Port 8005)
+
+#### GET /projects
+List all projects.
+
+**Response:**
+```markdown
+| ID | Name | SCM Type | SCM URL | Status |
+|----|------|----------|---------|--------|
+| 1  | Demo Project | git | https://github.com/example/demo.git | successful |
+```
+
+#### POST /projects
+Create a new project.
+
+**Request Body:**
+```json
+{
+  "name": "New Project",
+  "scm_type": "git",
+  "scm_url": "https://github.com/example/new.git",
+  "organization": 1
+}
+```
+
+**Response:**
+```markdown
+| Operation | Status | Details |
+|-----------|--------|---------|
+| Create Project | Success | ID: 2, Name: New Project |
+```
+
+### Organizations Server (Port 8006)
+
+#### GET /organizations
+List all organizations.
+
+**Response:**
+```markdown
+| ID | Name | Description | Created | Modified |
+|----|------|-------------|---------|----------|
+| 1  | Default | Default organization | 2025-09-13 15:39 | 2025-10-25 15:22 |
+```
+
+### Schedules Server (Port 8007)
+
+#### GET /schedules
+List all schedules.
+
+**Response:**
+```markdown
+| ID | Name | Template | RRULE | Enabled |
+|----|------|----------|-------|---------|
+| 1  | Daily Backup | 5 | FREQ=DAILY | Yes |
+```
+
+#### POST /schedules
+Create a new schedule.
+
+**Request Body:**
+```json
+{
+  "name": "Weekly Report",
+  "rrule": "FREQ=WEEKLY;BYDAY=MO",
+  "unified_job_template": 10
+}
+```
+
+**Response:**
+```markdown
+| Operation | Status | Details |
+|-----------|--------|---------|
+| Create Schedule | Success | ID: 2, Name: Weekly Report |
+```
+
+### Advanced Server (Port 8008)
+
+#### GET /credentials
+List all credentials.
+
+**Response:**
+```markdown
+| ID | Name | Type | Created | Modified |
+|----|------|------|---------|----------|
+| 1  | AWS Creds | aws | 2025-09-13 15:39 | 2025-10-25 15:22 |
+```
+
+### Notifications Server (Port 8009)
+
+#### GET /activity_stream
+Get activity stream events.
+
+**Response:**
+```markdown
+| ID | Type | User | Action | Timestamp |
+|----|------|------|--------|-----------|
+| 123 | job | admin | launched | 2025-11-01 20:00 |
+```
+
+### Infrastructure Server (Port 8010)
+
+#### GET /config
+Get AWX system configuration.
+
+**Response:**
+```markdown
+| Property | Value |
+|----------|-------|
+| Version | 23.3.0 |
+| License | Enterprise |
+| Install Type | traditional |
+```
 
 ---
 
@@ -655,17 +824,10 @@ curl -X DELETE "http://localhost:8002/inventories/5?dry_run=true"
 ```
 
 **Response:**
-```json
-{
-  "dry_run": true,
-  "action": "delete_inventory",
-  "resource_id": 5,
-  "would_delete": {
-    "inventory": "Staging",
-    "hosts": 10
-  },
-  "message": "Dry run - no changes made"
-}
+```markdown
+| Operation | Status | Details |
+|-----------|--------|---------|
+| Delete Inventory | Dry Run | Would delete inventory 'Staging' with 10 hosts |
 ```
 
 #### Confirmation Required
@@ -677,23 +839,19 @@ curl -X DELETE "http://localhost:8002/inventories/5?confirm=true"
 ```
 
 Without `confirm=true`, request will be rejected:
-```json
-{
-  "error": "Confirmation required",
-  "message": "Add '?confirm=true' to confirm deletion"
-}
+```markdown
+| Operation | Status | Details |
+|-----------|--------|---------|
+| Delete Inventory | Failed | Confirmation required - add '?confirm=true' |
 ```
 
 #### Post-Operation Verification
 
 All delete operations verify completion:
-```json
-{
-  "deleted": true,
-  "resource_id": 5,
-  "verified": true,
-  "message": "Inventory deleted and verified"
-}
+```markdown
+| Operation | Status | Details |
+|-----------|--------|---------|
+| Delete Inventory | Success | Inventory deleted and verified (ID: 5) |
 ```
 
 ### Audit Logging
@@ -961,12 +1119,81 @@ Enable debug logging:
 LOG_LEVEL=DEBUG docker compose -f docker-compose.multi.yml up
 ```
 
+#### 5. Multi-Server Architecture Issues
+
+**Symptoms:** Some servers are healthy but others are not responding
+
+**Diagnosis:**
+```bash
+# Check all servers individually
+for port in {8001..8010}; do
+  echo "=== Port $port ==="
+  curl -s http://localhost:$port/health
+  echo
+done
+```
+
+**Solutions:**
+- Ensure all 10 servers are started: `docker compose -f docker-compose.multi.yml up -d`
+- Check server-specific logs: `docker logs mcp-server-core-1`
+- Verify port availability: `netstat -tuln | grep -E '800[1-9]|8010'`
+- Check shared volume mounts for `shared/` directory
+
+#### 6. Table Formatting Issues
+
+**Symptoms:** API returns plain text instead of markdown tables
+
+**Diagnosis:**
+```bash
+# Test table formatting
+curl http://localhost:8002/inventories
+```
+
+**Expected Response:**
+```markdown
+| ID | Name | Organization | Hosts Count | Groups Count |
+|----|------|--------------|-------------|--------------|
+```
+
+**Unexpected Response (plain text):**
+```
+count: 2
+results: [...]
+```
+
+**Solutions:**
+- Ensure `shared/table_formatter.py` is accessible to all servers
+- Check Docker volume mounts: `- ./shared:/app/shared`
+- Verify TableFormatter import in server routes
+- Restart servers after code changes
+
+#### 7. Server-Specific Connection Issues
+
+**Core Server (8001) Issues:**
+```bash
+# Test AWX connectivity
+curl http://localhost:8001/test
+```
+
+**Inventory Server (8002) Issues:**
+```bash
+# Test inventory access
+curl http://localhost:8002/test
+```
+
+**Templates Server (8003) Issues:**
+```bash
+# Test template access
+curl http://localhost:8003/test
+```
+
 ### Support Resources
 
 - **Documentation**: See `/docs` directory
 - **Issues**: GitHub Issues tracker
 - **Logs**: Check `./logs/*/mcp_server.log`
 - **Health**: Monitor `/health` and `/ready` endpoints
+- **Multi-Server Health Check**: Run the loop command above to check all servers
 
 ---
 
