@@ -8,14 +8,14 @@ class TestTemplates:
         assert "template_id" in prompt
         assert "extra_vars" in prompt
         assert "Think step-by-step" in prompt
-        assert "Only return a JSON object" in prompt
+        assert "Always format your response as a markdown table" in prompt
 
     def test_validate_schema_template_format(self):
         payload = {"payload": '{"name": "test"}', "schema": '{"type": "object"}'}
         prompt = VALIDATE_SCHEMA_TEMPLATE.format(**payload)
         assert "JSON payload" in prompt
         assert "Think step-by-step" in prompt
-        assert "Only return a JSON object" in prompt
+        assert "Always format your response as a markdown table" in prompt
 
     def test_templates_dict(self):
         assert "launch_job_template" in TEMPLATES
@@ -27,5 +27,4 @@ class TestTemplates:
     def test_template_consistency(self):
         for action, template in TEMPLATES.items():
             assert "Think step-by-step" in template
-            assert "Only return a JSON object" in template
-            assert '{"result":' in template
+            assert "Always format your response as a markdown table" in template
