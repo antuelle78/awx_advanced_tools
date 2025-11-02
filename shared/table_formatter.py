@@ -1,6 +1,6 @@
 # Table formatting utilities for consistent LLM output
 import json
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, Optional
 from datetime import datetime
 
 
@@ -31,7 +31,7 @@ class TableFormatter:
         try:
             dt = datetime.fromisoformat(dt_str.replace('Z', '+00:00'))
             return dt.strftime("%Y-%m-%d %H:%M")
-        except:
+        except (ValueError, Exception):
             return dt_str[:19] if dt_str else "N/A"
 
     @staticmethod
@@ -95,8 +95,6 @@ class TableFormatter:
         """Format single item details as a table."""
         if not isinstance(data, dict):
             return f"| Value |\n|-------|\n| {str(data)} |"
-
-        columns = TableFormatter.RESOURCE_COLUMNS.get(resource_type, ["Key", "Value"])
 
         # For single items, show key-value pairs
         header = "| Property | Value |"
