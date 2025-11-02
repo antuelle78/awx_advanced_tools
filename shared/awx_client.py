@@ -122,9 +122,13 @@ class AWXClient:
     ) -> dict:
         """Create a new schedule for a job template."""
         url = f"{self.base_url}/api/v2/job_templates/{job_template_id}/schedules/"
+        from datetime import datetime
+        dtstart = datetime.utcnow().strftime("%Y%m%dT%H%M%SZ")
         payload = {
             "name": name,
-            "rrule": rrule,
+            "rrule": f"DTSTART:{dtstart} RRULE:{rrule}",
+            "unified_job_template": job_template_id,
+            "enabled": True,
         }
         resp = await self._request("POST", url, json=payload)
         return resp.json()

@@ -217,7 +217,13 @@ class Tools:
             if not response.content:
                 return json.dumps({"status": "success"})
 
-            return json.dumps(response.json())
+            # Check if response is JSON or table-formatted text
+            content_type = response.headers.get('content-type', '').lower()
+            if 'application/json' in content_type:
+                return json.dumps(response.json())
+            else:
+                # Return table-formatted responses as-is (they are already markdown)
+                return response.text
 
         except httpx.HTTPStatusError as e:
             return json.dumps(

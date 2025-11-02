@@ -6,7 +6,7 @@ Handles:
 - Organization deletion
 """
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Response
 from shared.awx_client import awx_client
 from shared.table_formatter import TableFormatter
 from .schemas import CreateOrganizationRequest, UpdateOrganizationRequest
@@ -20,9 +20,11 @@ async def list_organizations(name: str = None):
     """List all organizations."""
     try:
         data = await awx_client.list_organizations(name)
-        return TableFormatter.format_list_response(data, "organizations")
+        table_response = TableFormatter.format_list_response(data, "organizations")
+        return Response(content=table_response, media_type="text/markdown")
     except httpx.HTTPStatusError as exc:
-        return TableFormatter.format_error(str(exc), "Organization Management")
+        error_response = TableFormatter.format_error(str(exc), "Organization Management")
+        return Response(content=error_response, media_type="text/markdown")
 
 
 @router.get("/organizations/{organization_id}")

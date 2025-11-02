@@ -7,7 +7,7 @@ Handles:
 - User lookup by name
 """
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Response
 from shared.awx_client import awx_client
 from shared.table_formatter import TableFormatter
 from .schemas import CreateUserRequest, UpdateUserRequest
@@ -21,9 +21,11 @@ async def list_users():
     """List all users."""
     try:
         data = await awx_client.list_users()
-        return TableFormatter.format_list_response(data, "users")
+        table_response = TableFormatter.format_list_response(data, "users")
+        return Response(content=table_response, media_type="text/markdown")
     except httpx.HTTPStatusError as exc:
-        return TableFormatter.format_error(str(exc), "User Management")
+        error_response = TableFormatter.format_error(str(exc), "User Management")
+        return Response(content=error_response, media_type="text/markdown")
 
 
 @router.get("/users/{user_id}")

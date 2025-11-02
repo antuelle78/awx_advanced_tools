@@ -10,6 +10,11 @@ class CreateScheduleRequest(BaseModel):
     job_template_id: int
 
 
+class CreateScheduleAWXRequest(BaseModel):
+    name: str
+    rrule: str
+
+
 class UpdateScheduleRequest(BaseModel):
     name: Optional[str] = None
     rrule: Optional[str] = None

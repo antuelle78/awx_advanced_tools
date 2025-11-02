@@ -2,7 +2,7 @@
 
 from fastapi import APIRouter, HTTPException
 from shared.awx_client import awx_client
-from .schemas import CreateScheduleRequest, UpdateScheduleRequest
+from .schemas import CreateScheduleRequest, CreateScheduleAWXRequest, UpdateScheduleRequest
 import httpx
 
 router = APIRouter()
@@ -67,6 +67,29 @@ async def delete_schedule(schedule_id: int):
     """Delete schedule."""
     try:
         return await awx_client.delete_schedule(schedule_id)
+    except httpx.HTTPStatusError as exc:
+        raise HTTPException(status_code=exc.response.status_code, detail=str(exc))
+
+
+# Additional routes to match tool expectations
+@router.get("/job_templates/{template_id}/schedules")
+async def list_schedules_awx_style(template_id: int):
+    """List schedules for a job template (AWX-style endpoint for tool compatibility)."""
+    try:
+        return await awx_client.list_schedules(template_id)
+    except httpx.HTTPStatusError as exc:
+        raise HTTPException(status_code=exc.response.status_code, detail=str(exc))
+
+
+@router.post("/job_templates/{template_id}/schedules")
+async def create_schedule_awx_style(template_id: int, request: CreateScheduleAWXRequest):
+    """Create a new schedule (AWX-style endpoint for tool compatibility)."""
+    try:
+        return await awx_client.create_schedule(
+            name=request.name,
+            rrule=request.rrule,
+            job_template_id=template_id,
+        )
     except httpx.HTTPStatusError as exc:
         raise HTTPException(status_code=exc.response.status_code, detail=str(exc))
 

@@ -6,7 +6,7 @@ Handles:
 - Project deletion and synchronization
 """
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Response
 from shared.awx_client import awx_client
 from shared.table_formatter import TableFormatter
 from .schemas import CreateProjectRequest, UpdateProjectRequest
@@ -20,9 +20,11 @@ async def list_projects(name: str = None):
     """List all projects."""
     try:
         data = await awx_client.list_projects(name)
-        return TableFormatter.format_list_response(data, "projects")
+        table_response = TableFormatter.format_list_response(data, "projects")
+        return Response(content=table_response, media_type="text/markdown")
     except httpx.HTTPStatusError as exc:
-        return TableFormatter.format_error(str(exc), "Project Management")
+        error_response = TableFormatter.format_error(str(exc), "Project Management")
+        return Response(content=error_response, media_type="text/markdown")
 
 
 @router.get("/projects/{project_id}")
