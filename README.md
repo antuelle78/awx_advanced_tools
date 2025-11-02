@@ -1,617 +1,1177 @@
-# 🚀 AWX Advanced Tools
-## The Intelligent Bridge Between AI and Automation
+# AWX Advanced Tools
 
-> **Empower your LLMs to become AWX Super Administrators** - Seamlessly manage Ansible Tower/AWX infrastructure with natural language commands, intelligent tool discovery, and enterprise-grade safety features.
+**Production-grade AI-powered automation platform for Ansible AWX/Tower**
 
-[![GitHub stars](https://img.shields.io/github/stars/antuelle78/awx_advanced_tools?style=social)](https://github.com/antuelle78/awx_advanced_tools)
-[![Docker Pulls](https://img.shields.io/docker/pulls/antuelle78/awx_advanced_tools)](https://hub.docker.com/r/antuelle78/awx_advanced_tools)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-green.svg)](https://fastapi.tiangolo.com/)
 [![CI/CD Pipeline](https://github.com/antuelle78/awx_advanced_tools/actions/workflows/ci.yml/badge.svg)](https://github.com/antuelle78/awx_advanced_tools/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/gh/antuelle78/awx_advanced_tools/branch/main/graph/badge.svg)](https://codecov.io/gh/antuelle78/awx_advanced_tools)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
+[![Docker](https://img.shields.io/badge/docker-20.10+-blue.svg)](https://www.docker.com/)
 
-**Transform how you manage infrastructure automation:**
-- 🤖 **AI-Powered Operations**: Let LLMs handle complex AWX workflows
-- 🛡️ **Enterprise Security**: Dry-run modes, confirmation prompts, comprehensive auditing
-- ⚡ **Intelligent Tooling**: Model-aware capabilities with progressive feature exposure
-- 🔄 **Real-time Integration**: Live status monitoring and job execution
-- 📊 **Observability**: Full activity stream and performance metrics
+## Overview
 
-<a id="why-awx-advanced-tools"></a>
-## ✨ Why AWX Advanced Tools?
+AWX Advanced Tools is an enterprise-ready microservices platform that enables Large Language Models (LLMs) to manage Ansible AWX/Tower infrastructure through natural language commands. Built on a distributed architecture of 10 specialized servers, it provides intelligent routing, comprehensive safety features, and production-grade reliability.
 
-### The Problem
-Traditional AWX management requires deep technical knowledge, manual API calls, and constant context switching. What if your AI assistant could handle it all?
+### Key Features
 
-### The Solution
-AWX Advanced Tools bridges the gap between conversational AI and enterprise automation, enabling:
+- **Multi-Server Architecture**: 10 specialized microservices optimized for small LLM context windows
+- **Enterprise Security**: Dry-run modes, confirmation workflows, comprehensive audit logging
+- **Production Ready**: Full CI/CD pipeline, health checks, monitoring integration
+- **Flexible Deployment**: Docker Compose for development, Kubernetes for production
+- **LLM Optimized**: Intelligent tool discovery with model-aware capabilities
 
-- **Natural Language Automation**: "Create a backup job template for production servers" → Instant execution
-- **Intelligent Context Awareness**: LLMs understand your infrastructure and make smart decisions
-- **Enterprise-Grade Safety**: Built-in safeguards prevent accidental infrastructure changes
-- **Unified Workflow**: Single interface for all AWX operations
+### Use Cases
 
-### Real-World Impact
-- 🚀 **50% faster** infrastructure provisioning
-- 🛡️ **Zero accidental** deletions with safety features
-- 📈 **24/7 availability** through AI assistance
-- 🎯 **Reduced errors** via intelligent validation
+- **DevOps Automation**: Natural language job execution and infrastructure management
+- **Self-Service Operations**: Enable non-technical teams to manage AWX workflows
+- **Automated Remediation**: AI-driven incident response and system recovery
+- **Audit & Compliance**: Complete activity logging and change tracking
+- **Integration Hub**: Connect AWX with LLM-powered chat interfaces
 
 ---
 
 ## Table of Contents
 
-1. [Why AWX Advanced Tools?](#why-awx-advanced-tools)
-2. [Quick Start](#quick-start)
-3. [Core Features](#core-features)
-4. [Architecture & Design](#architecture--design)
-5. [Installation & Setup](#installation--setup)
-6. [Configuration](#configuration)
-7. [Running the Server](#running-the-server)
-8. [API Specification](#api-specification)
-9. [Real-World Use Cases](#real-world-use-cases)
-10. [Open-WebUI Tool](#open-webui-tool)
-11. [Testing](#testing)
-12. [Deployment](#deployment)
-13. [Community & Support](#community--support)
-14. [Contribution Guidelines](#contribution-guidelines)
-15. [License](#license)
----
-
-<a id="core-features"></a>
-## 🎯 Core Features
-
-| 🚀 **AI-Powered Operations** | 🛡️ **Enterprise Security** | ⚡ **Performance** |
-|-----------------------------|----------------------------|-------------------|
-| • Natural language job execution<br>• Intelligent tool discovery<br>• Context-aware automation<br>• Multi-model LLM support | • Dry-run simulation<br>• Confirmation workflows<br>• Comprehensive auditing<br>• Input validation | • Async operations<br>• Connection pooling<br>• Response caching<br>• Optimized API calls |
-
-### 🔧 Advanced Capabilities
-
-<div align="center">
-
-| Feature | Description | Impact |
-|---------|-------------|---------|
-| **Smart Tool Discovery** | LLMs get tools based on model capabilities | 🎯 Prevents overwhelming small models |
-| **Context Management** | Maintains conversation state across sessions | 🧠 Enables complex multi-step workflows |
-| **Fallback Handling** | Graceful degradation for unsupported operations | 🛡️ Ensures reliability |
-| **Activity Monitoring** | Real-time job status and system events | 📊 Complete observability |
-
-</div>
+1. [Architecture](#architecture)
+2. [Prerequisites](#prerequisites)
+3. [Quick Start](#quick-start)
+4. [Deployment](#deployment)
+   - [Docker Compose](#docker-compose-deployment)
+   - [Kubernetes](#kubernetes-deployment)
+5. [Configuration](#configuration)
+6. [API Reference](#api-reference)
+7. [Security](#security)
+8. [Monitoring](#monitoring)
+9. [Troubleshooting](#troubleshooting)
+10. [Development](#development)
+11. [Contributing](#contributing)
+12. [License](#license)
 
 ---
 
-<a id="architecture--design"></a>
-## 🏗️ Architecture & Design
+## Architecture
 
-The service exposes a standard REST API. An external tool, such as Open-WebUI, makes authenticated requests to this service, which then translates them into the appropriate calls to the AWX API.
+### Multi-Server Design
 
-### High-Level Flow
-
-```mermaid
-graph TB
-    A[Open-WebUI / Chat Interface] --> B[MCP Server Gateway]
-    B --> C{Authentication & Routing}
-    C --> D[AWX Advanced Tools API]
-    D --> E[Model Capabilities Engine]
-    D --> F[Context Manager]
-    D --> G[Fallback Handler]
-    E --> H[Tool Discovery & Optimization]
-    D --> I[AWX Adapter Layer]
-    I --> J[Ansible AWX/Tower API]
-
-    style A fill:#e1f5fe
-    style D fill:#fff3e0
-    style I fill:#e8f5e8
-    style J fill:#fce4ec
-```
-
-**Key Components:**
-- 🔐 **Secure Gateway**: JWT authentication with role-based access
-- 🧠 **Intelligent Routing**: Model-aware tool selection and optimization
-- 📊 **Context Awareness**: Conversation history and state management
-- 🛡️ **Safety Layer**: Dry-run modes and confirmation workflows
-- 🔄 **Real-time Sync**: Live status updates and activity monitoring
-
-### 🏭 Multi-Server Architecture
-
-For optimal performance with small LLMs, AWX Advanced Tools supports a **distributed multi-server deployment** that splits functionality across specialized microservices:
+AWX Advanced Tools employs a microservices architecture with 10 specialized servers, each handling specific AWX domains:
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                    10 Specialized Servers                    │
-├──────────┬──────────┬──────────┬──────────┬─────────────────┤
-│ Core     │ Inventory│ Templates│ Users    │ Projects        │
-│ (8001)   │ (8002)   │ (8003)   │ (8004)   │ (8005)          │
-│ 6 tools  │ 8 tools  │ 7 tools  │ 7 tools  │ 7 tools         │
-├──────────┼──────────┼──────────┼──────────┼─────────────────┤
-│ Orgs     │ Schedules│ Advanced │ Notify   │ Infra           │
-│ (8006)   │ (8007)   │ (8008)   │ (8009)   │ (8010)          │
-│ 6 tools  │ 7 tools  │ 5 tools  │ 2 tools  │ 3 tools         │
-└──────────┴──────────┴──────────┴──────────┴─────────────────┘
-            ▲
-            │ Each server: 5-8 tools (perfect for small models)
-            │ Shared AWX client library for consistency
-            │ Independent scaling and deployment
+┌─────────────────────────────────────────────────────────┐
+│            AWX Advanced Tools v2.0                       │
+│        Multi-Server Microservices Architecture           │
+├──────────┬──────────┬──────────┬──────────┬────────────┤
+│ Core     │ Inventory│ Templates│ Users    │ Projects   │
+│ :8001    │ :8002    │ :8003    │ :8004    │ :8005      │
+│ 6 tools  │ 8 tools  │ 7 tools  │ 7 tools  │ 7 tools    │
+├──────────┼──────────┼──────────┼──────────┼────────────┤
+│ Orgs     │ Schedules│ Advanced │ Notify   │ Infra      │
+│ :8006    │ :8007    │ :8008    │ :8009    │ :8010      │
+│ 6 tools  │ 7 tools  │ 5 tools  │ 2 tools  │ 3 tools    │
+└──────────┴──────────┴──────────┴──────────┴────────────┘
+                          │
+                    ┌─────▼─────┐
+                    │   Redis   │
+                    │   Cache   │
+                    └───────────┘
+                          │
+                    ┌─────▼─────┐
+                    │    AWX    │
+                    │  Instance │
+                    └───────────┘
 ```
 
-**Benefits:**
-- 🎯 **Small LLM Friendly**: Each server exposes only 5-8 tools instead of 40+
-- ⚡ **Better Performance**: Reduced context size = faster inference
-- 🔄 **Independent Scaling**: Scale busy services independently
-- 🛡️ **Fault Isolation**: One service failure doesn't affect others
-- 📦 **Easy Deployment**: Docker Compose or Kubernetes
+### Server Responsibilities
 
-**Quick Start Multi-Server:**
-```bash
-docker compose -f docker-compose.multi.yml up -d
-```
+| Server | Port | Purpose | Tools |
+|--------|------|---------|-------|
+| **Core** | 8001 | Health checks, job monitoring | `ping_awx()`, `get_job()`, `list_jobs()`, `cancel_job()` |
+| **Inventory** | 8002 | Inventory and host management | `list_inventories()`, `create_inventory()`, `list_hosts()`, `create_host()` |
+| **Templates** | 8003 | Job template operations | `list_templates()`, `launch_job_template()`, `create_job_template()` |
+| **Users** | 8004 | User and team administration | `list_users()`, `create_user()`, `update_user()`, `delete_user()` |
+| **Projects** | 8005 | SCM project management | `list_projects()`, `create_project()`, `sync_project()` |
+| **Organizations** | 8006 | Organization CRUD | `list_organizations()`, `create_organization()`, `update_organization()` |
+| **Schedules** | 8007 | Job scheduling | `create_schedule()`, `toggle_schedule()`, `list_schedules()` |
+| **Advanced** | 8008 | Credentials & advanced ops | `list_credentials()`, `create_credential()`, `update_credential()` |
+| **Notifications** | 8009 | Activity monitoring | `list_activity_stream()` |
+| **Infrastructure** | 8010 | System information | `get_awx_version()`, `list_instance_groups()`, `get_awx_config()` |
 
-All 10 servers share a common AWX client library (`shared/awx_client.py`) ensuring consistent behavior across the architecture. See [MULTI_SERVER_README.md](MULTI_SERVER_README.md) for detailed documentation.
+### Design Principles
 
-<a id="quick-start"></a>
-## 🚀 Quick Start (5 minutes)
+- **Single Responsibility**: Each server manages one domain
+- **Shared Library**: Common AWX client ensures consistency
+- **Stateless**: Servers can scale horizontally
+- **Health Monitoring**: All servers expose `/health` endpoints
+- **Audit Trail**: Complete logging of all operations
 
-### 1. Deploy with Docker
-```bash
-docker run -d -p 8001:8000 \
-  -e AWX_BASE_URL=https://your-awx.com \
-  -e AWX_TOKEN=your_token \
-  antuelle78/awx_advanced_tools:latest
-```
+### Technology Stack
 
-### 2. Configure Open-WebUI
-Import `open-webui-tool.py` and set:
-- **Server URL**: `http://localhost:8001`
-- **Credentials**: Your AWX authentication
-
-### 3. Start Automating!
-```
-User: "Create a daily backup schedule for production"
-LLM: [Analyzes request, resolves IDs, creates job template and schedule]
-Result: Automated backup workflow deployed ✅
-```
-
-### 🎉 You're Done!
-Your AI assistant can now manage your entire AWX infrastructure through natural conversation.
+- **Framework**: FastAPI 0.115+ (async/await)
+- **Language**: Python 3.10+
+- **Validation**: Pydantic 2.8+
+- **HTTP Client**: httpx (async)
+- **Cache**: Redis (optional)
+- **Container**: Docker + Docker Compose
+- **Orchestration**: Kubernetes 1.20+
 
 ---
 
-<a id="installation--setup"></a>
-## 3. Installation & Setup
+## Prerequisites
 
-### 3.1 Prerequisites
+### Required
 
-| Component | Minimum Version |
-|-----------|-----------------|
-| Python    | 3.10+ |
-| Docker    | 20.10+ |
+- **Python**: 3.10 or higher
+- **Docker**: 20.10 or higher
+- **Docker Compose**: 2.0 or higher
+- **AWX/Tower**: Running instance with API access
+- **Network**: Connectivity to AWX instance
 
-### 3.2 Clone the Repository
+### Optional
+
+- **Kubernetes**: 1.20+ (for production deployment)
+- **Redis**: For distributed caching
+- **Prometheus**: For metrics collection
+- **Grafana**: For monitoring dashboards
+
+### System Requirements
+
+#### Development
+- CPU: 2 cores
+- RAM: 4 GB
+- Disk: 10 GB free space
+
+#### Production
+- CPU: 4+ cores
+- RAM: 8+ GB
+- Disk: 20+ GB SSD
+- Network: Low latency to AWX instance
+
+---
+
+## Quick Start
+
+### 1. Clone Repository
 
 ```bash
 git clone https://github.com/antuelle78/awx_advanced_tools.git
-cd awx_advanced_tools
+cd awx_advanced_tools/mcp-server
 ```
 
-[![CI/CD Pipeline](https://github.com/antuelle78/awx_advanced_tools/actions/workflows/ci.yml/badge.svg)](https://github.com/antuelle78/awx_advanced_tools/actions/workflows/ci.yml)
-[![codecov](https://codecov.io/gh/antuelle78/awx_advanced_tools/branch/main/graph/badge.svg)](https://codecov.io/gh/antuelle78/awx_advanced_tools)
-
-### 3.3 Container Images
-
-Pre-built Docker images are available on:
-- **GitHub Container Registry**: `ghcr.io/antuelle78/awx_advanced_tools:latest`
-- **Docker Hub**: `antuelle78/awx_advanced_tools:latest`
+### 2. Configure Environment
 
 ```bash
-# From GitHub Container Registry
-docker pull ghcr.io/antuelle78/awx_advanced_tools:latest
-
-# From Docker Hub
-docker pull antuelle78/awx_advanced_tools:latest
+cp .env.example .env
 ```
 
----
+Edit `.env` with your AWX credentials:
 
-<a id="configuration"></a>
-## 4. Configuration
+```bash
+AWX_BASE_URL=https://your-awx-instance.com
+AWX_USERNAME=admin
+AWX_PASSWORD=your_secure_password
+```
 
-All settings are read from environment variables. Create a `.env` file in the project root or set the variables in your deployment environment.
+### 3. Deploy with Docker Compose
 
-| Variable | Description | Example |
-|----------|-------------|---------|
-| `AWX_BASE_URL` | Base URL of your AWX/Tower instance. | `https://awx.example.com` |
-| `AWX_TOKEN` | Bearer token with AWX permissions (optional if using username/password). | `your_awx_token` |
-| `AWX_USERNAME` | AWX username for authentication (optional if using token). | `admin` |
-| `AWX_PASSWORD` | AWX password for authentication (optional if using token). | `your_password` |
-| `JWT_SECRET` | Secret used to validate JWTs for API access. | `a_very_secret_key` |
-| `AUDIT_LOG_DIR` | Directory for audit logs. | `/var/log/mcp` |
-| `LLM_PROVIDER` | The LLM provider to use. Can be `default` (for OpenAI-compatible APIs) or `ollama`. | `ollama` |
-| `LLM_ENDPOINT` | The endpoint of the LLM provider. | `http://host.docker.internal:11434` |
-| `LLM_MODEL` | The name of the LLM model to use. | `gemma3` |
-| `LLM_API_KEY` | API key for the LLM provider (only required for `default` provider). | `your_llm_api_key` |
-| `REDIS_HOST` | The hostname of the Redis server (optional, for future use). | `redis` |
-| `REDIS_PORT` | The port of the Redis server (optional, for future use). | `6379` |
-| `REDIS_DB` | The Redis database to use (optional, for future use). | `0` |
-
----
-
-<a id="running-the-server"></a>
-## 5. Running the Server
-
-### 5.1 Monolithic Deployment (Single Server)
-
-The simplest deployment runs everything in one container:
+#### Option A: Single Monolithic Server
 
 ```bash
 docker compose up -d
 ```
 
-The server will be available at `http://localhost:8001`. All API endpoints (except /health and /login) require JWT authentication.
+Server available at: `http://localhost:8001`
 
-### 5.2 Multi-Server Deployment (Recommended for Small LLMs)
-
-For better performance with smaller language models, use the distributed architecture:
+#### Option B: Multi-Server Architecture (Recommended)
 
 ```bash
 docker compose -f docker-compose.multi.yml up -d
 ```
 
-This deploys 10 specialized servers on ports 8001-8010:
-- **Core** (8001): Basic AWX operations
-- **Inventory** (8002): Inventory and host management
-- **Templates** (8003): Job template operations
-- **Users** (8004): User and team management
-- **Projects** (8005): SCM project management
-- **Organizations** (8006): Organization CRUD
-- **Schedules** (8007): Job scheduling
-- **Advanced** (8008): Credentials and advanced operations
-- **Notifications** (8009): Activity stream monitoring
-- **Infrastructure** (8010): System info and configuration
+Servers available on ports 8001-8010.
 
-Each server exposes 5-8 tools, making them ideal for small LLMs with limited context windows. See the [Multi-Server README](MULTI_SERVER_README.md) for detailed documentation.
-
-### 5.3 Kubernetes Deployment
-
-For production environments, use the Kubernetes manifests:
+### 4. Verify Deployment
 
 ```bash
-# Single server
-kubectl apply -f k8s/
-
-# Multi-server architecture
-kubectl apply -f k8s/multi-server-deployment.yaml
+# Check all servers
+for port in {8001..8010}; do
+  echo -n "Port $port: "
+  curl -s http://localhost:$port/health | jq -r '.status'
+done
 ```
 
-All API endpoints (except /health and /login) require JWT authentication. Use the `/login` endpoint to obtain a JWT token, then include it in the `Authorization` header as `Bearer <token>`.
+Expected output: `healthy` for all servers.
+
+### 5. Test API
+
+```bash
+# List inventories
+curl http://localhost:8002/inventories
+
+# List job templates
+curl http://localhost:8003/templates
+
+# Check AWX connectivity
+curl http://localhost:8001/ping
+```
 
 ---
 
-<a id="api-specification"></a>
-## 6. API Specification
+## Deployment
 
-The following endpoints are available. All endpoints (except /health) require basic authentication (username: admin, password: password).
+### Docker Compose Deployment
+
+#### Development Setup
+
+```bash
+# Build and start all services
+docker compose -f docker-compose.multi.yml up -d --build
+
+# View logs
+docker compose -f docker-compose.multi.yml logs -f
+
+# Stop services
+docker compose -f docker-compose.multi.yml down
+```
+
+#### Configuration
+
+The `docker-compose.multi.yml` includes:
+- 10 specialized MCP servers
+- Redis cache
+- Health checks for all services
+- Persistent audit logs
+- Network isolation
+
+#### Scaling Individual Services
+
+```bash
+# Scale inventory server to 3 replicas
+docker compose -f docker-compose.multi.yml up -d --scale inventory=3
+
+# Scale templates server to 2 replicas
+docker compose -f docker-compose.multi.yml up -d --scale templates=2
+```
+
+### Kubernetes Deployment
+
+#### Prerequisites
+
+- kubectl configured with cluster access
+- Kubernetes 1.20 or higher
+- LoadBalancer or Ingress controller (for external access)
+
+#### Quick Deploy
+
+```bash
+# Apply ConfigMap (update with your AWX credentials first)
+kubectl apply -f k8s/configmap.yaml
+
+# Deploy all 10 servers
+kubectl apply -f k8s/multi-server-deployment.yaml
+
+# Verify deployment
+kubectl get pods -l tier=mcp-server
+kubectl get services | grep mcp-
+```
+
+#### Production Configuration
+
+1. **Update ConfigMap** with production credentials:
+
+```yaml
+# k8s/configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: awx-advanced-tools-config
+data:
+  AWX_BASE_URL: "https://awx.production.com"
+  AWX_USERNAME: "automation-user"
+  # Use Secrets for sensitive data in production
+```
+
+2. **Create Kubernetes Secret** for credentials:
+
+```bash
+kubectl create secret generic awx-credentials \
+  --from-literal=username=admin \
+  --from-literal=password=your_secure_password
+```
+
+3. **Configure Resource Limits**:
+
+```yaml
+resources:
+  requests:
+    memory: "256Mi"
+    cpu: "250m"
+  limits:
+    memory: "512Mi"
+    cpu: "500m"
+```
+
+4. **Set up Ingress** for external access:
+
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: mcp-ingress
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  tls:
+  - hosts:
+    - awx-tools.example.com
+    secretName: awx-tools-tls
+  rules:
+  - host: awx-tools.example.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: mcp-core
+            port:
+              number: 8001
+```
+
+5. **Enable Horizontal Pod Autoscaling**:
+
+```bash
+kubectl autoscale deployment mcp-inventory --cpu-percent=70 --min=2 --max=10
+kubectl autoscale deployment mcp-templates --cpu-percent=70 --min=2 --max=10
+```
+
+#### Monitoring Kubernetes Deployment
+
+```bash
+# Check pod status
+kubectl get pods -l tier=mcp-server -w
+
+# View logs from specific server
+kubectl logs -l app=mcp-core -f --tail=100
+
+# Describe pod for troubleshooting
+kubectl describe pod <pod-name>
+
+# Check service endpoints
+kubectl get endpoints
+```
+
+---
+
+## Configuration
+
+### Environment Variables
+
+All servers accept the following environment variables:
+
+#### Required
+
+| Variable | Description | Example |
+|----------|-------------|---------|
+| `AWX_BASE_URL` | AWX/Tower API base URL | `https://awx.example.com` |
+| `AWX_USERNAME` | AWX username (if not using token) | `admin` |
+| `AWX_PASSWORD` | AWX password (if not using token) | `secure_password` |
+| `AWX_TOKEN` | AWX API token (alternative to user/pass) | `AbCdEf123456...` |
+
+#### Optional
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `AUDIT_LOG_DIR` | Directory for audit logs | `/var/log/mcp` |
+| `REDIS_HOST` | Redis server hostname | `redis` |
+| `REDIS_PORT` | Redis server port | `6379` |
+| `REDIS_DB` | Redis database number | `0` |
+| `LLM_PROVIDER` | LLM provider (`default` or `ollama`) | `default` |
+| `LLM_ENDPOINT` | LLM API endpoint | `http://localhost:11434` |
+| `LLM_MODEL` | LLM model name | `gpt-4o` |
+| `LLM_API_KEY` | LLM API key | - |
+| `JWT_SECRET` | Secret for JWT authentication | Random |
+
+### Configuration File
+
+Create `.env` file:
+
+```bash
+# AWX Configuration
+AWX_BASE_URL=https://awx.production.com
+AWX_TOKEN=your_awx_api_token
+
+# Or use username/password
+AWX_USERNAME=automation-user
+AWX_PASSWORD=secure_password
+
+# Logging
+AUDIT_LOG_DIR=/var/log/awx-tools
+
+# LLM Integration (Optional)
+LLM_PROVIDER=ollama
+LLM_ENDPOINT=http://ollama:11434
+LLM_MODEL=granite3.1-dense:8b
+
+# Cache (Optional)
+REDIS_HOST=redis
+REDIS_PORT=6379
+
+# Security
+JWT_SECRET=change_this_to_random_string
+```
+
+### AWX User Permissions
+
+The AWX user/token must have appropriate permissions:
+
+**Minimum Permissions:**
+- Read: All resources
+- Execute: Job templates
+- Create/Update/Delete: Based on use case
+
+**Recommended Setup:**
+
+1. Create dedicated AWX user:
+```bash
+# In AWX UI: Users > Add User
+Username: awx-tools-automation
+Organization: Default
+User Type: System Administrator
+```
+
+2. Generate API token:
+```bash
+# In AWX UI: Users > awx-tools-automation > Tokens > Add Token
+Scope: Write
+```
+
+3. Use token in configuration:
+```bash
+AWX_TOKEN=<generated_token>
+```
+
+---
+
+## API Reference
+
+### Health Check Endpoints
+
+All servers expose standard health endpoints:
+
+#### GET /health
+
+Returns server health status.
+
+**Response:**
+```json
+{
+  "status": "healthy",
+  "timestamp": "2025-11-01T22:00:00Z",
+  "server": "core",
+  "version": "2.0.0"
+}
+```
+
+#### GET /ready
+
+Returns readiness status (includes AWX connectivity check).
+
+**Response:**
+```json
+{
+  "ready": true,
+  "awx_connected": true,
+  "services": {
+    "awx": "ok",
+    "redis": "ok"
+  }
+}
+```
+
+### Core Server (Port 8001)
+
+#### GET /ping
+Test AWX connectivity.
+
+**Response:**
+```json
+{
+  "message": "pong",
+  "awx_version": "23.3.0",
+  "connected": true
+}
+```
+
+#### GET /jobs
+List all jobs with pagination.
+
+**Parameters:**
+- `page` (int): Page number (default: 1)
+- `page_size` (int): Items per page (default: 20)
+
+**Response:**
+```json
+{
+  "count": 156,
+  "next": "/jobs?page=2",
+  "previous": null,
+  "results": [
+    {
+      "id": 42,
+      "name": "Deploy Application",
+      "status": "successful",
+      "created": "2025-11-01T20:00:00Z"
+    }
+  ]
+}
+```
+
+#### GET /jobs/{job_id}
+Get specific job details.
+
+**Response:**
+```json
+{
+  "id": 42,
+  "name": "Deploy Application",
+  "status": "successful",
+  "job_template": 10,
+  "started": "2025-11-01T20:00:00Z",
+  "finished": "2025-11-01T20:05:00Z",
+  "elapsed": 300
+}
+```
+
+### Inventory Server (Port 8002)
+
+#### GET /inventories
+List inventories.
+
+**Parameters:**
+- `name` (str): Filter by name
+- `organization` (int): Filter by organization ID
+
+**Response:**
+```json
+{
+  "count": 5,
+  "inventories": [
+    {
+      "id": 1,
+      "name": "Production",
+      "total_hosts": 50,
+      "organization": 1
+    }
+  ]
+}
+```
+
+#### POST /inventories
+Create new inventory.
+
+**Request Body:**
+```json
+{
+  "name": "Staging",
+  "description": "Staging environment",
+  "organization": 1,
+  "variables": {
+    "env": "staging"
+  }
+}
+```
+
+**Response:**
+```json
+{
+  "id": 6,
+  "name": "Staging",
+  "created": "2025-11-01T22:00:00Z"
+}
+```
+
+### Templates Server (Port 8003)
+
+#### POST /templates/{template_id}/launch
+Launch job template.
+
+**Request Body:**
+```json
+{
+  "extra_vars": {
+    "target_env": "production",
+    "backup_enabled": true
+  }
+}
+```
+
+**Response:**
+```json
+{
+  "job_id": 157,
+  "status": "pending",
+  "url": "/jobs/157"
+}
+```
+
+For complete API documentation, see [API_REFERENCE.md](./API_REFERENCE.md).
+
+---
+
+## Security
 
 ### Authentication
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/login` | POST | Logs in and returns a JWT token. |
 
-### Job Templates & Jobs
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/awx/job_templates/{template_id}/launch` | POST | Launches an AWX job template. |
-| `/awx/templates` | GET | Lists job templates in AWX. |
-| `/awx/jobs` | GET | Lists jobs in AWX. |
-| `/awx/jobs/{job_id}` | GET | Retrieves the current status of a job. |
+#### Basic Authentication
 
-### Inventories
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/awx/inventories` | POST | Creates a new inventory in AWX. Supports `dry_run` parameter for testing. |
-| `/awx/inventories` | GET | Lists inventories in AWX. |
-| `/awx/inventories/{inventory_id}` | GET | Retrieves an inventory in AWX. |
-| `/awx/inventories/{inventory_id}` | DELETE | Deletes an inventory in AWX. Requires `confirm=true` and supports `dry_run` for testing. Verifies deletion post-operation. |
-| `/awx/inventories/{inventory_id}/sync` | POST | Syncs an inventory in AWX. |
+All endpoints (except `/health`) require authentication:
 
-### Schedules
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/awx/job_templates/{template_id}/schedules` | GET | Lists schedules for a job template. |
-| `/awx/job_templates/{template_id}/schedules` | POST | Creates a schedule for a job template. |
-| `/awx/schedules/{schedule_id}` | GET | Retrieves a schedule in AWX. |
-| `/awx/schedules/{schedule_id}` | PATCH | Toggles a schedule in AWX. |
-| `/awx/schedules/{schedule_id}` | DELETE | Deletes a schedule in AWX. |
-
-### Organizations
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/awx/organizations` | GET | Lists organizations in AWX. |
-| `/awx/organizations/{organization_id}` | GET | Retrieves an organization in AWX. |
-| `/awx/organizations` | POST | Creates a new organization in AWX. |
-| `/awx/organizations/{organization_id}` | PATCH | Updates an organization in AWX. |
-| `/awx/organizations/{organization_id}` | DELETE | Deletes an organization in AWX. |
-
-### Projects
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/awx/projects` | GET | Lists projects in AWX. |
-| `/awx/projects/{project_id}` | GET | Retrieves a project in AWX. |
-| `/awx/projects` | POST | Creates a new project in AWX. |
-| `/awx/projects/{project_id}` | PATCH | Updates a project in AWX. |
-| `/awx/projects/{project_id}` | DELETE | Deletes a project in AWX. Requires `confirm=true` and supports `dry_run` for testing. Verifies deletion post-operation. |
-| `/awx/projects/{project_id}/sync` | POST | Syncs a project in AWX. |
-
-### Credentials
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/awx/credentials` | GET | Lists credentials in AWX. |
-| `/awx/credentials/{credential_id}` | GET | Retrieves a credential in AWX. |
-| `/awx/credentials` | POST | Creates a new credential in AWX. |
-| `/awx/credentials/{credential_id}` | PATCH | Updates a credential in AWX. |
-| `/awx/credentials/{credential_id}` | DELETE | Deletes a credential in AWX. |
-
-### Users
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/awx/users` | GET | Lists users in AWX. |
-| `/awx/users/{user_id}` | GET | Retrieves a user in AWX. |
-| `/awx/users` | POST | Creates a new user in AWX. |
-| `/awx/users/{user_id}` | PATCH | Updates a user in AWX. |
-| `/awx/users/{user_id}` | DELETE | Deletes a user in AWX. |
-
-### Activity Stream
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/awx/activity_stream` | GET | Lists activity stream entries in AWX. |
-| `/activity_stream` | GET | Lists activity stream entries in AWX (alias). |
-
-### Workflow Job Templates
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/awx/workflow_job_templates` | GET | Lists workflow job templates in AWX. |
-| `/awx/workflow_job_templates/{workflow_job_template_id}` | GET | Retrieves a workflow job template in AWX. |
-| `/awx/workflow_job_templates` | POST | Creates a new workflow job template in AWX. |
-| `/awx/workflow_job_templates/{workflow_job_template_id}` | PATCH | Updates a workflow job template in AWX. |
-| `/awx/workflow_job_templates/{workflow_job_template_id}` | DELETE | Deletes a workflow job template in AWX. |
-| `/awx/workflow_job_templates/{workflow_job_template_id}/launch` | POST | Launches a workflow job template in AWX. |
-
-### Notifications
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/awx/notifications` | GET | Lists notification templates in AWX. |
-| `/awx/notifications/{notification_id}` | GET | Retrieves a notification template in AWX. |
-| `/awx/notifications` | POST | Creates a new notification template in AWX. |
-| `/awx/notifications/{notification_id}` | PATCH | Updates a notification template in AWX. |
-| `/awx/notifications/{notification_id}` | DELETE | Deletes a notification template in AWX. |
-
-### Instance Groups
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/awx/instance_groups` | GET | Lists instance groups in AWX. |
-| `/awx/instance_groups/{instance_group_id}` | GET | Retrieves an instance group in AWX. |
-| `/awx/instance_groups` | POST | Creates a new instance group in AWX. |
-| `/awx/instance_groups/{instance_group_id}` | PATCH | Updates an instance group in AWX. |
-| `/awx/instance_groups/{instance_group_id}` | DELETE | Deletes an instance group in AWX. |
-
-### Activity Stream
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/awx/activity_stream` | GET | Lists activity stream events in AWX. |
-
-### API Documentation
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/docs` | GET | Swagger UI for interactive API documentation. |
-
-<a id="real-world-use-cases"></a>
-## 💡 Real-World Use Cases
-
-### Infrastructure Provisioning
-*"Our DevOps team reduced deployment time by 60% using AI-assisted AWX management"* - Enterprise Customer
-
-### Incident Response
-*"During outages, our AI assistant automatically created recovery job templates and notified stakeholders"* - SRE Manager
-
-### Compliance Automation
-*"Automated audit trail generation and compliance reporting through intelligent scheduling"* - Security Team Lead
-
-### Multi-Environment Management
-*"Seamlessly manage dev/staging/prod environments with context-aware tool selection"* - Platform Engineer
-
-## 8. Safety Features for Critical Infrastructure
-
-To ensure trust in LLM-assisted maintenance of critical infrastructure, the following safety checks are implemented:
-
-- **Dry-Run Modes**: All create and delete operations support a `dry_run=true` parameter to simulate actions without execution, allowing testing of changes.
-- **Confirmation Prompts**: Destructive actions (e.g., delete operations) require a `confirm=true` parameter to prevent accidental deletions.
-- **Input Validation**: All inputs are validated using Pydantic models to ensure data integrity.
-- **Comprehensive Logging**: All operations are logged with timestamps, success/failure status, and response times for auditing and feedback loops.
-- **Existence Checks**: Create operations check for existing resources to prevent duplicates and provide actionable error messages.
-- **Authentication**: All endpoints (except /health) require basic authentication to secure access.
-
-These features ensure source of truth and minimize risks in production environments.
-
----
-
-<a id="open-webui-tool"></a>
-## 10. Open-WebUI Tool
-
-This repository includes an `open-webui-tool.py` file that can be imported into Open-WebUI to allow an LLM to use this service. Additionally, extended prompts for AWX tools are provided in the `prompts/` folder to enhance LLM context.
-
-The tool includes safety features such as dry-run modes for testing actions, confirmation prompts for destructive operations, comprehensive logging for auditing, and post-operation verification for delete actions to ensure resources are actually removed. For delete operations, set `confirm=true` and optionally `dry_run=true` to simulate without execution.
-
-### System Prompt for AWXai Super Administrator
-
-To configure a custom LLM model as the AWXai super administrator, use the system prompt provided in `awxai_system_prompt.md`. This prompt instructs the LLM to manage AWX operations through the API endpoints, integrate LLM capabilities, and follow security guidelines.
-
-### Configuration
-
-1.  Import the `open-webui-tool.py` file in the Open-WebUI interface.
-2.  In the tool's "Valves" settings, configure the `mcp_server_url` (default: http://host.docker.internal:8001), `mcp_username` (default: admin), and `mcp_password` (default: password) fields.
-3.  For the LLM, set the system prompt using the content from `awxai_system_prompt.md` to enable super administrator capabilities.
-
----
-
-<a id="testing"></a>
-## 11. Testing
-
-The project includes comprehensive automated testing with coverage reporting.
-
-### Local Testing
 ```bash
-python -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-pip install pytest pytest-cov pytest-asyncio
+curl -u username:password http://localhost:8001/ping
+```
 
+#### JWT Authentication
+
+1. Obtain JWT token:
+```bash
+curl -X POST http://localhost:8001/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"admin","password":"password"}'
+```
+
+2. Use token in requests:
+```bash
+curl -H "Authorization: Bearer <token>" \
+  http://localhost:8002/inventories
+```
+
+### Safety Features
+
+#### Dry-Run Mode
+
+Test operations without execution:
+
+```bash
+curl -X DELETE "http://localhost:8002/inventories/5?dry_run=true"
+```
+
+**Response:**
+```json
+{
+  "dry_run": true,
+  "action": "delete_inventory",
+  "resource_id": 5,
+  "would_delete": {
+    "inventory": "Staging",
+    "hosts": 10
+  },
+  "message": "Dry run - no changes made"
+}
+```
+
+#### Confirmation Required
+
+Destructive operations require explicit confirmation:
+
+```bash
+curl -X DELETE "http://localhost:8002/inventories/5?confirm=true"
+```
+
+Without `confirm=true`, request will be rejected:
+```json
+{
+  "error": "Confirmation required",
+  "message": "Add '?confirm=true' to confirm deletion"
+}
+```
+
+#### Post-Operation Verification
+
+All delete operations verify completion:
+```json
+{
+  "deleted": true,
+  "resource_id": 5,
+  "verified": true,
+  "message": "Inventory deleted and verified"
+}
+```
+
+### Audit Logging
+
+All operations are logged to audit files:
+
+**Log Location:** `${AUDIT_LOG_DIR}/mcp_server.log`
+
+**Log Format:**
+```json
+{
+  "timestamp": "2025-11-01T22:00:00Z",
+  "user": "admin",
+  "action": "delete_inventory",
+  "resource_type": "inventory",
+  "resource_id": 5,
+  "success": true,
+  "source_ip": "192.168.1.100"
+}
+```
+
+### Network Security
+
+#### Production Checklist
+
+- [ ] Use HTTPS for AWX API
+- [ ] Enable TLS for Redis
+- [ ] Configure firewall rules
+- [ ] Use Kubernetes NetworkPolicies
+- [ ] Enable JWT authentication
+- [ ] Rotate credentials regularly
+- [ ] Monitor audit logs
+- [ ] Set up intrusion detection
+
+#### Kubernetes Network Policies
+
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: mcp-server-policy
+spec:
+  podSelector:
+    matchLabels:
+      tier: mcp-server
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app: gateway
+    ports:
+    - protocol: TCP
+      port: 8000
+  egress:
+  - to:
+    - podSelector:
+        matchLabels:
+          app: redis
+    ports:
+    - protocol: TCP
+      port: 6379
+  - to:
+    - namespaceSelector: {}
+    ports:
+    - protocol: TCP
+      port: 443  # AWX HTTPS
+```
+
+---
+
+## Monitoring
+
+### Health Checks
+
+Configure health monitoring:
+
+**Docker Compose:**
+```yaml
+healthcheck:
+  test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+  interval: 30s
+  timeout: 10s
+  retries: 3
+  start_period: 10s
+```
+
+**Kubernetes:**
+```yaml
+livenessProbe:
+  httpGet:
+    path: /health
+    port: 8000
+  initialDelaySeconds: 10
+  periodSeconds: 30
+readinessProbe:
+  httpGet:
+    path: /ready
+    port: 8000
+  initialDelaySeconds: 5
+  periodSeconds: 10
+```
+
+### Metrics
+
+Prometheus metrics exposed on `/metrics`:
+
+**Key Metrics:**
+- `http_requests_total` - Total HTTP requests
+- `http_request_duration_seconds` - Request latency
+- `awx_api_calls_total` - AWX API calls
+- `awx_api_errors_total` - AWX API errors
+- `cache_hits_total` - Redis cache hits
+- `cache_misses_total` - Redis cache misses
+
+**Prometheus Config:**
+```yaml
+scrape_configs:
+  - job_name: 'mcp-servers'
+    static_configs:
+      - targets:
+        - 'mcp-core:8001'
+        - 'mcp-inventory:8002'
+        - 'mcp-templates:8003'
+        # ... other servers
+```
+
+### Logging
+
+#### Log Levels
+
+Set via environment:
+```bash
+LOG_LEVEL=INFO  # DEBUG, INFO, WARNING, ERROR, CRITICAL
+```
+
+#### Centralized Logging
+
+**ELK Stack:**
+```yaml
+filebeat:
+  inputs:
+    - type: log
+      paths:
+        - /var/log/mcp/*.log
+      json.keys_under_root: true
+  output:
+    elasticsearch:
+      hosts: ["elasticsearch:9200"]
+```
+
+**Loki:**
+```yaml
+promtail:
+  config:
+    clients:
+      - url: http://loki:3100/loki/api/v1/push
+    scrape_configs:
+      - job_name: mcp-servers
+        static_configs:
+          - labels:
+              app: mcp-server
+            paths:
+              - /var/log/mcp/*.log
+```
+
+### Alerting
+
+**Prometheus Alert Rules:**
+```yaml
+groups:
+  - name: mcp-servers
+    rules:
+      - alert: HighErrorRate
+        expr: rate(http_requests_total{status=~"5.."}[5m]) > 0.05
+        for: 5m
+        annotations:
+          summary: "High error rate on {{ $labels.server }}"
+      
+      - alert: AWXConnectionDown
+        expr: up{job="mcp-servers"} == 0
+        for: 2m
+        annotations:
+          summary: "AWX connection lost on {{ $labels.instance }}"
+```
+
+---
+
+## Troubleshooting
+
+### Common Issues
+
+#### 1. Server Won't Start
+
+**Symptoms:** Container exits immediately
+
+**Diagnosis:**
+```bash
+docker logs mcp-server-core-1
+```
+
+**Solutions:**
+- Check AWX credentials in `.env`
+- Verify AWX instance is accessible
+- Check port availability: `netstat -tuln | grep 8001`
+- Review environment variables: `docker compose config`
+
+#### 2. AWX Connection Failed
+
+**Symptoms:** Health check fails, `/ready` returns not ready
+
+**Diagnosis:**
+```bash
+curl http://localhost:8001/ping
+```
+
+**Solutions:**
+- Verify AWX_BASE_URL is correct
+- Check network connectivity: `ping awx-server`
+- Test AWX API directly:
+  ```bash
+  curl -u username:password https://awx-server/api/v2/ping
+  ```
+- Check firewall rules
+- Verify SSL certificates if using HTTPS
+
+#### 3. High Memory Usage
+
+**Symptoms:** Container OOMKilled, slow responses
+
+**Diagnosis:**
+```bash
+docker stats
+```
+
+**Solutions:**
+- Set memory limits in `docker-compose.yml`:
+  ```yaml
+  deploy:
+    resources:
+      limits:
+        memory: 512M
+  ```
+- Enable Redis caching to reduce API calls
+- Scale services horizontally
+- Review audit logs for unusual activity
+
+#### 4. Authentication Errors
+
+**Symptoms:** 401 Unauthorized responses
+
+**Solutions:**
+- Verify AWX credentials
+- Check token expiration
+- Regenerate AWX API token
+- Review audit logs for authentication attempts
+
+### Debug Mode
+
+Enable debug logging:
+
+```bash
+LOG_LEVEL=DEBUG docker compose -f docker-compose.multi.yml up
+```
+
+### Support Resources
+
+- **Documentation**: See `/docs` directory
+- **Issues**: GitHub Issues tracker
+- **Logs**: Check `./logs/*/mcp_server.log`
+- **Health**: Monitor `/health` and `/ready` endpoints
+
+---
+
+## Development
+
+### Local Development Setup
+
+```bash
+# Create virtual environment
+python3 -m venv .venv
+source .venv/bin/activate
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Install development dependencies
+pip install -r requirements-dev.txt
+
+# Run tests
+pytest
+
+# Run linter
+ruff check .
+
+# Run type checker
+mypy app/
+```
+
+### Project Structure
+
+```
+mcp-server/
+├── app/                      # Monolithic server (legacy)
+│   ├── adapters/            # AWX adapters
+│   ├── llm/                 # LLM integration
+│   └── ...
+├── servers/                  # Multi-server architecture
+│   ├── core/                # Core server
+│   ├── inventory/           # Inventory server
+│   ├── templates/           # Templates server
+│   └── ...                  # Other servers
+├── shared/                   # Shared libraries
+│   ├── awx_client.py        # Common AWX client
+│   ├── config.py            # Configuration
+│   └── middleware.py        # Common middleware
+├── tests/                    # Test suite
+├── k8s/                      # Kubernetes manifests
+├── docs/                     # Documentation
+├── docker-compose.yml        # Single server compose
+├── docker-compose.multi.yml  # Multi-server compose
+└── README.md                # This file
+```
+
+### Adding a New Server
+
+1. **Copy template:**
+```bash
+cp -r servers/_template servers/my-new-server
+```
+
+2. **Update files:**
+- `servers/my-new-server/main.py` - Server configuration
+- `servers/my-new-server/routes.py` - API endpoints
+- `servers/my-new-server/schemas.py` - Pydantic models
+
+3. **Add to Docker Compose:**
+```yaml
+my-new-server:
+  build:
+    context: .
+    dockerfile: servers/my-new-server/Dockerfile
+  ports:
+    - "8011:8011"
+  environment:
+    - AWX_BASE_URL=${AWX_BASE_URL}
+  networks:
+    - mcp-network
+```
+
+4. **Add to Kubernetes:**
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mcp-my-new-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mcp-my-new-server
+  template:
+    spec:
+      containers:
+      - name: my-new-server
+        image: awx-tools:my-new-server
+        ports:
+        - containerPort: 8000
+```
+
+### Running Tests
+
+```bash
 # Run all tests
 pytest
+
+# Run specific test file
+pytest tests/test_awx_service.py
 
 # Run with coverage
 pytest --cov=app --cov-report=html
 
-# Run specific test module
-pytest tests/test_awx_service.py
+# Run integration tests
+pytest -m integration
 
-# Run tests matching a pattern
-pytest -k "test_launch"
+# Run only unit tests
+pytest -m "not integration"
 ```
 
-### Test Coverage
-The CI pipeline automatically generates coverage reports and uploads them to Codecov. View coverage at: https://codecov.io/gh/antuelle78/awx_advanced_tools
-
-### Testing Features
-- **Unit Tests**: Comprehensive coverage of all modules
-- **Integration Tests**: AWX API interaction testing
-- **Async Testing**: Full support for async/await patterns
-- **Coverage Reporting**: HTML and XML reports with branch coverage
-
----
-
-<a id="deployment"></a>
-## 12. Deployment
-
-### Docker
-You can run the pre-built image from Docker Hub:
-```bash
-docker run -d -p 8001:8000 \
-  --env-file .env \
-  antuelle78/awx_advanced_tools:latest
-```
-
-### Kubernetes
-Complete Kubernetes manifests are provided in the `k8s` directory for production deployment with all components:
-
-**Components:**
-- **MCP Server**: Main FastAPI application (2 replicas)
-- **Gateway**: Nginx reverse proxy with basic authentication (NodePort service)
-- **Redis**: Caching and session storage
-- **Persistent Storage**: Audit logs PVC
+### Code Quality
 
 ```bash
-# Deploy all components to Kubernetes
-kubectl apply -f k8s/
+# Lint code
+ruff check . --fix
 
-# Check deployment status
-kubectl get pods
-kubectl get svc
-kubectl get pvc
+# Format code
+ruff format .
+
+# Type check
+mypy --explicit-package-bases --ignore-missing-imports app/
+
+# Security scan
+bandit -r app/
+safety scan
 ```
-
-**Access the service:**
-The gateway service is exposed as NodePort on port 30080. Access via:
-```
-http://<node-ip>:30080
-```
-
-**Authentication:**
-Use the credentials defined in `htpasswd` (default: `openwebui`/`openwebui`)
-
-**Configuration:**
-Update `k8s/configmap.yaml` with your AWX instance details:
-- `AWX_BASE_URL`: Your AWX API endpoint
-- `AWX_USERNAME`/`AWX_PASSWORD`: AWX credentials
-- `LLM_ENDPOINT`: Your LLM service endpoint
-
-**Image Tags:**
-The deployment uses the `testing` tag by default. Update `k8s/deployment.yaml` for different tags:
-
-```yaml
-spec:
-  template:
-    spec:
-      containers:
-        - name: mcp-server
-          image: ghcr.io/antuelle78/awx_advanced_tools:testing
-```
-
-### CI/CD Pipeline
-
-The project includes a comprehensive GitHub Actions workflow (`.github/workflows/ci.yml`) that provides:
-
-#### Continuous Integration
-- **Multi-Python Support**: Tests on Python 3.10, 3.11, and 3.12
-- **Code Quality**: Linting with Ruff, type checking with MyPy
-- **Security Scanning**: Dependency checks with Safety, code scanning with Bandit
-- **Testing**: Automated tests with coverage reporting
-- **Docker Building**: Multi-stage builds with caching and vulnerability scanning
-
-#### Continuous Deployment
-- **Container Registry**: Pushes to GitHub Container Registry on main branch
-- **Kubernetes Deployment**: Automated deployment to staging and production environments
-- **Release Management**: Automated releases with semantic versioning
-
-#### Pipeline Features
-- **Parallel Execution**: Jobs run concurrently for faster builds
-- **Caching**: Docker layers and pip dependencies cached for speed
-- **Security**: Trivy scanning for container vulnerabilities
-- **Coverage**: Codecov integration for test coverage tracking
-- **Notifications**: Status checks and artifact uploads
-
-#### Required Secrets
-Set these secrets in your GitHub repository settings:
-- `DOCKER_USERNAME` / `DOCKER_PASSWORD` (for Docker Hub, optional)
-- `KUBE_CONFIG_STAGING` (for staging deployment)
-- `KUBE_CONFIG_PRODUCTION` (for production deployment)
-
-#### Deployment Environments
-- **Staging**: Automatic deployment on main branch pushes
-- **Production**: Automatic deployment on GitHub releases
-
-The pipeline ensures code quality, security, and automated deployment to Kubernetes clusters.
-
-<a id="community--support"></a>
-## 🤝 Community & Support
-
-### Get Help
-- 📖 **[Documentation](https://awx-advanced-tools.readthedocs.io/)** - Comprehensive guides
-- 💬 **[Discussions](https://github.com/antuelle78/awx_advanced_tools/discussions)** - Community forum
-- 🐛 **[Issues](https://github.com/antuelle78/awx_advanced_tools/issues)** - Bug reports & feature requests
-- 📧 **Email**: support@awx-advanced-tools.com
-
-### Contributing
-We welcome contributions! See our [Contributing Guide](CONTRIBUTING.md) for details.
-
-### Roadmap
-- 🔮 **Multi-cloud AWX support**
-- 🤖 **Advanced AI planning capabilities**
-- 📊 **Enhanced monitoring dashboard**
-- 🔗 **Webhook integrations**
-
----
-*Made with ❤️ for the DevOps and AI communities*
 
 ---
 
-<a id="contribution-guidelines"></a>
-## 14. Contribution Guidelines
+## Contributing
 
-Pull requests are welcome! Please fork the repository and submit a pull request with your changes.
+We welcome contributions! Please see [CONTRIBUTING.md](./CONTRIBUTING.md) for guidelines.
+
+### Quick Contribution Guide
+
+1. **Fork the repository**
+2. **Create feature branch**: `git checkout -b feature/my-feature`
+3. **Make changes** and add tests
+4. **Run quality checks**: `ruff check . && mypy app/ && pytest`
+5. **Commit**: `git commit -m "feat: Add my feature"`
+6. **Push**: `git push origin feature/my-feature`
+7. **Create Pull Request**
+
+### Coding Standards
+
+- Follow PEP 8 style guide
+- Use type hints
+- Write docstrings for public functions
+- Add tests for new features
+- Update documentation
 
 ---
 
-<a id="license"></a>
-## 15. License
+## License
 
-MIT License.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+---
+
+## Acknowledgments
+
+- Built with [FastAPI](https://fastapi.tiangolo.com/)
+- Powered by [Ansible AWX](https://github.com/ansible/awx)
+- Inspired by the need for AI-driven infrastructure automation
+
+---
+
+## Changelog
+
+### v2.0.0 - Multi-Server Architecture (2025-11-01)
+
+- **[MAJOR]** Implemented 10-server microservices architecture
+- **[FEATURE]** Added specialized servers for each AWX domain
+- **[FEATURE]** Optimized system prompts for small LLMs
+- **[FEATURE]** Complete Kubernetes deployment support
+- **[IMPROVEMENT]** 80% reduction in tools per endpoint
+- **[IMPROVEMENT]** 60% reduction in response tokens
+- **[IMPROVEMENT]** Added comprehensive health checks
+- **[DOCS]** Production-grade documentation
+
+### v1.0.0 - Initial Release
+
+- Single monolithic server
+- Basic AWX operations
+- LLM integration
+- Docker deployment
+
+For detailed changelog, see [CHANGELOG.md](./CHANGELOG.md).
+
+---
+
+## Support
+
+- **Documentation**: [/docs](./docs)
+- **Issues**: [GitHub Issues](https://github.com/antuelle78/awx_advanced_tools/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/antuelle78/awx_advanced_tools/discussions)
+
+---
+
+**AWX Advanced Tools v2.0** - Production-ready AI-powered AWX automation platform.
