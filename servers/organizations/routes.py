@@ -23,7 +23,9 @@ async def list_organizations(name: str = None):
         table_response = TableFormatter.format_list_response(data, "organizations")
         return Response(content=table_response, media_type="text/markdown")
     except httpx.HTTPStatusError as exc:
-        error_response = TableFormatter.format_error(str(exc), "Organization Management")
+        error_response = TableFormatter.format_error(
+            str(exc), "Organization Management"
+        )
         return Response(content=error_response, media_type="text/markdown")
 
 

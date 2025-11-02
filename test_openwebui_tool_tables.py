@@ -5,7 +5,9 @@ Test script to verify open-webui-tool-multi-server works with table-formatted re
 
 import sys
 import os
+
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), ".")))
+
 
 def test_table_responses():
     """Test that the tool can handle table-formatted responses."""
@@ -59,7 +61,9 @@ def test_table_responses():
         # Test create_schedule (should reach server even if AWX rejects)
         print("\n📅 Testing create_schedule...")
         try:
-            result = tool.create_schedule(7, "test-schedule", "FREQ=MINUTELY;INTERVAL=5")
+            result = tool.create_schedule(
+                7, "test-schedule", "FREQ=MINUTELY;INTERVAL=5"
+            )
             print("Response type:", type(result))
             print("Response preview:")
             print(result[:200] + "..." if len(result) > 200 else result)
@@ -77,8 +81,10 @@ def test_table_responses():
     except Exception as e:
         print(f"\n❌ Test failed: {e}")
         import traceback
+
         traceback.print_exc()
         return False
+
 
 if __name__ == "__main__":
     success = test_table_responses()

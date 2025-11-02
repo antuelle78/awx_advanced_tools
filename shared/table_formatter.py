@@ -29,7 +29,7 @@ class TableFormatter:
         if not dt_str:
             return "N/A"
         try:
-            dt = datetime.fromisoformat(dt_str.replace('Z', '+00:00'))
+            dt = datetime.fromisoformat(dt_str.replace("Z", "+00:00"))
             return dt.strftime("%Y-%m-%d %H:%M")
         except (ValueError, Exception):
             return dt_str[:19] if dt_str else "N/A"
@@ -41,7 +41,7 @@ class TableFormatter:
             return "N/A"
         if len(text) <= max_length:
             return text
-        return text[:max_length-3] + "..."
+        return text[: max_length - 3] + "..."
 
     @staticmethod
     def format_list_response(data: Dict[str, Any], resource_type: str) -> str:
@@ -51,9 +51,11 @@ class TableFormatter:
 
         results = data["results"]
         if not results:
-            return f"| No {resource_type.replace('_', ' ')} found |\n|{'-'*30}|"
+            return f"| No {resource_type.replace('_', ' ')} found |\n|{'-' * 30}|"
 
-        columns = TableFormatter.RESOURCE_COLUMNS.get(resource_type, ["ID", "Name", "Created"])
+        columns = TableFormatter.RESOURCE_COLUMNS.get(
+            resource_type, ["ID", "Name", "Created"]
+        )
 
         # Build table header
         header = "| " + " | ".join(columns) + " |"
@@ -69,7 +71,12 @@ class TableFormatter:
                 value = item.get(col_lower, item.get(col, "N/A"))
 
                 # Format specific column types
-                if "created" in col_lower or "modified" in col_lower or "started" in col_lower or "finished" in col_lower:
+                if (
+                    "created" in col_lower
+                    or "modified" in col_lower
+                    or "started" in col_lower
+                    or "finished" in col_lower
+                ):
                     value = TableFormatter._format_datetime(value)
                 elif col_lower in ["description", "scm_url", "rrule", "variables"]:
                     value = TableFormatter._truncate_text(str(value))
@@ -86,7 +93,9 @@ class TableFormatter:
         # Add summary if there are more results
         count = data.get("count", len(results))
         if count > len(results):
-            rows.append(f"| ... and {count - len(results)} more {resource_type.replace('_', ' ')}(s) |")
+            rows.append(
+                f"| ... and {count - len(results)} more {resource_type.replace('_', ' ')}(s) |"
+            )
 
         return "\n".join(rows)
 
@@ -108,9 +117,15 @@ class TableFormatter:
 
             # Format the value
             if isinstance(value, dict):
-                formatted_value = json.dumps(value, indent=2)[:100] + "..." if len(json.dumps(value)) > 100 else json.dumps(value)
+                formatted_value = (
+                    json.dumps(value, indent=2)[:100] + "..."
+                    if len(json.dumps(value)) > 100
+                    else json.dumps(value)
+                )
             elif isinstance(value, list):
-                formatted_value = f"{len(value)} items" if len(value) > 3 else str(value)
+                formatted_value = (
+                    f"{len(value)} items" if len(value) > 3 else str(value)
+                )
             elif isinstance(value, bool):
                 formatted_value = "Yes" if value else "No"
             elif key in ["created", "modified", "started", "finished"]:
@@ -123,7 +138,12 @@ class TableFormatter:
         return "\n".join(rows)
 
     @staticmethod
-    def format_operation_result(operation: str, success: bool, data: Optional[Dict[str, Any]] = None, error: Optional[str] = None) -> str:
+    def format_operation_result(
+        operation: str,
+        success: bool,
+        data: Optional[Dict[str, Any]] = None,
+        error: Optional[str] = None,
+    ) -> str:
         """Format operation results (create/update/delete) as a table."""
         status = "Success" if success else "Failed"
 
@@ -154,6 +174,8 @@ class TableFormatter:
         separator = "|-------|--------|---------|"
 
         rows = [header, separator]
-        rows.append(f"| Error | {server} | {TableFormatter._truncate_text(error_message, 80)} |")
+        rows.append(
+            f"| Error | {server} | {TableFormatter._truncate_text(error_message, 80)} |"
+        )
 
         return "\n".join(rows)

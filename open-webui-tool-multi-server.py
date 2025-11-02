@@ -228,8 +228,8 @@ class Tools:
                 return json.dumps({"status": "success"})
 
             # Check if response is JSON or table-formatted text
-            content_type = response.headers.get('content-type', '').lower()
-            if 'application/json' in content_type:
+            content_type = response.headers.get("content-type", "").lower()
+            if "application/json" in content_type:
                 return json.dumps(response.json())
             else:
                 # Return table-formatted responses as-is (they are already markdown)
@@ -586,7 +586,9 @@ class Tools:
         """Lists all credentials in AWX."""
         return self._make_request("list_credentials", "/credentials")
 
-    def create_credential(self, name: str, credential_type: str, inputs: Dict[str, Any]) -> str:
+    def create_credential(
+        self, name: str, credential_type: str, inputs: Dict[str, Any]
+    ) -> str:
         """Creates a new credential in AWX."""
         json_data = {"name": name, "credential_type": credential_type, "inputs": inputs}
         return self._make_request(
@@ -597,7 +599,12 @@ class Tools:
         """Retrieves details of a specific credential."""
         return self._make_request("get_credential", f"/credentials/{credential_id}")
 
-    def update_credential(self, credential_id: int, name: Optional[str] = None, inputs: Optional[Dict[str, Any]] = None) -> str:
+    def update_credential(
+        self,
+        credential_id: int,
+        name: Optional[str] = None,
+        inputs: Optional[Dict[str, Any]] = None,
+    ) -> str:
         """Updates an existing credential in AWX."""
         json_data = {}
         if name:
@@ -605,27 +612,41 @@ class Tools:
         if inputs:
             json_data["inputs"] = inputs
         return self._make_request(
-            "update_credential", f"/credentials/{credential_id}", method="PATCH", json_data=json_data
+            "update_credential",
+            f"/credentials/{credential_id}",
+            method="PATCH",
+            json_data=json_data,
         )
 
     def delete_credential(self, credential_id: int) -> str:
         """Deletes a credential from AWX."""
-        return self._make_request("delete_credential", f"/credentials/{credential_id}", method="DELETE")
+        return self._make_request(
+            "delete_credential", f"/credentials/{credential_id}", method="DELETE"
+        )
 
     def list_workflow_job_templates(self) -> str:
         """Lists all workflow job templates in AWX."""
-        return self._make_request("list_workflow_job_templates", "/workflow_job_templates")
+        return self._make_request(
+            "list_workflow_job_templates", "/workflow_job_templates"
+        )
 
-    def create_workflow_job_template(self, name: str, description: Optional[str] = None) -> str:
+    def create_workflow_job_template(
+        self, name: str, description: Optional[str] = None
+    ) -> str:
         """Creates a new workflow job template in AWX."""
         json_data = {"name": name}
         if description:
             json_data["description"] = description
         return self._make_request(
-            "create_workflow_job_template", "/workflow_job_templates", method="POST", json_data=json_data
+            "create_workflow_job_template",
+            "/workflow_job_templates",
+            method="POST",
+            json_data=json_data,
         )
 
-    def launch_workflow_job_template(self, workflow_id: int, extra_vars: Optional[Dict[str, Any]] = None) -> str:
+    def launch_workflow_job_template(
+        self, workflow_id: int, extra_vars: Optional[Dict[str, Any]] = None
+    ) -> str:
         """Launches a workflow job template to start a new workflow job."""
         json_data = {"extra_vars": extra_vars} if extra_vars else {}
         return self._make_request(
@@ -635,7 +656,12 @@ class Tools:
             json_data=json_data,
         )
 
-    def update_workflow_job_template(self, workflow_id: int, name: Optional[str] = None, description: Optional[str] = None) -> str:
+    def update_workflow_job_template(
+        self,
+        workflow_id: int,
+        name: Optional[str] = None,
+        description: Optional[str] = None,
+    ) -> str:
         """Updates an existing workflow job template in AWX."""
         json_data = {}
         if name:
@@ -643,19 +669,28 @@ class Tools:
         if description:
             json_data["description"] = description
         return self._make_request(
-            "update_workflow_job_template", f"/workflow_job_templates/{workflow_id}", method="PATCH", json_data=json_data
+            "update_workflow_job_template",
+            f"/workflow_job_templates/{workflow_id}",
+            method="PATCH",
+            json_data=json_data,
         )
 
     def delete_workflow_job_template(self, workflow_id: int) -> str:
         """Deletes a workflow job template from AWX."""
-        return self._make_request("delete_workflow_job_template", f"/workflow_job_templates/{workflow_id}", method="DELETE")
+        return self._make_request(
+            "delete_workflow_job_template",
+            f"/workflow_job_templates/{workflow_id}",
+            method="DELETE",
+        )
 
     # ===== Notifications (Port 8009) =====
 
     def list_activity_stream(self, page: int = 1, page_size: int = 50) -> str:
         """Lists activity stream events from AWX."""
         params = {"page": page, "page_size": page_size}
-        return self._make_request("list_activity_stream", "/activity_stream", params=params)
+        return self._make_request(
+            "list_activity_stream", "/activity_stream", params=params
+        )
 
     # ===== Infrastructure (Port 8010) =====
 

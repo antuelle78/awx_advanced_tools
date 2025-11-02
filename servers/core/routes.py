@@ -33,10 +33,14 @@ async def launch_job_template(template_id: int, request: LaunchJobRequest = None
     try:
         extra_vars = request.extra_vars if request else None
         data = await awx_client.launch_job_template(template_id, extra_vars)
-        table_response = TableFormatter.format_operation_result("launch_job_template", True, data)
+        table_response = TableFormatter.format_operation_result(
+            "launch_job_template", True, data
+        )
         return Response(content=table_response, media_type="text/markdown")
     except httpx.HTTPStatusError as exc:
-        error_response = TableFormatter.format_operation_result("launch_job_template", False, error=str(exc))
+        error_response = TableFormatter.format_operation_result(
+            "launch_job_template", False, error=str(exc)
+        )
         return Response(content=error_response, media_type="text/markdown")
 
 

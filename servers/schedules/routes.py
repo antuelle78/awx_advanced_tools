@@ -2,7 +2,11 @@
 
 from fastapi import APIRouter, HTTPException
 from shared.awx_client import awx_client
-from .schemas import CreateScheduleRequest, CreateScheduleAWXRequest, UpdateScheduleRequest
+from .schemas import (
+    CreateScheduleRequest,
+    CreateScheduleAWXRequest,
+    UpdateScheduleRequest,
+)
 import httpx
 
 router = APIRouter()
@@ -82,7 +86,9 @@ async def list_schedules_awx_style(template_id: int):
 
 
 @router.post("/job_templates/{template_id}/schedules")
-async def create_schedule_awx_style(template_id: int, request: CreateScheduleAWXRequest):
+async def create_schedule_awx_style(
+    template_id: int, request: CreateScheduleAWXRequest
+):
     """Create a new schedule (AWX-style endpoint for tool compatibility)."""
     try:
         return await awx_client.create_schedule(
