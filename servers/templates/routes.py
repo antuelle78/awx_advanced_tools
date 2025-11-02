@@ -14,6 +14,7 @@ from .schemas import (
     UpdateWorkflowTemplateRequest,
     LaunchWorkflowRequest,
 )
+from typing import Optional, Dict, Any
 import httpx
 
 router = APIRouter()
@@ -30,6 +31,29 @@ async def create_job_template(request: CreateJobTemplateRequest):
             playbook=request.playbook,
             description=request.description,
             extra_vars=request.extra_vars,
+        )
+    except httpx.HTTPStatusError as exc:
+        raise HTTPException(status_code=exc.response.status_code, detail=str(exc))
+
+
+@router.post("/job_templates/")
+async def create_job_template_tool_compatible(
+    name: str,
+    inventory: int,
+    project: int,
+    playbook: str,
+    description: Optional[str] = None,
+    extra_vars: Optional[Dict[str, Any]] = None,
+):
+    """Create a new job template (tool-compatible endpoint with query params + body)."""
+    try:
+        return await awx_client.create_job_template(
+            name=name,
+            inventory=inventory,
+            project=project,
+            playbook=playbook,
+            description=description,
+            extra_vars=extra_vars,
         )
     except httpx.HTTPStatusError as exc:
         raise HTTPException(status_code=exc.response.status_code, detail=str(exc))

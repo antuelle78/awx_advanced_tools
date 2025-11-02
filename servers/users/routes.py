@@ -37,9 +37,9 @@ async def get_user(user_id: int):
         raise HTTPException(status_code=exc.response.status_code, detail=str(exc))
 
 
-@router.get("/users/by_name/{username}")
+@router.get("/users/by-name/{username}")
 async def get_user_by_name(username: str):
-    """Get user details by username."""
+    """Get user details by username (AWX-style endpoint for tool compatibility)."""
     try:
         return await awx_client.get_user_by_name(username)
     except httpx.HTTPStatusError as exc:
